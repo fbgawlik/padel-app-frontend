@@ -90,13 +90,15 @@ const LoginScreen = () => {
 // Objeto de estilos completo y restaurado al 100%
 const styles = {
  contenedor: { 
-  flex: 1, 
-  marginLeft: '260px', 
-  padding: '40px', 
+  display: 'flex',
+  justifyContent: 'center', // Centra la tarjeta horizontalmente
+  alignItems: 'center',     // Centra la tarjeta verticalmente
+  minHeight: '100vh',       // Ocupa el 100% del alto de la pantalla
+  padding: '20px', 
   color: '#fff', 
   fontFamily: 'sans-serif',
   boxSizing: 'border-box',
-  overflowY: 'auto' 
+  backgroundColor: '#0A0A0A' // Fondo oscuro para que combine con el diseño premium
 },
   tarjetaLogin: {
     backgroundColor: '#141414',

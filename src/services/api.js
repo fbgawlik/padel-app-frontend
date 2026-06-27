@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'https://padel-api-backend-production.up.railway.app/api', // Asegurate de que coincida con tu puerto del backend
+  baseURL: `${import.meta.env.VITE_API_URL}/api`, 
 });
 
 // 🔥 INTERCEPTOR: Inyecta el token automáticamente en CADA petición
