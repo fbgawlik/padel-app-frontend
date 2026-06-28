@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 
+const BACKEND_URL = 'https://padel-api-backend-production.up.railway.app';
+
 const BuscadorClubesScreen = () => {
   const navigate = useNavigate();
   const [listaComplejos, setListaComplejos] = useState([]);
@@ -30,64 +32,75 @@ const BuscadorClubesScreen = () => {
 
   return (
     <div style={styles.contenedor}>
-      <div style={styles.headerClub}>
-        <h1 style={styles.tituloClub}>Reserva de Turnos</h1>
-        <p style={styles.infoClub}>Buscá tu complejo deportivo para conocer la disponibilidad de canchas.</p>
+      
+      {/* HEADER DE EXPLORACIÓN */}
+      <div style={styles.headerContenedor}>
+        <h1 style={styles.tituloGrande}>Explorar</h1>
+        <p style={styles.subtitulo}>Encuentra tu próximo club para jugar.</p>
+        
+        {/* BARRA DE BÚSQUEDA TIPO iOS */}
+        <div style={styles.buscadorGlass}>
+          <span style={{ fontSize: '18px', color: '#8E8E93' }}>🔍</span>
+          <input 
+            type="text" 
+            placeholder="Buscar por nombre o zona..." 
+            value={busqueda} 
+            onChange={(e) => setBusqueda(e.target.value)} 
+            style={styles.inputNativo}
+          />
+        </div>
       </div>
 
-      {/* BUSCADOR PREMIUM */}
-      <div style={styles.contenedorBuscador}>
-        <span style={styles.iconoLupa}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-        </span>
-        <input 
-          type="text" 
-          placeholder="Escribí el nombre o dirección del club..." 
-          value={busqueda} 
-          onChange={(e) => setBusqueda(e.target.value)} 
-          style={styles.inputBuscador}
-        />
-      </div>
-
-      {/* HEADER DE RESULTADOS */}
       <div style={styles.resultadosHeader}>
-        <h3 style={styles.subtitulo}>Complejos Encontrados</h3>
-        {!loading && <span style={styles.badgeResultados}>{complejosFiltrados.length}</span>}
+        <h3 style={styles.tituloSeccion}>Clubes Disponibles</h3>
+        {!loading && <span style={styles.badgeContador}>{complejosFiltrados.length}</span>}
       </div>
       
-      {/* GRILLA DE CLUBES */}
-      <div style={styles.grillaBusquedaComplejos}>
+      {/* LISTA DE CLUBES */}
+      <div style={styles.grillaClubes}>
         {loading ? (
           <div style={styles.estadoVacio}>
             <div style={styles.spinner}></div>
-            <p>Buscando complejos...</p>
           </div>
         ) : complejosFiltrados.length === 0 ? (
           <div style={styles.estadoVacio}>
-            <p>No se encontraron complejos con esa búsqueda.</p>
+            <p>No encontramos clubes con esa búsqueda 😔</p>
           </div>
         ) : (
-          complejosFiltrados.map((club) => (
-            <div key={club.id} style={styles.tarjetaClubBusqueda} onClick={() => navigate(`/reservar/${club.id}`)}>
-              <div style={styles.avatarClub}>
-                🏢
+          complejosFiltrados.map((club) => {
+            const urlFoto = club.imagenUrl 
+              ? (club.imagenUrl.startsWith('http') ? club.imagenUrl : `${BACKEND_URL}${club.imagenUrl}`)
+              : null;
+
+            return (
+              <div key={club.id} style={styles.tarjetaClubNativa} onClick={() => navigate(`/reservar/${club.id}`)}>
+                
+                {/* Imagen del club grande arriba */}
+                <div style={styles.imagenClubContenedor}>
+                  {urlFoto ? (
+                    <img src={urlFoto} alt={club.nombre} style={styles.imagenImagen} />
+                  ) : (
+                    <div style={styles.imagenPlaceholder}>🏟️</div>
+                  )}
+                  {/* Badge de cantidad de canchas flotante */}
+                  <div style={styles.badgeFlotante}>
+                    {club.canchas?.length || 0} Canchas
+                  </div>
+                </div>
+
+                <div style={styles.infoContenedor}>
+                  <div>
+                    <h4 style={styles.nombreClub}>{club.nombre}</h4>
+                    <p style={styles.direccionClub}>📍 {club.direccion || 'Sin dirección registrada'}</p>
+                  </div>
+                  
+                  <button style={styles.botonReservaRapida}>
+                    Ver turnos
+                  </button>
+                </div>
               </div>
-              <div style={styles.infoClubContainer}>
-                <h4 style={styles.nombreClub}>{club.nombre}</h4>
-                <p style={styles.direccionClub}>📍 {club.direccion}</p>
-              </div>
-              <button style={styles.botonSeleccionarClub}>
-                Reservar
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginLeft: '6px', transition: 'transform 0.2s'}} className="flecha-btn">
-                  <line x1="5" y1="12" x2="19" y2="12"></line>
-                  <polyline points="12 5 19 12 12 19"></polyline>
-                </svg>
-              </button>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
@@ -96,160 +109,158 @@ const BuscadorClubesScreen = () => {
 
 const styles = {
   contenedor: { 
-    width: '100%', 
-    boxSizing: 'border-box'
+    padding: '24px 16px', 
+    boxSizing: 'border-box',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   },
-  headerClub: { 
-    borderBottom: '1px solid rgba(255,255,255,0.05)', 
-    paddingBottom: '24px', 
-    marginBottom: '32px' 
+  headerContenedor: {
+    marginBottom: '24px'
   },
-  tituloClub: { 
+  tituloGrande: { 
     fontSize: '32px', 
-    margin: '0 0 8px 0', 
     fontWeight: '800', 
     color: '#fff', 
-    letterSpacing: '-0.5px' 
+    margin: '0 0 4px 0',
+    letterSpacing: '-0.5px'
   },
-  infoClub: { 
-    color: '#8A8A8A', 
-    margin: 0, 
-    fontSize: '15px', 
-    fontWeight: '400' 
+  subtitulo: {
+    color: '#8E8E93',
+    fontSize: '15px',
+    margin: '0 0 20px 0'
   },
   
-  contenedorBuscador: { 
-    display: 'flex', 
-    alignItems: 'center', 
-    backgroundColor: '#121212', 
-    border: '1px solid rgba(255,255,255,0.06)', 
-    borderRadius: '14px', 
-    padding: '14px 20px', 
-    marginBottom: '40px', 
-    maxWidth: '600px',
-    transition: 'border-color 0.3s ease',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
-  },
-  iconoLupa: { 
-    marginRight: '14px', 
-    color: '#666',
+  // Buscador
+  buscadorGlass: {
     display: 'flex',
-    alignItems: 'center'
+    alignItems: 'center',
+    gap: '12px',
+    backgroundColor: '#161618',
+    borderRadius: '20px',
+    padding: '14px 20px',
+    border: '1px solid rgba(255,255,255,0.06)'
   },
-  inputBuscador: { 
-    backgroundColor: 'transparent', 
-    border: 'none', 
-    color: '#fff', 
-    fontSize: '16px', 
-    outline: 'none', 
+  inputNativo: {
+    backgroundColor: 'transparent',
+    border: 'none',
+    color: '#fff',
+    fontSize: '16px',
     width: '100%',
+    outline: 'none',
     fontWeight: '500'
   },
-  inputBuscadorPlaceholder: {
-    color: '#555'
-  },
-  
+
   resultadosHeader: {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    marginBottom: '20px'
+    marginBottom: '16px'
   },
-  subtitulo: { 
-    fontSize: '18px', 
-    color: '#fff', 
+  tituloSeccion: {
+    fontSize: '18px',
     fontWeight: '700',
+    color: '#fff',
     margin: 0
   },
-  badgeResultados: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    color: '#EAEAEA',
+  badgeContador: {
+    backgroundColor: 'rgba(57, 255, 20, 0.1)',
+    color: '#39FF14',
     padding: '4px 10px',
-    borderRadius: '20px',
+    borderRadius: '12px',
     fontSize: '12px',
-    fontWeight: '600'
+    fontWeight: '700'
   },
 
-  grillaBusquedaComplejos: { 
-    display: 'flex', 
-    flexDirection: 'column', 
-    gap: '16px', 
-    maxWidth: '800px' 
+  grillaClubes: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px'
   },
-  tarjetaClubBusqueda: { 
-    display: 'flex', 
-    alignItems: 'center', 
-    backgroundColor: '#121212', 
-    border: '1px solid rgba(255,255,255,0.03)', 
-    borderRadius: '16px', 
-    padding: '20px', 
-    cursor: 'pointer', 
-    transition: 'all 0.2s ease', 
-    gap: '20px' 
+  
+  // Tarjetas de Clubes
+  tarjetaClubNativa: {
+    backgroundColor: '#161618',
+    borderRadius: '24px',
+    overflow: 'hidden',
+    border: '1px solid rgba(255,255,255,0.04)',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+    cursor: 'pointer'
   },
-  avatarClub: { 
-    fontSize: '24px', 
-    backgroundColor: '#1A1A1A', 
-    width: '56px',
-    height: '56px',
+  imagenClubContenedor: {
+    height: '160px',
+    width: '100%',
+    backgroundColor: '#111',
+    position: 'relative'
+  },
+  imagenImagen: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover'
+  },
+  imagenPlaceholder: {
+    width: '100%',
+    height: '100%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: '12px',
-    border: '1px solid rgba(255,255,255,0.02)'
+    fontSize: '48px',
+    opacity: 0.5
   },
-  infoClubContainer: { 
-    flex: 1,
+  badgeFlotante: {
+    position: 'absolute',
+    top: '16px',
+    right: '16px',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    backdropFilter: 'blur(10px)',
+    color: '#fff',
+    padding: '6px 12px',
+    borderRadius: '20px',
+    fontSize: '12px',
+    fontWeight: '600',
+    border: '1px solid rgba(255,255,255,0.1)'
+  },
+  infoContenedor: {
+    padding: '20px',
     display: 'flex',
-    flexDirection: 'column',
-    gap: '4px'
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: '16px'
   },
-  nombreClub: { 
-    margin: 0, 
-    color: '#fff', 
+  nombreClub: {
     fontSize: '18px',
     fontWeight: '700',
+    color: '#fff',
+    margin: '0 0 4px 0',
     letterSpacing: '-0.3px'
   },
-  direccionClub: { 
-    margin: 0, 
-    color: '#8A8A8A', 
-    fontSize: '14px' 
+  direccionClub: {
+    fontSize: '13px',
+    color: '#8E8E93',
+    margin: 0
   },
-  botonSeleccionarClub: { 
-    backgroundColor: 'rgba(0, 255, 102, 0.08)', 
-    border: 'none', 
-    color: '#00ff66', 
-    fontWeight: '700', 
-    fontSize: '14px', 
-    cursor: 'pointer',
-    padding: '10px 18px',
-    borderRadius: '10px',
-    display: 'flex',
-    alignItems: 'center',
-    transition: 'all 0.2s ease'
+  botonReservaRapida: {
+    backgroundColor: '#39FF14',
+    color: '#0F0F10',
+    border: 'none',
+    padding: '10px 16px',
+    borderRadius: '14px',
+    fontWeight: '700',
+    fontSize: '13px',
+    whiteSpace: 'nowrap'
   },
-  
+
   estadoVacio: { 
     display: 'flex', 
-    flexDirection: 'column', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    padding: '60px 20px', 
-    color: '#666', 
-    backgroundColor: '#121212', 
-    borderRadius: '16px', 
-    border: '1px dashed rgba(255,255,255,0.1)',
-    maxWidth: '800px'
+    justifyContent: 'center',
+    padding: '60px 0',
+    color: '#8E8E93'
   },
   spinner: { 
-    width: '24px', 
-    height: '24px', 
-    border: '3px solid rgba(0,255,102,0.2)', 
-    borderTop: '3px solid #00ff66', 
+    width: '32px', 
+    height: '32px', 
+    border: '3px solid rgba(57, 255, 20, 0.2)', 
+    borderTop: '3px solid #39FF14', 
     borderRadius: '50%', 
-    animation: 'spin 1s linear infinite', 
-    marginBottom: '16px' 
+    animation: 'spin 1s linear infinite'
   }
 };
 
