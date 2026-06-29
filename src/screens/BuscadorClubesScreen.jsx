@@ -33,14 +33,12 @@ const BuscadorClubesScreen = () => {
   return (
     <div style={styles.contenedor}>
       
-      {/* HEADER DE EXPLORACIÓN */}
       <div style={styles.headerContenedor}>
         <h1 style={styles.tituloGrande}>Explorar</h1>
         <p style={styles.subtitulo}>Encuentra tu próximo club para jugar.</p>
         
-        {/* BARRA DE BÚSQUEDA TIPO iOS */}
         <div style={styles.buscadorGlass}>
-          <span style={{ fontSize: '18px', color: '#8E8E93' }}>🔍</span>
+          <span style={styles.iconoBuscar}>🔍</span>
           <input 
             type="text" 
             placeholder="Buscar por nombre o zona..." 
@@ -56,15 +54,14 @@ const BuscadorClubesScreen = () => {
         {!loading && <span style={styles.badgeContador}>{complejosFiltrados.length}</span>}
       </div>
       
-      {/* LISTA DE CLUBES */}
       <div style={styles.grillaClubes}>
         {loading ? (
-          <div style={styles.estadoVacio}>
+          <div style={styles.estadoVacioSpinner}>
             <div style={styles.spinner}></div>
           </div>
         ) : complejosFiltrados.length === 0 ? (
           <div style={styles.estadoVacio}>
-            <p>No encontramos clubes con esa búsqueda 😔</p>
+            <p style={styles.textoVacio}>No encontramos clubes con esa búsqueda 😔</p>
           </div>
         ) : (
           complejosFiltrados.map((club) => {
@@ -75,28 +72,28 @@ const BuscadorClubesScreen = () => {
             return (
               <div key={club.id} style={styles.tarjetaClubNativa} onClick={() => navigate(`/reservar/${club.id}`)}>
                 
-                {/* Imagen del club grande arriba */}
                 <div style={styles.imagenClubContenedor}>
                   {urlFoto ? (
                     <img src={urlFoto} alt={club.nombre} style={styles.imagenImagen} />
                   ) : (
                     <div style={styles.imagenPlaceholder}>🏟️</div>
                   )}
-                  {/* Badge de cantidad de canchas flotante */}
+                  
                   <div style={styles.badgeFlotante}>
                     {club.canchas?.length || 0} Canchas
                   </div>
                 </div>
 
                 <div style={styles.infoContenedor}>
-                  <div>
+                  <div style={styles.textoAgrupado}>
                     <h4 style={styles.nombreClub}>{club.nombre}</h4>
                     <p style={styles.direccionClub}>📍 {club.direccion || 'Sin dirección registrada'}</p>
                   </div>
                   
-                  <button style={styles.botonReservaRapida}>
-                    Ver turnos
-                  </button>
+                  <div style={styles.badgeAccion}>
+                    <span style={styles.textoBadgeAccion}>Ver Club</span>
+                    <span style={styles.flechaBadge}>→</span>
+                  </div>
                 </div>
               </div>
             );
@@ -109,86 +106,89 @@ const BuscadorClubesScreen = () => {
 
 const styles = {
   contenedor: { 
-    padding: '24px 16px', 
+    padding: '16px 20px', 
     boxSizing: 'border-box',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   },
   headerContenedor: {
-    marginBottom: '24px'
+    marginBottom: '28px'
   },
   tituloGrande: { 
-    fontSize: '32px', 
+    fontSize: '34px', 
     fontWeight: '800', 
-    color: '#fff', 
-    margin: '0 0 4px 0',
-    letterSpacing: '-0.5px'
+    color: '#ffffff', 
+    margin: '0 0 6px 0',
+    letterSpacing: '-0.8px'
   },
   subtitulo: {
     color: '#8E8E93',
     fontSize: '15px',
-    margin: '0 0 20px 0'
+    margin: '0 0 24px 0',
+    letterSpacing: '-0.2px'
   },
-  
-  // Buscador
   buscadorGlass: {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    backgroundColor: '#161618',
-    borderRadius: '20px',
-    padding: '14px 20px',
-    border: '1px solid rgba(255,255,255,0.06)'
+    backgroundColor: '#121214',
+    borderRadius: '24px',
+    padding: '16px 20px',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+  },
+  iconoBuscar: {
+    fontSize: '16px',
+    opacity: 0.7
   },
   inputNativo: {
     backgroundColor: 'transparent',
     border: 'none',
-    color: '#fff',
-    fontSize: '16px',
+    color: '#ffffff',
+    fontSize: '15px',
     width: '100%',
     outline: 'none',
     fontWeight: '500'
   },
-
   resultadosHeader: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    marginBottom: '16px'
+    gap: '10px',
+    marginBottom: '20px',
+    paddingLeft: '4px'
   },
   tituloSeccion: {
     fontSize: '18px',
     fontWeight: '700',
-    color: '#fff',
-    margin: 0
+    color: '#ffffff',
+    margin: 0,
+    letterSpacing: '-0.3px'
   },
   badgeContador: {
     backgroundColor: 'rgba(57, 255, 20, 0.1)',
     color: '#39FF14',
     padding: '4px 10px',
-    borderRadius: '12px',
+    borderRadius: '99px',
     fontSize: '12px',
     fontWeight: '700'
   },
-
   grillaClubes: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px'
+    gap: '24px'
   },
-  
-  // Tarjetas de Clubes
   tarjetaClubNativa: {
-    backgroundColor: '#161618',
-    borderRadius: '24px',
+    backgroundColor: '#121214',
+    borderRadius: '28px',
     overflow: 'hidden',
-    border: '1px solid rgba(255,255,255,0.04)',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
-    cursor: 'pointer'
+    border: '1px solid rgba(255, 255, 255, 0.04)',
+    boxShadow: '0 12px 32px rgba(0, 0, 0, 0.25)',
+    cursor: 'pointer',
+    transition: 'transform 0.2s ease'
   },
   imagenClubContenedor: {
-    height: '160px',
+    height: '180px',
     width: '100%',
-    backgroundColor: '#111',
+    backgroundColor: '#1A1A1E',
     position: 'relative'
   },
   imagenImagen: {
@@ -202,65 +202,88 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '48px',
-    opacity: 0.5
+    fontSize: '40px',
+    opacity: 0.3
   },
   badgeFlotante: {
     position: 'absolute',
-    top: '16px',
-    right: '16px',
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    backdropFilter: 'blur(10px)',
-    color: '#fff',
-    padding: '6px 12px',
-    borderRadius: '20px',
+    bottom: '16px',
+    left: '16px',
+    backgroundColor: 'rgba(18, 18, 20, 0.6)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    color: '#ffffff',
+    padding: '6px 14px',
+    borderRadius: '99px',
     fontSize: '12px',
     fontWeight: '600',
-    border: '1px solid rgba(255,255,255,0.1)'
+    border: '1px solid rgba(255, 255, 255, 0.08)'
   },
   infoContenedor: {
-    padding: '20px',
+    padding: '20px 22px',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: '16px'
   },
+  textoAgrupado: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px'
+  },
   nombreClub: {
-    fontSize: '18px',
+    fontSize: '19px',
     fontWeight: '700',
-    color: '#fff',
-    margin: '0 0 4px 0',
-    letterSpacing: '-0.3px'
+    color: '#ffffff',
+    margin: 0,
+    letterSpacing: '-0.4px'
   },
   direccionClub: {
     fontSize: '13px',
     color: '#8E8E93',
-    margin: 0
+    margin: 0,
+    letterSpacing: '-0.1px'
   },
-  botonReservaRapida: {
-    backgroundColor: '#39FF14',
-    color: '#0F0F10',
-    border: 'none',
-    padding: '10px 16px',
-    borderRadius: '14px',
+  badgeAccion: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    backgroundColor: 'rgba(57, 255, 20, 0.08)',
+    padding: '8px 14px',
+    borderRadius: '99px',
+    border: '1px solid rgba(57, 255, 20, 0.15)'
+  },
+  textoBadgeAccion: {
+    color: '#39FF14',
+    fontSize: '12px',
     fontWeight: '700',
-    fontSize: '13px',
-    whiteSpace: 'nowrap'
+    letterSpacing: '-0.1px'
   },
-
+  flechaBadge: {
+    color: '#39FF14',
+    fontSize: '12px',
+    fontWeight: '700'
+  },
   estadoVacio: { 
     display: 'flex', 
     justifyContent: 'center',
-    padding: '60px 0',
-    color: '#8E8E93'
+    padding: '80px 0'
+  },
+  textoVacio: {
+    color: '#8E8E93',
+    fontSize: '15px'
+  },
+  estadoVacioSpinner: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '80px 0'
   },
   spinner: { 
-    width: '32px', 
-    height: '32px', 
-    border: '3px solid rgba(57, 255, 20, 0.2)', 
+    width: '28px', 
+    height: '28px', 
+    border: '3px solid rgba(57, 255, 20, 0.1)', 
     borderTop: '3px solid #39FF14', 
-    borderRadius: '50%', 
-    animation: 'spin 1s linear infinite'
+    borderRadius: '50%'
   }
 };
 
