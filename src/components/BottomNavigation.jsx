@@ -8,7 +8,6 @@ const BottomNavigation = () => {
   const location = useLocation();
   const { usuario } = useContext(AuthContext);
 
-  // Definimos las 4 pestañas principales de la experiencia móvil
   const tabs = [
     { nombre: 'Inicio', ruta: '/dashboard', icono: '🏠' },
     { nombre: 'Buscar', ruta: '/turnos', icono: '🎾' },
@@ -27,24 +26,24 @@ const BottomNavigation = () => {
               onClick={() => navigate(tab.ruta)}
               style={{
                 ...styles.tabButton,
-                color: isActive ? '#39FF14' : '#8E8E93', // Verde neón si está activo, gris si no
+                backgroundColor: isActive ? 'rgba(57, 255, 20, 0.12)' : 'transparent',
+                padding: isActive ? '10px 16px' : '10px 12px',
+                flex: isActive ? 1.5 : 1,
               }}
             >
               <span style={{ 
                 ...styles.icon, 
-                transform: isActive ? 'scale(1.15)' : 'scale(1)',
-                textShadow: isActive ? '0 0 10px rgba(57, 255, 20, 0.4)' : 'none'
+                transform: isActive ? 'scale(1.1)' : 'scale(1)',
+                filter: isActive ? 'drop-shadow(0 0 6px rgba(57, 255, 20, 0.6))' : 'none'
               }}>
                 {tab.icono}
               </span>
-              <span style={{ 
-                ...styles.label, 
-                fontWeight: isActive ? '600' : '400',
-                color: isActive ? '#ffffff' : '#8E8E93' 
-              }}>
-                {tab.nombre}
-              </span>
-              {isActive && <div style={styles.activeIndicator} />}
+              
+              {isActive && (
+                <span style={styles.label}>
+                  {tab.nombre}
+                </span>
+              )}
             </button>
           );
         })}
@@ -56,62 +55,57 @@ const BottomNavigation = () => {
 const styles = {
   navContainer: {
     position: 'fixed',
-    bottom: 0,
+    bottom: '24px',
     left: 0,
     right: 0,
-    height: '84px',
+    height: '64px',
     backgroundColor: 'transparent',
     display: 'flex',
     justifyContent: 'center',
-    alignItems: 'flex-start',
-    padding: '0 16px',
+    alignItems: 'center',
+    padding: '0 24px',
     zIndex: 1000,
   },
   navBar: {
     width: '100%',
-    maxWidth: '500px', // Limita el ancho en pantallas más grandes para mantener la estética móvil
-    height: '64px',
-    backgroundColor: 'rgba(26, 26, 26, 0.85)', // Fondo gris oscuro con opacidad
-    backdropFilter: 'blur(20px)', // Efecto esmerilado de iOS/Figma
-    WebkitBackdropFilter: 'blur(20px)',
-    borderRadius: '32px', // Bordes ultra redondeados como el video
-    border: '1px solid rgba(255, 255, 255, 0.06)',
+    maxWidth: '420px',
+    height: '100%',
+    backgroundColor: 'rgba(18, 18, 20, 0.82)',
+    backdropFilter: 'blur(30px)',
+    WebkitBackdropFilter: 'blur(30px)',
+    borderRadius: '32px',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
     display: 'flex',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     alignItems: 'center',
     padding: '0 8px',
-    boxShadow: '0px 10px 30px rgba(0, 0, 0, 0.5)',
+    boxShadow: '0px 12px 40px rgba(0, 0, 0, 0.6)',
   },
   tabButton: {
     background: 'none',
     border: 'none',
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
-    height: '100%',
+    height: '46px',
+    borderRadius: '24px',
     cursor: 'pointer',
-    position: 'relative',
-    transition: 'all 0.2s ease',
-    gap: '4px',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    gap: '6px',
   },
   icon: {
-    fontSize: '20px',
+    fontSize: '18px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     transition: 'transform 0.2s ease',
   },
   label: {
-    fontSize: '11px',
-    transition: 'color 0.2s ease',
-  },
-  activeIndicator: {
-    position: 'absolute',
-    bottom: '4px',
-    width: '4px',
-    height: '4px',
-    borderRadius: '50%',
-    backgroundColor: '#39FF14', // Puntito verde neón indicador
-    boxShadow: '0 0 8px #39FF14',
+    fontSize: '12px',
+    fontWeight: '600',
+    color: '#39FF14',
+    letterSpacing: '-0.2px',
   }
 };
 
