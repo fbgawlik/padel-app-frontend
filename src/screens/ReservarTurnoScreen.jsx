@@ -536,4 +536,4 @@ const styles = {
   spinner: { width: '28px', height: '28px', border: '3px solid rgba(57, 255, 20, 0.2)', borderTop: '3px solid #39FF14', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '12px' }
 };
 
-export default ReservarTurnoScreen;s
+export default ReservarTurnoScreen;
