@@ -21,7 +21,9 @@ const ReservarTurnoScreen = () => {
 
   // Generador dinámico de los próximos 7 días para el carrusel horizontal
   const generarProximosDias = () => {
+    const diasSemana = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB']; // Arreglo fijo anti-traductores
     const dias = [];
+    
     for (let i = 0; i < 7; i++) {
       const hoy = new Date();
       hoy.setDate(hoy.getDate() + i);
@@ -30,7 +32,7 @@ const ReservarTurnoScreen = () => {
       const dd = String(hoy.getDate()).padStart(2, '0');
       
       const fechaStr = `${yyyy}-${mm}-${dd}`;
-      const nombreDia = hoy.toLocaleDateString('es-ES', { weekday: 'short' }).replace('.', '');
+      const nombreDia = diasSemana[hoy.getDay()]; // Tomamos el día exacto de nuestro arreglo
       const numeroDia = hoy.getDate();
       
       dias.push({ fechaStr, nombreDia, numeroDia });
