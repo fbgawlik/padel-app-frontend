@@ -20,13 +20,47 @@ const MisReservasScreen = () => {
       setLoading(true);
       setError('');
       
-      // Llamamos a la ruta que configuramos en tu backend
       const respuesta = await API.get('/turnos/mi-actividad');
       
-      // Guardamos la información en sus respectivos estados
-      setMisTurnos(respuesta.data.turnos || []);
-      setMisPartidos(respuesta.data.partidos || []);
-      setMisTorneos(respuesta.data.torneos || []);
+      // --- LÓGICA DE FILTRADO Y ORDENAMIENTO (SOLO FUTURO) ---
+      const hoy = new Date();
+      const yyyy = hoy.getFullYear();
+      const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+      const dd = String(hoy.getDate()).padStart(2, '0');
+      const fechaHoyStr = `${yyyy}-${mm}-${dd}`;
+      const horaActualStr = String(hoy.getHours()).padStart(2, '0') + ':' + String(hoy.getMinutes()).padStart(2, '0');
+
+      // Función para filtrar turnos y partidos que ya pasaron
+      const filtrarFuturos = (items) => {
+        if (!items) return [];
+        return items.filter(item => {
+          if (!item.fecha) return true; // Por seguridad si viene un dato raro
+          if (item.fecha > fechaHoyStr) return true; // Fechas futuras
+          if (item.fecha === fechaHoyStr && item.horaInicio > horaActualStr) return true; // Hoy, pero más tarde
+          return false; // Ya pasó
+        }).sort((a, b) => {
+          // Ordenamos de más próximo a más lejano
+          const fechaA = new Date(`${a.fecha}T${a.horaInicio}`);
+          const fechaB = new Date(`${b.fecha}T${b.horaInicio}`);
+          return fechaA - fechaB;
+        });
+      };
+
+      // Función para torneos (compara con la fecha de fin del torneo)
+      const filtrarTorneosActivos = (inscripciones) => {
+        if (!inscripciones) return [];
+        return inscripciones.filter(insc => {
+          if (!insc.torneo || !insc.torneo.fechaFin) return true;
+          // Mostramos el torneo si todavía no terminó (fechaFin es igual o mayor a hoy)
+          return insc.torneo.fechaFin >= fechaHoyStr;
+        });
+      };
+
+      // Guardamos la información ya filtrada en los estados
+      setMisTurnos(filtrarFuturos(respuesta.data.turnos));
+      setMisPartidos(filtrarFuturos(respuesta.data.partidos));
+      setMisTorneos(filtrarTorneosActivos(respuesta.data.torneos));
+
     } catch (err) {
       console.error("Error al cargar la actividad:", err);
       setError('No se pudo sincronizar tu historial de reservas. Volvé a intentarlo.');
@@ -95,7 +129,7 @@ const MisReservasScreen = () => {
         {/* === TAB 1: MIS TURNOS PRIVADOS === */}
         {tabActiva === 'turnos' && (
           misTurnos.length === 0 ? (
-            <div style={styles.estadoVacio}>No tenés turnos reservados actualmente. ¡Andá a la pestaña Buscar Club!</div>
+            <div style={styles.estadoVacio}>No tenés próximos turnos reservados. ¡Andá a la pestaña Buscar Club!</div>
           ) : (
             misTurnos.map((turno) => (
               <div key={turno.id} style={styles.tarjeta}>
@@ -134,7 +168,7 @@ const MisReservasScreen = () => {
         {/* === TAB 2: PARTIDOS ABIERTOS (Play & Share) === */}
         {tabActiva === 'partidos' && (
           misPartidos.length === 0 ? (
-            <div style={styles.estadoVacio}>No estás participando en ningún partido abierto por el momento.</div>
+            <div style={styles.estadoVacio}>No estás anotado en ningún próximo partido abierto.</div>
           ) : (
             misPartidos.map((partido) => {
               // En pádel juegan 4. Creador (1) + las inscripciones en la tabla puente.
@@ -184,7 +218,7 @@ const MisReservasScreen = () => {
         {/* === TAB 3: MIS TORNEOS === */}
         {tabActiva === 'torneos' && (
           misTorneos.length === 0 ? (
-            <div style={styles.estadoVacio}>No te inscribiste a ningún torneo de pádel todavía.</div>
+            <div style={styles.estadoVacio}>No te inscribiste a ningún torneo activo todavía.</div>
           ) : (
             misTorneos.map((inscripcion) => (
               <div key={inscripcion.id} style={styles.tarjeta}>
@@ -243,7 +277,7 @@ const styles = {
     borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
     paddingBottom: '16px',
     marginBottom: '32px',
-    overflowX: 'auto', // Scroll horizontal en celulares si no entran
+    overflowX: 'auto', 
   },
   tabBoton: {
     background: 'none',
