@@ -1,10 +1,14 @@
 // src/screens/PerfilScreen.jsx
 import React, { useContext, useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom'; // Agregamos useNavigate
 import { AuthContext } from '../context/AuthContext';
 import API from '../services/api';
 
 const PerfilScreen = () => {
-  const { usuario, actualizarDatosUsuario } = useContext(AuthContext);
+  // Extraemos logout del contexto
+  const { usuario, actualizarDatosUsuario, logout } = useContext(AuthContext); 
+  const navigate = useNavigate(); // Inicializamos navigate
+  
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState('');
   const [mensajeExito, setMensajeExito] = useState('');
@@ -96,6 +100,17 @@ const PerfilScreen = () => {
     }
   };
 
+  // Función agregada para manejar el cierre de sesión
+  const handleCerrarSesion = () => {
+    if (logout) {
+      logout();
+    } else {
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
+    }
+    navigate('/login');
+  };
+
   return (
     <div style={styles.contenedor}>
       <div style={styles.header}>
@@ -182,13 +197,21 @@ const PerfilScreen = () => {
             {cargando ? 'Guardando...' : 'Guardar Cambios'}
           </button>
         </form>
+
+        {/* Sección de Cerrar Sesión Agregada */}
+        <div style={styles.seccionSalir}>
+          <button type="button" onClick={handleCerrarSesion} style={styles.botonCerrarSesion}>
+            Cerrar Sesión
+          </button>
+        </div>
+
       </div>
     </div>
   );
 };
 
 const styles = {
-  contenedor: { width: '100%', boxSizing: 'border-box' },
+  contenedor: { width: '100%', boxSizing: 'border-box', padding: '24px 16px', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
   header: { borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '24px', marginBottom: '32px' },
   titulo: { fontSize: '32px', margin: '0 0 8px 0', fontWeight: '800', color: '#fff', letterSpacing: '-0.5px' },
   texto: { color: '#8A8A8A', margin: 0, fontSize: '15px' },
@@ -208,6 +231,10 @@ const styles = {
   avatarLetra: { fontSize: '40px', color: '#8A8A8A', fontWeight: 'bold' },
   imagenImagen: { width: '100%', height: '100%', objectFit: 'cover' },
   avatarOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0, 255, 102, 0.8)', color: '#000', fontSize: '12px', fontWeight: 'bold', textAlign: 'center', padding: '4px 0', opacity: 0.8 },
+  
+  // Nuevos Estilos para el botón de salida
+  seccionSalir: { marginTop: '32px', paddingTop: '24px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center' },
+  botonCerrarSesion: { padding: '14px 24px', backgroundColor: 'rgba(255, 59, 48, 0.1)', border: '1px solid rgba(255, 59, 48, 0.2)', color: '#FF3B30', borderRadius: '10px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s', width: '100%', maxWidth: '250px' }
 };
 
 export default PerfilScreen;
