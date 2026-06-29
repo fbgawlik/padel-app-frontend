@@ -7,14 +7,12 @@ const MisReservasScreen = () => {
   const { usuario } = useContext(AuthContext);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [tabActiva, setTabActiva] = useState('turnos'); // 'turnos', 'partidos', 'torneos'
+  const [tabActiva, setTabActiva] = useState('turnos');
 
-  // Estados reales conectados al backend
   const [misTurnos, setMisTurnos] = useState([]);
   const [misPartidos, setMisPartidos] = useState([]);
   const [misTorneos, setMisTorneos] = useState([]);
 
-  // Llamada al endpoint del backend para traer toda la actividad del jugador
   const cargarMiActividad = async () => {
     try {
       setLoading(true);
@@ -22,7 +20,6 @@ const MisReservasScreen = () => {
       
       const respuesta = await API.get('/turnos/mi-actividad');
       
-      // --- LÓGICA DE FILTRADO Y ORDENAMIENTO (SOLO FUTURO) ---
       const hoy = new Date();
       const yyyy = hoy.getFullYear();
       const mm = String(hoy.getMonth() + 1).padStart(2, '0');
@@ -30,33 +27,28 @@ const MisReservasScreen = () => {
       const fechaHoyStr = `${yyyy}-${mm}-${dd}`;
       const horaActualStr = String(hoy.getHours()).padStart(2, '0') + ':' + String(hoy.getMinutes()).padStart(2, '0');
 
-      // Función para filtrar turnos y partidos que ya pasaron
       const filtrarFuturos = (items) => {
         if (!items) return [];
         return items.filter(item => {
-          if (!item.fecha) return true; // Por seguridad si viene un dato raro
-          if (item.fecha > fechaHoyStr) return true; // Fechas futuras
-          if (item.fecha === fechaHoyStr && item.horaInicio > horaActualStr) return true; // Hoy, pero más tarde
-          return false; // Ya pasó
+          if (!item.fecha) return true;
+          if (item.fecha > fechaHoyStr) return true;
+          if (item.fecha === fechaHoyStr && item.horaInicio > horaActualStr) return true;
+          return false;
         }).sort((a, b) => {
-          // Ordenamos de más próximo a más lejano
           const fechaA = new Date(`${a.fecha}T${a.horaInicio}`);
           const fechaB = new Date(`${b.fecha}T${b.horaInicio}`);
           return fechaA - fechaB;
         });
       };
 
-      // Función para torneos (compara con la fecha de fin del torneo)
       const filtrarTorneosActivos = (inscripciones) => {
         if (!inscripciones) return [];
         return inscripciones.filter(insc => {
           if (!insc.torneo || !insc.torneo.fechaFin) return true;
-          // Mostramos el torneo si todavía no terminó (fechaFin es igual o mayor a hoy)
           return insc.torneo.fechaFin >= fechaHoyStr;
         });
       };
 
-      // Guardamos la información ya filtrada en los estados
       setMisTurnos(filtrarFuturos(respuesta.data.turnos));
       setMisPartidos(filtrarFuturos(respuesta.data.partidos));
       setMisTorneos(filtrarTorneosActivos(respuesta.data.torneos));
@@ -79,7 +71,7 @@ const MisReservasScreen = () => {
     return (
       <div style={styles.contenedorMensaje}>
         <div style={styles.spinner}></div>
-        <p style={{ color: '#8A8A8A', marginTop: '16px' }}>Sincronizando tus reservas con el club...</p>
+        <p style={styles.textoSincronizando}>Sincronizando tus reservas con el club...</p>
       </div>
     );
   }
@@ -87,7 +79,7 @@ const MisReservasScreen = () => {
   if (error) {
     return (
       <div style={styles.contenedorMensaje}>
-        <p style={{ color: '#ff4444', fontWeight: '600' }}>{error}</p>
+        <p style={styles.textoError}>{error}</p>
         <button onClick={cargarMiActividad} style={styles.botonReintentar}>Reintentar conexión</button>
       </div>
     );
@@ -95,41 +87,40 @@ const MisReservasScreen = () => {
 
   return (
     <div style={styles.pantallaContainer}>
-      {/* ENCABEZADO */}
+      
       <div style={styles.headerSeccion}>
         <h1 style={styles.tituloPrincipal}>Mi Actividad</h1>
         <p style={styles.subtituloPrincipal}>Consultá tus turnos reservados, partidos abiertos y torneos inscritos.</p>
       </div>
 
-      {/* SELECTOR DE TABS (ESTILO ADN PÁDEL) */}
       <div style={styles.tabsContenedor}>
         <button 
           onClick={() => setTabActiva('turnos')}
           style={{...styles.tabBoton, ...(tabActiva === 'turnos' ? styles.tabBotonActivo : {})}}
         >
-          🎾 Mis Turnos ({misTurnos.length})
+          🎾 Turnos ({misTurnos.length})
         </button>
         <button 
           onClick={() => setTabActiva('partidos')}
           style={{...styles.tabBoton, ...(tabActiva === 'partidos' ? styles.tabBotonActivo : {})}}
         >
-          🤝 Partidos Abiertos ({misPartidos.length})
+          🤝 Partidos ({misPartidos.length})
         </button>
         <button 
           onClick={() => setTabActiva('torneos')}
           style={{...styles.tabBoton, ...(tabActiva === 'torneos' ? styles.tabBotonActivo : {})}}
         >
-          🏆 Mis Torneos ({misTorneos.length})
+          🏆 Torneos ({misTorneos.length})
         </button>
       </div>
 
-      {/* CONTENIDO DENTRO DE CADA TAB */}
       <div style={styles.grillaTarjetas}>
         
-        {/* === TAB 1: MIS TURNOS PRIVADOS === */}
         {tabActiva === 'turnos' && (
           misTurnos.length === 0 ? (
-            <div style={styles.estadoVacio}>No tenés próximos turnos reservados. ¡Andá a la pestaña Buscar Club!</div>
+            <div style={styles.estadoVacio}>
+              <p style={styles.textoVacio}>No tenés próximos turnos reservados. ¡Explorá los clubes disponibles!</p>
+            </div>
           ) : (
             misTurnos.map((turno) => (
               <div key={turno.id} style={styles.tarjeta}>
@@ -137,19 +128,18 @@ const MisReservasScreen = () => {
                 <div style={styles.cuerpoTarjeta}>
                   <h3 style={styles.tituloTarjeta}>{turno.cancha?.nombre || 'Cancha Estándar'}</h3>
                   <p style={styles.subtituloTarjeta}>🏢 {turno.cancha?.complejo?.nombre}</p>
-                  <p style={{...styles.subtituloTarjeta, fontSize: '12px'}}>📍 {turno.cancha?.complejo?.direccion}</p>
+                  <p style={styles.direccionTarjeta}>📍 {turno.cancha?.complejo?.direccion}</p>
                   
                   <div style={styles.divisor}></div>
                   
                   <div style={styles.filaInfo}>
-                    <span>📅 Fecha: <strong>{turno.fecha}</strong></span>
-                    <span>⏰ Hora: <strong>{turno.horaInicio} a {turno.horaFin} hs</strong></span>
+                    <span style={styles.datoTexto}>📅 Fecha: <strong style={styles.resaltado}>{turno.fecha}</strong></span>
+                    <span style={styles.datoTexto}>⏰ Hora: <strong style={styles.resaltado}>{turno.horaInicio} a {turno.horaFin} hs</strong></span>
                   </div>
 
-                  {/* SECCIÓN DINÁMICA DE EXTRAS / CONSUMOS COMPRADOS O ALQUILADOS */}
                   {turno.consumosExtras && turno.consumosExtras.length > 0 && (
                     <div style={styles.cajaExtras}>
-                      <p style={styles.tituloExtras}>🛍️ Extras añadidos a este turno:</p>
+                      <p style={styles.tituloExtras}>🛍️ Extras añadidos:</p>
                       {turno.consumosExtras.map((item) => (
                         <div key={item.id} style={styles.itemExtra}>
                           <span style={styles.nombreExtra}>• {item.producto?.nombre} x{item.cantidad}</span>
@@ -165,13 +155,13 @@ const MisReservasScreen = () => {
           )
         )}
 
-        {/* === TAB 2: PARTIDOS ABIERTOS (Play & Share) === */}
         {tabActiva === 'partidos' && (
           misPartidos.length === 0 ? (
-            <div style={styles.estadoVacio}>No estás anotado en ningún próximo partido abierto.</div>
+            <div style={styles.estadoVacio}>
+              <p style={styles.textoVacio}>No estás anotado en ningún próximo partido abierto.</p>
+            </div>
           ) : (
             misPartidos.map((partido) => {
-              // En pádel juegan 4. Creador (1) + las inscripciones en la tabla puente.
               const jugadoresActuales = 1 + (partido.inscripcionesPartido?.length || 0);
               const esOrganizador = partido.jugadorId === usuario.id;
 
@@ -179,30 +169,30 @@ const MisReservasScreen = () => {
                 <div key={partido.id} style={styles.tarjeta}>
                   <span style={{
                     ...styles.badgeEstado, 
-                    backgroundColor: esOrganizador ? 'rgba(0, 153, 255, 0.1)' : 'rgba(0, 255, 102, 0.1)',
-                    color: esOrganizador ? '#0099ff' : '#00ff66',
-                    borderColor: esOrganizador ? 'rgba(0, 153, 255, 0.2)' : 'rgba(0, 255, 102, 0.2)'
+                    backgroundColor: esOrganizador ? 'rgba(0, 204, 255, 0.08)' : 'rgba(57, 255, 20, 0.08)',
+                    color: esOrganizador ? '#00ccff' : '#39FF14',
+                    borderColor: esOrganizador ? 'rgba(0, 204, 255, 0.15)' : 'rgba(57, 255, 20, 0.15)'
                   }}>
                     {esOrganizador ? 'ORGANIZADOR' : 'INSCRIPTO'}
                   </span>
                   <div style={styles.cuerpoTarjeta}>
                     <h3 style={styles.tituloTarjeta}>Partido Abierto: {partido.cancha?.nombre}</h3>
                     <p style={styles.subtituloTarjeta}>🏢 Club: {partido.cancha?.complejo?.nombre}</p>
-                    <p style={{...styles.subtituloTarjeta, fontSize: '13px', color: '#00ff66'}}>
+                    <p style={{...styles.subtituloTarjeta, color: esOrganizador ? '#00ccff' : '#39FF14', fontWeight: '500'}}>
                       👤 Organiza: {esOrganizador ? 'Vos' : `${partido.jugador?.nombre} ${partido.jugador?.apellido}`}
                     </p>
                     
                     <div style={styles.divisor}></div>
                     
                     <div style={styles.filaInfo}>
-                      <span>📅 {partido.fecha}</span>
-                      <span>⏰ {partido.horaInicio} hs</span>
+                      <span style={styles.datoTexto}>📅 {partido.fecha}</span>
+                      <span style={styles.datoTexto}>⏰ {partido.horaInicio} hs</span>
                     </div>
 
                     <div style={styles.contenedorProgreso}>
                       <div style={styles.filaProgresoTexto}>
                         <span>Cupos ocupados</span>
-                        <strong>{jugadoresActuales} / 4 Jugadores</strong>
+                        <strong style={styles.resaltadoProgreso}>{jugadoresActuales} / 4 Jugadores</strong>
                       </div>
                       <div style={styles.barraProgresoFondo}>
                         <div style={{...styles.barraProgresoRelleno, width: `${(jugadoresActuales / 4) * 100}%`}}></div>
@@ -215,27 +205,26 @@ const MisReservasScreen = () => {
           )
         )}
 
-        {/* === TAB 3: MIS TORNEOS === */}
         {tabActiva === 'torneos' && (
           misTorneos.length === 0 ? (
-            <div style={styles.estadoVacio}>No te inscribiste a ningún torneo activo todavía.</div>
+            <div style={styles.estadoVacio}>
+              <p style={styles.textoVacio}>No te inscribiste a ningún torneo activo todavía.</p>
+            </div>
           ) : (
             misTorneos.map((inscripcion) => (
               <div key={inscripcion.id} style={styles.tarjeta}>
-                <span style={{...styles.badgeEstado, backgroundColor: 'rgba(255, 170, 0, 0.1)', color: '#ffaa00', borderColor: 'rgba(255, 170, 0, 0.2)'}}>
-                  COMPETENCIA
-                </span>
+                <span style={styles.badgeTorneo}>COMPETENCIA</span>
                 <div style={styles.cuerpoTarjeta}>
                   <h3 style={styles.tituloTarjeta}>{inscripcion.torneo?.nombre}</h3>
                   <p style={styles.subtituloTarjeta}>🏢 Sede: {inscripcion.torneo?.complejo?.nombre}</p>
-                  <p style={{...styles.subtituloTarjeta, color: '#ffaa00', fontWeight: 'bold'}}>🏆 Categoría anotada: {inscripcion.categoria}</p>
+                  <p style={styles.categoriaTexto}>🏆 Categoría: {inscripcion.categoria}</p>
                   
                   <div style={styles.divisor}></div>
                   
                   <div style={styles.filaInfo}>
-                    <span>👥 Pareja: <strong>{inscripcion.jugador1} y {inscripcion.jugador2}</strong></span>
+                    <span style={styles.datoTexto}>👥 Pareja: <strong style={styles.resaltado}>{inscripcion.jugador1} y {inscripcion.jugador2}</strong></span>
                   </div>
-                  <div style={{...styles.filaInfo, marginTop: '8px', fontSize: '13px', color: '#8A8A8A'}}>
+                  <div style={styles.cronogramaFila}>
                     <span>📅 Cronograma: {inscripcion.torneo?.fechaInicio} al {inscripcion.torneo?.fechaFin}</span>
                   </div>
                 </div>
@@ -249,198 +238,267 @@ const MisReservasScreen = () => {
   );
 };
 
-// === ESTILOS VISUALES PREMIUM (ADN PÁDEL DARK MODE) ===
 const styles = {
   pantallaContainer: {
-    padding: '40px 24px',
-    minHeight: '100vh',
-    backgroundColor: '#0A0A0A',
+    padding: '16px 20px',
+    boxSizing: 'border-box',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   },
   headerSeccion: {
-    marginBottom: '32px',
+    marginBottom: '28px'
   },
   tituloPrincipal: {
-    fontSize: '28px',
+    fontSize: '34px',
     fontWeight: '800',
     color: '#ffffff',
-    margin: '0 0 8px 0',
-    letterSpacing: '-0.5px',
+    margin: '0 0 6px 0',
+    letterSpacing: '-0.8px'
   },
   subtituloPrincipal: {
     fontSize: '15px',
-    color: '#8A8A8A',
+    color: '#8E8E93',
     margin: 0,
+    letterSpacing: '-0.2px',
+    lineHeight: '1.4'
   },
   tabsContenedor: {
     display: 'flex',
-    gap: '12px',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-    paddingBottom: '16px',
+    gap: '6px',
+    backgroundColor: '#121214',
+    padding: '6px',
+    borderRadius: '24px',
     marginBottom: '32px',
-    overflowX: 'auto', 
+    overflowX: 'auto',
+    border: '1px solid rgba(255, 255, 255, 0.04)',
+    WebkitOverflowScrolling: 'touch',
+    msOverflowStyle: 'none',
+    scrollbarWidth: 'none'
   },
   tabBoton: {
     background: 'none',
     border: 'none',
-    color: '#8A8A8A',
-    padding: '10px 20px',
-    fontSize: '14px',
+    color: '#8E8E93',
+    padding: '12px 18px',
+    fontSize: '13px',
     fontWeight: '600',
     cursor: 'pointer',
-    borderRadius: '8px',
+    borderRadius: '18px',
     transition: 'all 0.2s ease',
     whiteSpace: 'nowrap',
+    flex: 1,
+    textAlign: 'center'
   },
   tabBotonActivo: {
-    backgroundColor: 'rgba(0, 255, 102, 0.08)',
-    color: '#00ff66',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    color: '#ffffff',
     fontWeight: '700',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
   },
   grillaTarjetas: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))',
-    gap: '24px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px'
   },
   tarjeta: {
-    backgroundColor: '#121212',
-    borderRadius: '16px',
-    border: '1px solid rgba(255, 255, 255, 0.03)',
+    backgroundColor: '#121214',
+    borderRadius: '28px',
+    border: '1px solid rgba(255, 255, 255, 0.04)',
     position: 'relative',
     overflow: 'hidden',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+    boxShadow: '0 12px 32px rgba(0, 0, 0, 0.2)'
   },
   cuerpoTarjeta: {
-    padding: '24px',
+    padding: '24px 22px'
   },
   badgeEstado: {
     position: 'absolute',
-    top: '20px',
-    right: '20px',
-    backgroundColor: 'rgba(0, 255, 102, 0.1)',
-    color: '#00ff66',
-    border: '1px solid rgba(0, 255, 102, 0.2)',
-    padding: '4px 10px',
-    borderRadius: '20px',
+    top: '22px',
+    right: '22px',
+    backgroundColor: 'rgba(57, 255, 20, 0.08)',
+    color: '#39FF14',
+    border: '1px solid rgba(57, 255, 20, 0.15)',
+    padding: '6px 12px',
+    borderRadius: '99px',
     fontSize: '11px',
     fontWeight: '700',
-    letterSpacing: '0.5px',
+    letterSpacing: '0.4px'
+  },
+  badgeTorneo: {
+    position: 'absolute',
+    top: '22px',
+    right: '22px',
+    backgroundColor: 'rgba(255, 159, 10, 0.08)',
+    color: '#FF9F0A',
+    border: '1px solid rgba(255, 159, 10, 0.15)',
+    padding: '6px 12px',
+    borderRadius: '99px',
+    fontSize: '11px',
+    fontWeight: '700',
+    letterSpacing: '0.4px'
   },
   tituloTarjeta: {
-    fontSize: '18px',
-    fontWeight: '800',
-    color: '#fff',
+    fontSize: '19px',
+    fontWeight: '700',
+    color: '#ffffff',
     margin: '0 0 6px 0',
-    paddingRight: '90px',
+    paddingRight: '110px',
+    letterSpacing: '-0.3px'
   },
   subtituloTarjeta: {
     fontSize: '14px',
-    color: '#8A8A8A',
+    color: '#8E8E93',
     margin: '0 0 4px 0',
+    letterSpacing: '-0.1px'
+  },
+  direccionTarjeta: {
+    fontSize: '12px',
+    color: '#8E8E93',
+    margin: 0,
+    letterSpacing: '-0.1px'
   },
   divisor: {
     height: '1px',
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    margin: '16px 0',
+    margin: '18px 0'
   },
   filaInfo: {
     display: 'flex',
     justifyContent: 'space-between',
-    fontSize: '14px',
-    color: '#EAEAEA',
+    gap: '12px'
   },
-  estadoVacio: {
-    gridColumn: '1 / -1',
-    textAlign: 'center',
-    padding: '60px 20px',
-    backgroundColor: '#121212',
-    border: '1px dashed rgba(255, 255, 255, 0.05)',
-    borderRadius: '16px',
-    color: '#8A8A8A',
-    fontSize: '14px',
+  datoTexto: {
+    fontSize: '13px',
+    color: '#8E8E93'
+  },
+  resaltado: {
+    color: '#ffffff',
+    fontWeight: '600'
   },
   cajaExtras: {
-    marginTop: '20px',
-    backgroundColor: 'rgba(0, 255, 102, 0.02)',
-    border: '1px dashed rgba(0, 255, 102, 0.15)',
-    borderRadius: '10px',
-    padding: '14px',
+    marginTop: '18px',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    border: '1px dashed rgba(255, 255, 255, 0.08)',
+    borderRadius: '16px',
+    padding: '14px 16px'
   },
   tituloExtras: {
     margin: '0 0 10px 0',
-    fontSize: '13px',
+    fontSize: '12px',
     fontWeight: '700',
-    color: '#00ff66',
+    color: '#ffffff',
+    textTransform: 'uppercase',
+    letterSpacing: '0.3px'
   },
   itemExtra: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     fontSize: '13px',
-    marginBottom: '8px',
-    color: '#EAEAEA',
+    marginBottom: '6px',
+    color: '#ffffff'
   },
   nombreExtra: {
     flex: 1,
+    color: '#8E8E93'
   },
   badgeTipoExtra: {
     fontSize: '10px',
-    backgroundColor: '#222',
-    color: '#aaa',
-    padding: '2px 6px',
-    borderRadius: '4px',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    color: '#8E8E93',
+    padding: '3px 8px',
+    borderRadius: '6px',
     marginRight: '12px',
+    fontWeight: '600'
   },
   precioExtra: {
     fontWeight: '700',
-    color: '#fff',
+    color: '#ffffff'
   },
   contenedorProgreso: {
-    marginTop: '20px',
+    marginTop: '20px'
   },
   filaProgresoTexto: {
     display: 'flex',
     justifyContent: 'space-between',
     fontSize: '12px',
-    color: '#8A8A8A',
-    marginBottom: '6px',
+    color: '#8E8E93',
+    marginBottom: '8px'
+  },
+  resaltadoProgreso: {
+    color: '#ffffff',
+    fontWeight: '600'
   },
   barraProgresoFondo: {
     height: '6px',
-    backgroundColor: '#222',
-    borderRadius: '10px',
-    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    borderRadius: '99px',
+    overflow: 'hidden'
   },
   barraProgresoRelleno: {
     height: '100%',
-    backgroundColor: '#00ff66',
-    borderRadius: '10px',
+    backgroundColor: '#39FF14',
+    borderRadius: '99px',
     transition: 'width 0.3s ease',
+    boxShadow: '0 0 12px rgba(57, 255, 20, 0.4)'
+  },
+  categoriaTexto: {
+    fontSize: '14px', 
+    color: '#FF9F0A', 
+    fontWeight: '600',
+    margin: '4px 0 0 0'
+  },
+  cronogramaFila: {
+    marginTop: '10px', 
+    fontSize: '12px', 
+    color: '#8E8E93'
   },
   contenedorMensaje: {
-    height: '80vh',
+    height: '75vh',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#0A0A0A',
+    alignItems: 'center'
   },
-  spinner: {
-    width: '40px',
-    height: '40px',
-    border: '3px solid rgba(0, 255, 102, 0.1)',
-    borderTop: '3px solid #00ff66',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite',
+  textoSincronizando: { 
+    color: '#8E8E93', 
+    marginTop: '16px',
+    fontSize: '15px'
+  },
+  textoError: { 
+    color: '#FF453A', 
+    fontWeight: '600',
+    fontSize: '15px'
   },
   botonReintentar: {
     marginTop: '20px',
-    backgroundColor: '#161616',
-    color: '#fff',
-    border: '1px solid rgba(255,255,255,0.1)',
-    padding: '10px 20px',
-    borderRadius: '8px',
+    backgroundColor: '#121214',
+    color: '#ffffff',
+    border: '1px solid rgba(255,255,255,0.05)',
+    padding: '12px 24px',
+    borderRadius: '16px',
     cursor: 'pointer',
-    fontWeight: '600',
+    fontWeight: '700',
+    fontSize: '14px'
+  },
+  estadoVacio: {
+    textAlign: 'center',
+    padding: '60px 20px',
+    backgroundColor: '#121214',
+    border: '1px dashed rgba(255, 255, 255, 0.05)',
+    borderRadius: '24px'
+  },
+  textoVacio: {
+    color: '#8E8E93',
+    fontSize: '14px',
+    margin: 0,
+    lineHeight: '1.4'
+  },
+  spinner: {
+    width: '32px',
+    height: '32px',
+    border: '3px solid rgba(57, 255, 20, 0.1)',
+    borderTop: '3px solid #39FF14',
+    borderRadius: '50%'
   }
 };
 
