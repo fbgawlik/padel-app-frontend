@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../services/api';
 
+const BACKEND_URL = 'https://padel-api-backend-production.up.railway.app';
+
 const ReservarTurnoScreen = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -17,16 +19,32 @@ const ReservarTurnoScreen = () => {
     return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
   };
 
+  // Generador dinámico de los próximos 7 días para el carrusel horizontal
+  const generarProximosDias = () => {
+    const dias = [];
+    for (let i = 0; i < 7; i++) {
+      const hoy = new Date();
+      hoy.setDate(hoy.getDate() + i);
+      const yyyy = hoy.getFullYear();
+      const mm = String(hoy.getMonth() + 1).padStart(2, '0');
+      const dd = String(hoy.getDate()).padStart(2, '0');
+      
+      const fechaStr = `${yyyy}-${mm}-${dd}`;
+      const nombreDia = hoy.toLocaleDateString('es-ES', { weekday: 'short' }).replace('.', '');
+      const numeroDia = hoy.getDate();
+      
+      dias.push({ fechaStr, nombreDia, numeroDia });
+    }
+    return dias;
+  };
+
   const [canchaSeleccionada, setCanchaSeleccionada] = useState(null);
   const [fechaSeleccionada, setFechaSeleccionada] = useState(obtenerFechaHoy());
   
-  // Guardarán el rango del bloque completo
   const [horaInicio, setHoraInicio] = useState("");
   const [horaFin, setHoraFin] = useState("");
-  
   const [esPartidoAbierto, setEsPartidoAbierto] = useState(false);
 
-  // Generamos bloques de 1 hora fija para la grilla visual de botones
   const generarSlotsHorarios = () => {
     const slots = [];
     for (let h = 8; h <= 23; h++) {
@@ -70,7 +88,6 @@ const ReservarTurnoScreen = () => {
     cargarTurnos();
   }, [canchaSeleccionada, fechaSeleccionada, complejo]);
 
-  // 🛠️ COMPROBACIÓN DINÁMICA: Revisa solapamientos con reservas existentes en la BD
   const comprobarSlotOcupado = (inicio, fin) => {
     const [hI, mI] = inicio.split(':').map(Number);
     const [hF, mF] = fin.split(':').map(Number);
@@ -88,42 +105,32 @@ const ReservarTurnoScreen = () => {
     });
   };
 
-  // 🔥 MANEJADOR DE SELECCIÓN MULTI-SLOT INTELIGENTE
   const seleccionarSlotHorario = (slot) => {
     if (!horaInicio) {
-      // Caso 1: No hay nada seleccionado, marcamos el bloque de 1 hora inicial
       setHoraInicio(slot.inicio);
       setHoraFin(slot.fin);
     } else {
-      // Caso 2: Ya había un bloque seleccionado previamente
       const [hClickIn] = slot.inicio.split(':').map(Number);
       const [hSelIn] = horaInicio.split(':').map(Number);
 
       if (hClickIn >= hSelIn) {
-        // Si el click es posterior o igual, intentamos extender el rango hacia adelante
-        // Validamos que no existan reservas ajenas ocupando el medio del nuevo rango extendido
         const hayBloqueadoEnMedio = comprobarSlotOcupado(horaInicio, slot.fin);
-        
         if (hayBloqueadoEnMedio) {
-          // Si hay un turno ocupado en el medio, no podemos extender. Reseteeamos la selección a este nuevo slot
           setHoraInicio(slot.inicio);
           setHoraFin(slot.fin);
         } else {
-          // Rango limpio, extendemos el horario de finalización con éxito
           setHoraFin(slot.fin);
         }
       } else {
-        // Caso 3: El click es anterior al inicio actual, reseteamos el bloque comenzando en este slot
         setHoraInicio(slot.inicio);
         setHoraFin(slot.fin);
       }
     }
   };
 
- const gestionarConfirmacionReserva = async () => {
+  const gestionarConfirmacionReserva = async () => {
     if (!horaInicio || !horaFin) return;
     try {
-      // 🔥 CAMBIO REST: Enviamos POST a la colección de turnos directamente
       await API.post('/turnos', {
         canchaId: canchaSeleccionada.id, 
         fecha: fechaSeleccionada, 
@@ -152,13 +159,9 @@ const ReservarTurnoScreen = () => {
     if (!window.confirm(`¿Confirmar ${accion} de "${producto.nombre}"?`)) return;
 
     try {
-      // 🔥 CAMBIO 1: Usamos producto.id en lugar de id (complejo)
-      // 🔥 CAMBIO 2: Añadimos un turnoId temporal (o el que corresponda si ya hay reserva)
-      // Nota: Si el usuario DEBE reservar primero, esta lógica debería cambiar
-      // para habilitarse solo DESPUÉS de tener un turnoId.
       await API.post(`/productos/${producto.id}/ventas`, { 
-        cantidad: 1, // Cambiado a 1 asumiendo que compras 1 por click, ajusta si es necesario
-        turnoId: "turno_temporal_pendiente_de_reserva" // O ajusta el backend para que sea opcional
+        cantidad: 1, 
+        turnoId: "turno_temporal_pendiente_de_reserva" 
       });
       
       setComplejo(prev => ({
@@ -171,20 +174,20 @@ const ReservarTurnoScreen = () => {
       alert(`¡${accion.charAt(0).toUpperCase() + accion.slice(1)} exitosa! Retiralo por la cantina el día de tu partido.`);
     } catch (error) {
       console.error("Error al procesar la transacción:", error);
-      alert("Error al procesar la operación. Verifica la consola.");
+      alert("Error al procesar la operación.");
     }
   };
 
   if (loading) return (
     <div style={styles.estadoVacio}>
       <div style={styles.spinner}></div>
-      <p>Cargando disponibilidad...</p>
+      <p style={{color: '#8E8E93', fontSize: '15px'}}>Buscando canchas libres...</p>
     </div>
   );
   
   if (error || !complejo) return (
     <div style={styles.estadoVacio}>
-      <p>{error || "Complejo no encontrado"}</p>
+      <p>{error || "Club no encontrado"}</p>
     </div>
   );
 
@@ -192,204 +195,192 @@ const ReservarTurnoScreen = () => {
 
   return (
     <div style={styles.contenedor}>
-      <button onClick={() => navigate('/turnos')} style={styles.botonVolver}>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '8px'}}>
+      
+      {/* BOTÓN VOLVER PREMIUM */}
+      <button onClick={() => navigate(-1)} style={styles.botonVolver}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <line x1="19" y1="12" x2="5" y2="12"></line>
           <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
-        Volver a buscar complejos
       </button>
 
+      {/* HEADER DEL CLUB */}
       <div style={styles.headerClub}>
         <h1 style={styles.tituloClub}>{complejo.nombre}</h1>
-        <p style={styles.infoClub}>
-          <span style={styles.iconoGris}>📍</span> {complejo.direccion}
-        </p>
+        <p style={styles.infoClub}>📍 {complejo.direccion}</p>
       </div>
 
-      <div style={styles.panelReserva}>
-        {/* COLUMNA 1: CANCHAS */}
-        <div style={styles.columna}>
-          <h3 style={styles.subtitulo}>1. Seleccioná la Cancha</h3>
-          <div style={styles.listaCanchas}>
-            {complejo.canchas?.map((cancha) => {
-              const seleccionada = canchaSeleccionada?.id === cancha.id;
-              return (
-                <div 
-                  key={cancha.id} 
-                  style={{
-                    ...styles.tarjetaCancha, 
-                    borderColor: seleccionada ? '#00ff66' : 'rgba(255,255,255,0.05)',
-                    backgroundColor: seleccionada ? 'rgba(0, 255, 102, 0.05)' : '#121212',
-                  }} 
-                  onClick={() => {
-                    setCanchaSeleccionada(cancha);
-                    setHoraInicio(""); 
-                    setHoraFin("");
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{...styles.iconoCancha, opacity: seleccionada ? 1 : 0.5}}>🎾</div>
-                    <div>
-                      <h4 style={{ margin: 0, fontSize: '16px', color: seleccionada ? '#fff' : '#aaa' }}>{cancha.nombre}</h4>
-                    </div>
-                  </div>
-                  {seleccionada && (
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#00ff66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* COLUMNA 2: HORARIOS CON EXTENSIÓN MULTIPLE */}
-        <div style={styles.columna}>
-          <h3 style={styles.subtitulo}>2. Fecha y Horario</h3>
-          
-          <div style={styles.grupoInput}>
-            <label style={styles.labelInput}>Fecha del Partido</label>
-            <input 
-              type="date" 
-              value={fechaSeleccionada} 
-              min={obtenerFechaHoy()} 
-              onChange={(e) => {
-                setFechaSeleccionada(e.target.value);
-                setHoraInicio(""); 
-                setHoraFin("");
-              }} 
-              style={styles.inputPicker} 
-            />
-          </div>
-
-          <div style={{ marginTop: '12px' }}>
-            <label style={styles.labelInput}>Horarios Disponibles (Hacé click para extender las horas)</label>
-            <div style={styles.grillaHorarios}>
-              {generarSlotsHorarios().map(slot => {
-                const ocupado = comprobarSlotOcupado(slot.inicio, slot.fin);
-                
-                // Un slot se ilumina si está contenido dentro del rango seleccionado
-                const seleccionado = horaInicio && horaFin && (slot.inicio >= horaInicio && slot.fin <= horaFin);
-
-                return (
-                  <button
-                    key={slot.inicio}
-                    disabled={ocupado}
-                    onClick={() => seleccionarSlotHorario(slot)}
-                    style={{
-                      ...styles.botonSlot,
-                      ...(ocupado 
-                        ? styles.slotOcupado 
-                        : seleccionado 
-                          ? styles.slotSeleccionado 
-                          : styles.slotDisponible)
-                    }}
-                  >
-                    {slot.inicio}
-                    {ocupado && <span style={styles.textoOcupadoLabel}>Ocupado</span>}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          
-          {/* CHECKBOX PARTIDO ABIERTO */}
-          <div style={styles.tarjetaPartidoAbierto}>
-            <label htmlFor="partidoAbierto" style={styles.labelPartidoAbierto}>
-              <div style={styles.textoPartidoAbierto}>
-                <span style={styles.tituloPartidoAbierto}>Crear "Partido Abierto"</span>
-                <span style={styles.descPartidoAbierto}>Hace público tu turno para que otros jugadores se sumen.</span>
-              </div>
-              <input
-                type="checkbox"
-                id="partidoAbierto"
-                checked={esPartidoAbierto}
-                onChange={(e) => setEsPartidoAbierto(e.target.checked)}
-                style={styles.checkboxPremium}
-              />
-            </label>
-          </div>
-
-          <button 
-            onClick={gestionarConfirmacionReserva} 
-            disabled={!horaInicio || !horaFin} 
-            style={{
-              ...styles.botonReservar,
-              opacity: (horaInicio && horaFin) ? 1 : 0.4,
-              cursor: (horaInicio && horaFin) ? 'pointer' : 'not-allowed'
-            }}
-          >
-            {(horaInicio && horaFin) 
-              ? `Reservar de ${horaInicio} a ${horaFin} hs` 
-              : "Seleccioná un Horario"
-            }
-          </button>
+      {/* PASO 1: SELECCIÓN DE CANCHA (Horizontal Scroll) */}
+      <div style={styles.seccionContenedor}>
+        <h3 style={styles.subtituloSeccion}>1. Selecciona la Cancha</h3>
+        <div style={styles.scrollHorizontal}>
+          {complejo.canchas?.map((cancha) => {
+            const seleccionada = canchaSeleccionada?.id === cancha.id;
+            return (
+              <button 
+                key={cancha.id} 
+                onClick={() => {
+                  setCanchaSeleccionada(cancha);
+                  setHoraInicio(""); 
+                  setHoraFin("");
+                }}
+                style={{
+                  ...styles.pildoraCancha,
+                  backgroundColor: seleccionada ? 'rgba(57, 255, 20, 0.1)' : 'rgba(255,255,255,0.04)',
+                  borderColor: seleccionada ? '#39FF14' : 'rgba(255,255,255,0.06)',
+                  color: seleccionada ? '#39FF14' : '#fff'
+                }}
+              >
+                <span style={{ fontSize: '16px' }}>🎾</span>
+                <span style={{ fontWeight: '600' }}>{cancha.nombre}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* SECCIÓN DE TIENDA Y CANTINA INTEGRADA */}
+      {/* PASO 2: SELECTOR DE FECHAS PREMIUM (Horizontal Scroll) */}
+      <div style={styles.seccionContenedor}>
+        <h3 style={styles.subtituloSeccion}>2. Selecciona el Día</h3>
+        <div style={styles.scrollHorizontal}>
+          {generarProximosDias().map((dia) => {
+            const esSeleccionado = fechaSeleccionada === dia.fechaStr;
+            return (
+              <button
+                key={dia.fechaStr}
+                onClick={() => {
+                  setFechaSeleccionada(dia.fechaStr);
+                  setHoraInicio(""); 
+                  setHoraFin("");
+                }}
+                style={{
+                  ...styles.tarjetaFecha,
+                  backgroundColor: esSeleccionado ? '#39FF14' : '#161618',
+                  border: esSeleccionado ? '1px solid #39FF14' : '1px solid rgba(255,255,255,0.04)'
+                }}
+              >
+                <span style={{ 
+                  ...styles.nombreDiaTexto, 
+                  color: esSeleccionado ? '#0F0F10' : '#8E8E93' 
+                }}>
+                  {dia.nombreDia.toUpperCase()}
+                </span>
+                <span style={{ 
+                  ...styles.numeroDiaTexto, 
+                  color: esSeleccionado ? '#0F0F10' : '#fff' 
+                }}>
+                  {dia.numeroDia}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* PASO 3: GRID DE HORARIOS DISPONIBLES */}
+      <div style={styles.seccionContenedor}>
+        <h3 style={styles.subtituloSeccion}>3. Elige tu Horario</h3>
+        <p style={styles.ayudaTexto}>Toca una hora de inicio y otra de fin para reservar bloques más largos.</p>
+        
+        <div style={styles.grillaHorarios}>
+          {generarSlotsHorarios().map(slot => {
+            const ocupado = comprobarSlotOcupado(slot.inicio, slot.fin);
+            const seleccionado = horaInicio && horaFin && (slot.inicio >= horaInicio && slot.fin <= horaFin);
+
+            return (
+              <button
+                key={slot.inicio}
+                disabled={ocupado}
+                onClick={() => seleccionarSlotHorario(slot)}
+                style={{
+                  ...styles.botonSlot,
+                  ...(ocupado 
+                    ? styles.slotOcupado 
+                    : seleccionado 
+                      ? styles.slotSeleccionado 
+                      : styles.slotDisponible)
+                }}
+              >
+                <span style={styles.slotHoraTexto}>{slot.inicio}</span>
+                {ocupado && <span style={styles.textoOcupadoLabel}>Ocupado</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* SWITCH DE PARTIDO ABIERTO */}
+      <div style={styles.tarjetaPartidoAbierto}>
+        <div style={styles.textoPartidoAbierto}>
+          <span style={styles.tituloPartidoAbierto}>¿Crear Partido Abierto?</span>
+          <span style={styles.descPartidoAbierto}>Cualquier jugador podrá unirse a los lugares libres.</span>
+        </div>
+        <input
+          type="checkbox"
+          id="partidoAbierto"
+          checked={esPartidoAbierto}
+          onChange={(e) => setEsPartidoAbierto(e.target.checked)}
+          style={styles.checkboxPremium}
+        />
+      </div>
+
+      {/* BOTÓN DE RESERVA FIJO / PRINCIPAL */}
+      <div style={{ margin: '24px 0 40px 0' }}>
+        <button 
+          onClick={gestionarConfirmacionReserva} 
+          disabled={!horaInicio || !horaFin} 
+          style={{
+            ...styles.botonReservar,
+            backgroundColor: (horaInicio && horaFin) ? '#39FF14' : 'rgba(255,255,255,0.05)',
+            color: (horaInicio && horaFin) ? '#0F0F10' : '#555',
+            cursor: (horaInicio && horaFin) ? 'pointer' : 'not-allowed'
+          }}
+        >
+          {(horaInicio && horaFin) 
+            ? `Confirmar Reserva (${horaInicio} a ${horaFin} hs)` 
+            : "Selecciona un Horario"
+          }
+        </button>
+      </div>
+
+      {/* SECCIÓN TIENDA / CANTINA */}
       <div style={styles.seccionTiendaWrapper}>
-        <div style={{ display: 'flex', flexDirection: 'column', marginBottom: '24px' }}>
-          <h3 style={styles.subtituloTienda}>🛒 Extras: Tienda y Cantina</h3>
-          <p style={{ color: '#8A8A8A', fontSize: '14px', margin: 0 }}>
-            ¿Te falta paleta o querés dejar paga la bebida? Agregalo a tu turno.
-          </p>
-        </div>
+        <h3 style={styles.subtituloSeccion}>🛒 Extras para tu partido</h3>
+        <p style={{ color: '#8E8E93', fontSize: '13px', margin: '0 0 16px 0' }}>Agrega palas o bebidas para retirar al llegar.</p>
 
         {listaProductos.length === 0 ? (
-          <div style={styles.tiendaEstadoVacio}>
-            <span style={{ fontSize: '40px', marginBottom: '16px', display: 'block' }}>🎒</span>
-            <h4 style={{ margin: '0 0 8px 0', color: '#EAEAEA' }}>Sin productos por ahora</h4>
-            <p style={{ color: '#8A8A8A', margin: 0, fontSize: '14px' }}>Este club no tiene cargados productos para alquiler o venta.</p>
-          </div>
+          <p style={styles.textoVacio}>No hay extras disponibles para este club.</p>
         ) : (
           <div style={styles.grillaTienda}>
             {listaProductos.map(p => {
               const agotado = p.stock <= 0;
               return (
-                <div key={p.id} style={{ ...styles.tarjetaProducto, opacity: agotado ? 0.6 : 1 }}>
-                  <div style={styles.imagenPlaceholder}>
-                    {p.esAlquiler ? '🎾' : '🥤'}
-                    <div style={{ position: 'absolute', top: '12px', right: '12px' }}>
+                <div key={p.id} style={{ ...styles.tarjetaProducto, opacity: agotado ? 0.5 : 1 }}>
+                  <div style={styles.infoProductoHorizontal}>
+                    <div style={styles.iconoTienda}>{p.esAlquiler ? '🎾' : '🥤'}</div>
+                    <div style={{ flex: 1 }}>
+                      <h4 style={styles.nombreProducto}>{p.nombre}</h4>
                       <span style={{ 
                         ...styles.badgeTipo, 
-                        backgroundColor: p.esAlquiler ? 'rgba(0, 204, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)', 
-                        color: p.esAlquiler ? '#00ccff' : '#aaa' 
+                        color: p.esAlquiler ? '#00ccff' : '#8E8E93' 
                       }}>
-                        {p.esAlquiler ? '🔄 ALQUILER' : '🛒 VENTA'}
+                        {p.esAlquiler ? '🔄 Alquiler' : '🛒 Compra'}
                       </span>
                     </div>
-                  </div>
-
-                  <div style={styles.infoProductoContainer}>
-                    <h4 style={styles.nombreProducto}>{p.nombre}</h4>
-                    <div style={styles.precioProducto}>${p.precio}</div>
-                    
-                    <div style={styles.stockContenedor}>
-                      <span style={{ 
-                        ...styles.badgeStock, 
-                        backgroundColor: agotado ? 'rgba(255, 51, 51, 0.1)' : 'rgba(0, 255, 102, 0.1)', 
-                        color: agotado ? '#ff4d4d' : '#00ff66' 
-                      }}>
-                        {agotado ? 'Agotado' : `${p.stock} u.`}
-                      </span>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={styles.precioProducto}>${p.precio}</div>
+                      <button 
+                        disabled={agotado}
+                        onClick={() => gestionarCompraProducto(p)}
+                        style={{ 
+                          ...styles.botonAccionTienda,
+                          backgroundColor: agotado ? 'transparent' : 'rgba(57, 255, 20, 0.1)',
+                          color: agotado ? '#555' : '#39FF14'
+                        }}
+                      >
+                        {agotado ? 'Agotado' : 'Agregar'}
+                      </button>
                     </div>
-
-                    <button 
-                      disabled={agotado}
-                      onClick={() => gestionarCompraProducto(p)}
-                      style={{ 
-                        ...styles.botonAccion, 
-                        backgroundColor: agotado ? '#1A1A1A' : 'rgba(0, 255, 102, 0.1)', 
-                        color: agotado ? '#555' : '#00ff66',
-                        cursor: agotado ? 'not-allowed' : 'pointer',
-                        border: agotado ? '1px solid transparent' : '1px solid rgba(0, 255, 102, 0.3)'
-                      }}
-                    >
-                      {agotado ? 'Sin stock' : (p.esAlquiler ? 'Alquilar' : 'Comprar')}
-                    </button>
                   </div>
                 </div>
               );
@@ -402,115 +393,147 @@ const ReservarTurnoScreen = () => {
 };
 
 const styles = {
-  contenedor: { width: '100%', boxSizing: 'border-box' },
+  contenedor: { 
+    padding: '16px', 
+    boxSizing: 'border-box',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+  },
   botonVolver: { 
-    display: 'flex', alignItems: 'center', backgroundColor: 'transparent', 
-    color: '#8A8A8A', border: 'none', cursor: 'pointer', marginBottom: '24px', 
-    fontSize: '14px', fontWeight: '600', padding: 0, transition: 'color 0.2s' 
+    backgroundColor: '#161618', 
+    color: '#fff', 
+    border: '1px solid rgba(255,255,255,0.05)', 
+    cursor: 'pointer', 
+    marginBottom: '16px', 
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
   },
-  headerClub: { borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '24px', marginBottom: '32px' },
-  tituloClub: { fontSize: '36px', margin: '0 0 8px 0', fontWeight: '800', letterSpacing: '-0.5px', color: '#fff' },
-  infoClub: { color: '#8A8A8A', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 },
-  iconoGris: { opacity: 0.7 },
+  headerClub: { marginBottom: '24px' },
+  tituloClub: { fontSize: '28px', margin: '0 0 6px 0', fontWeight: '800', color: '#fff', letterSpacing: '-0.5px' },
+  infoClub: { color: '#8E8E93', fontSize: '14px', margin: 0 },
   
-  panelReserva: { display: 'flex', gap: '40px', flexWrap: 'wrap' },
-  columna: { flex: 1, minWidth: '300px', display: 'flex', flexDirection: 'column', gap: '16px' },
-  subtitulo: { fontSize: '18px', color: '#fff', margin: '0 0 8px 0', fontWeight: '700' },
-  
-  listaCanchas: { display: 'flex', flexDirection: 'column', gap: '12px' },
-  tarjetaCancha: { 
-    padding: '16px 20px', borderRadius: '12px', border: '1px solid', 
-    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-    transition: 'all 0.2s ease'
-  },
-  iconoCancha: { fontSize: '20px' },
-  
-  grupoInput: { display: 'flex', flexDirection: 'column', gap: '6px', flex: 1, marginBottom: '8px' },
-  labelInput: { fontSize: '13px', color: '#8A8A8A', fontWeight: '600', marginBottom: '6px', display: 'block' },
-  inputPicker: { 
-    backgroundColor: '#1A1A1A', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', 
-    padding: '14px', borderRadius: '10px', width: '100%', fontSize: '15px', outline: 'none',
-    boxSizing: 'border-box'
+  seccionContenedor: { marginBottom: '24px' },
+  subtituloSeccion: { fontSize: '16px', color: '#fff', margin: '0 0 12px 0', fontWeight: '700' },
+  ayudaTexto: { color: '#8E8E93', fontSize: '12px', margin: '-8px 0 12px 0' },
+
+  scrollHorizontal: {
+    display: 'flex',
+    overflowX: 'auto',
+    gap: '10px',
+    paddingBottom: '8px',
+    msOverflowStyle: 'none',
+    scrollbarWidth: 'none',
   },
 
+  // Píldoras de Cancha
+  pildoraCancha: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '12px 18px',
+    borderRadius: '16px',
+    border: '1px solid',
+    fontSize: '14px',
+    whiteSpace: 'nowrap',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  },
+
+  // Selector de Fechas
+  tarjetaFecha: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: '56px',
+    height: '74px',
+    borderRadius: '18px',
+    cursor: 'pointer',
+    gap: '6px'
+  },
+  nombreDiaTexto: { fontSize: '10px', fontWeight: '700', letterSpacing: '0.5px' },
+  numeroDiaTexto: { fontSize: '18px', fontWeight: '800' },
+
+  // Grilla de Horarios
   grillaHorarios: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(95px, 1fr))',
-    gap: '10px',
-    marginTop: '6px'
+    gridTemplateColumns: 'repeat(auto-fill, minmax(85px, 1fr))',
+    gap: '8px',
   },
   botonSlot: {
-    padding: '14px 10px',
-    borderRadius: '10px',
-    fontSize: '14px',
-    fontWeight: '700',
+    padding: '16px 8px',
+    borderRadius: '14px',
     border: '1px solid',
     cursor: 'pointer',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '4px',
-    transition: 'all 0.2s ease',
+    gap: '2px',
+    transition: 'all 0.15s ease',
   },
   slotDisponible: {
-    backgroundColor: '#141414',
-    borderColor: 'rgba(255,255,255,0.08)',
-    color: '#ccc',
+    backgroundColor: '#161618',
+    borderColor: 'rgba(255,255,255,0.03)',
+    color: '#fff',
   },
   slotSeleccionado: {
-    backgroundColor: 'rgba(0, 255, 102, 0.08)',
-    borderColor: '#00ff66',
-    color: '#00ff66',
+    backgroundColor: 'rgba(57, 255, 20, 0.1)',
+    borderColor: '#39FF14',
+    color: '#39FF14',
   },
   slotOcupado: {
-    backgroundColor: '#1e1e1e',
+    backgroundColor: 'rgba(255,255,255,0.01)',
     borderColor: 'transparent',
-    color: '#555',
+    color: '#3A3A3C',
     cursor: 'not-allowed',
-    opacity: 0.4
   },
-  textoOcupadoLabel: {
-    fontSize: '9px',
-    fontWeight: '600',
-    color: '#ff4d4d',
-    textTransform: 'uppercase'
-  },
+  slotHoraTexto: { fontSize: '14px', fontWeight: '700' },
+  textoOcupadoLabel: { fontSize: '9px', fontWeight: '600', color: '#ff4d4d' },
 
+  // Switch Partido Abierto
   tarjetaPartidoAbierto: { 
-    backgroundColor: '#121212', border: '1px solid rgba(255,255,255,0.05)', 
-    borderRadius: '12px', padding: '16px', marginTop: '8px', marginBottom: '8px' 
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#161618', 
+    borderRadius: '20px', 
+    padding: '16px 20px', 
+    border: '1px solid rgba(255,255,255,0.03)',
+    marginBottom: '16px'
   },
-  labelPartidoAbierto: { 
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', gap: '16px' 
-  },
-  textoPartidoAbierto: { display: 'flex', flexDirection: 'column', gap: '4px' },
+  textoPartidoAbierto: { display: 'flex', flexDirection: 'column', gap: '2px', flex: 1 },
   tituloPartidoAbierto: { color: '#fff', fontSize: '15px', fontWeight: '700' },
-  descPartidoAbierto: { color: '#8A8A8A', fontSize: '12px', lineHeight: '1.4' },
-  checkboxPremium: { width: '22px', height: '22px', accentColor: '#00ff66', cursor: 'pointer' },
+  descPartidoAbierto: { color: '#8E8E93', fontSize: '12px', lineHeight: '1.3' },
+  checkboxPremium: { width: '20px', height: '20px', accentColor: '#39FF14', cursor: 'pointer' },
 
   botonReservar: { 
-    width: '100%', padding: '16px', backgroundColor: '#00ff66', color: '#000', 
-    border: 'none', borderRadius: '12px', fontWeight: '800', fontSize: '16px', 
+    width: '100%', 
+    padding: '16px', 
+    border: 'none', 
+    borderRadius: '16px', 
+    fontWeight: '800', 
+    fontSize: '15px', 
     transition: 'all 0.2s ease' 
   },
 
-  seccionTiendaWrapper: { marginTop: '48px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '32px' },
-  subtituloTienda: { fontSize: '20px', color: '#fff', margin: '0 0 4px 0', fontWeight: '700' },
-  grillaTienda: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px', marginTop: '16px' },
-  tarjetaProducto: { backgroundColor: '#121212', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)', display: 'flex', flexDirection: 'column', overflow: 'hidden', transition: 'transform 0.2s' },
-  imagenPlaceholder: { height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '44px', opacity: 0.8, backgroundColor: '#181818', position: 'relative' },
-  badgeTipo: { fontSize: '9px', fontWeight: '800', padding: '4px 6px', borderRadius: '6px', letterSpacing: '0.5px' },
-  infoProductoContainer: { padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 },
-  nombreProducto: { color: '#fff', fontSize: '16px', fontWeight: '700', margin: '0 0 6px 0', letterSpacing: '-0.3px' },
-  precioProducto: { color: '#EAEAEA', fontSize: '18px', fontWeight: '800', marginBottom: '12px' },
-  stockContenedor: { marginTop: 'auto', marginBottom: '16px' },
-  badgeStock: { fontSize: '11px', fontWeight: '700', padding: '4px 8px', borderRadius: '20px' },
-  botonAccion: { width: '100%', padding: '12px', border: 'none', fontWeight: '700', fontSize: '13px', transition: 'all 0.2s', borderRadius: '8px' },
-  tiendaEstadoVacio: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 20px', color: '#8A8A8A', textAlign: 'center', backgroundColor: '#121212', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.05)' },
+  // Tienda Estilo Premium Horizontal
+  seccionTiendaWrapper: { borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '24px' },
+  grillaTienda: { display: 'flex', flexDirection: 'column', gap: '10px' },
+  tarjetaProducto: { backgroundColor: '#161618', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.02)', padding: '12px' },
+  infoProductoHorizontal: { display: 'flex', alignItems: 'center', gap: '14px' },
+  iconoTienda: { width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyValue: 'center', fontSize: '20px', display: 'flex', justifyContent: 'center' },
+  nombreProducto: { color: '#fff', fontSize: '14px', fontWeight: '700', margin: '0 0 2px 0' },
+  badgeTipo: { fontSize: '11px', fontWeight: '500' },
+  precioProducto: { color: '#fff', fontSize: '15px', fontWeight: '700', marginBottom: '4px' },
+  botonAccionTienda: { border: 'none', padding: '6px 12px', borderRadius: '10px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' },
   
-  estadoVacio: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', color: '#8A8A8A', fontSize: '16px' },
-  spinner: { width: '30px', height: '30px', border: '3px solid rgba(0,255,102,0.2)', borderTop: '3px solid #00ff66', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '16px' }
+  textoVacio: { color: '#8E8E93', fontSize: '13px' },
+  estadoVacio: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '100px 24px' },
+  spinner: { width: '28px', height: '28px', border: '3px solid rgba(57, 255, 20, 0.2)', borderTop: '3px solid #39FF14', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '12px' }
 };
 
-export default ReservarTurnoScreen;
+export default ReservarTurnoScreen;s
