@@ -1,227 +1,214 @@
 // src/components/FormInscripcionModal.jsx
 import React, { useState } from 'react';
-import API from '../services/api'; // ✅ CORREGIDO: Ruta corregida para la carpeta src/components/
+import API from '../services/api';
 
-const FormInscripcionModal = ({ torneoDetalle, onClose, onInscripcionExitosa, styles }) => {
-  // Fallbacks de estilos para asegurar compatibilidad visual al 100%
-  const estiloRestricciones = styles.bloqueRestricciones || { marginTop: '16px', padding: '16px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' };
-  const estiloBotonSiNo = styles.botonSiNo || { padding: '10px 16px', borderRadius: '10px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', backgroundColor: 'transparent', border: '1px solid' };
-  const estiloSecundario = styles.botonSecundarioModal || { backgroundColor: 'transparent', color: '#8A8A8A', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 20px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' };
-
-  // 1. Estados locales exclusivos de la inscripción
-  const [formInscripcion, setFormInscripcion] = useState({
-    jugador1: '',
-    telefono1: '',
-    jugador2: '',
-    telefono2: '',
-    categoriaSelected: '',
-    restriccionHoraria: ''
+const FormInscripcionModal = ({ torneoDetalle, onClose, onInscripcionExitosa }) => {
+  // Generamos los horarios desde las 08:00 hasta las 22:00
+  const horariosDisponibles = Array.from({ length: 15 }, (_, i) => {
+    const hora = i + 8;
+    return `${hora < 10 ? '0' : ''}${hora}:00`;
   });
-  const [tieneRestriccion, setTieneRestriccion] = useState(false);
-  const [opcionesHorarias, setOpcionesHorarias] = useState([]);
-  const [detalleHorarioLibre, setDetalleHorarioLibre] = useState('');
 
-  // 2. Manejadores de inputs
-  const manejarCambioInscripcion = (e) => {
-    setFormInscripcion({ ...formInscripcion, [e.target.name]: e.target.value });
+  const categoriasTorneo = torneoDetalle?.categoria ? torneoDetalle.categoria.split(' | ') : [];
+
+  const [formData, setFormData] = useState({
+    categoriaSeleccionada: '',
+    jugador1: { nombre: '', dni: '', telefono: '' },
+    jugador2: { nombre: '', dni: '', telefono: '' },
+    restriccionesHorarias: [] // Guardará los horarios en los que NO pueden jugar
+  });
+
+  const [cargando, setCargando] = useState(false);
+
+  const handleJugadorChange = (jugador, campo, valor) => {
+    setFormData((prev) => ({
+      ...prev,
+      [jugador]: {
+        ...prev[jugador],
+        [campo]: valor
+      }
+    }));
   };
 
-  const toggleOpcionHoraria = (opcion) => {
-    setOpcionesHorarias((prev) => {
-      const nuevas = prev.includes(opcion) ? prev.filter((o) => o !== opcion) : [...prev, opcion];
-      const parteCheckboxes = nuevas.join(', ');
-      const stringFinal = [parteCheckboxes, detalleHorarioLibre].filter(Boolean).join(' - Obs: ');
-      setFormInscripcion((f) => ({ ...f, restriccionHoraria: stringFinal }));
-      return nuevas;
+  const toggleRestriccionHoraria = (horario) => {
+    setFormData((prev) => {
+      const seleccionados = prev.restriccionesHorarias.includes(horario)
+        ? prev.restriccionesHorarias.filter((h) => h !== horario)
+        : [...prev.restriccionesHorarias, horario];
+      
+      return { ...prev, restriccionesHorarias: seleccionados };
     });
   };
 
-  const manejarCambioTextoLibre = (e) => {
-    const valor = e.target.value;
-    setDetalleHorarioLibre(valor);
-    const parteCheckboxes = opcionesHorarias.join(', ');
-    const stringFinal = [parteCheckboxes, valor].filter(Boolean).join(' - Obs: ');
-    setFormInscripcion((f) => ({ ...f, restriccionHoraria: stringFinal }));
-  };
-
-  // 3. Lógica de envío al Backend
-  const ejecutarInscripcion = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formInscripcion.categoriaSelected) {
-      return alert("Por favor, selecciona una categoría.");
+    if (!formData.categoriaSeleccionada) {
+      return alert('⚠️ Por favor, seleccioná la categoría en la que desean inscribirse.');
     }
 
-    const cantInscriptos = torneoDetalle.inscripciones?.filter(
-      (i) => i.categoria === formInscripcion.categoriaSelected
-    ).length || 0;
-    const cupoMaximo = torneoDetalle.cupoParejas || 16;
-
-    if (cantInscriptos >= cupoMaximo) {
-      return alert("Lamentablemente esta categoría se completó hace instantes. Elegí otra o contactá al club.");
+    // Validación preventiva de UI: Jugadores duplicados
+    if (formData.jugador1.dni === formData.jugador2.dni) {
+      return alert('⚠️ Los DNI de ambos jugadores no pueden ser iguales.');
     }
 
-    const j1Form = formInscripcion.jugador1.trim().toLowerCase();
-    const j2Form = formInscripcion.jugador2.trim().toLowerCase();
-
-    // Validación preventiva en el Front (Duplicados)
-    const yaSeEncuentraInscripto = torneoDetalle.inscripciones?.find((insc) => {
-      const j1Lista = insc.jugador1.trim().toLowerCase();
-      const j2Lista = insc.jugador2.trim().toLowerCase();
-      return j1Lista === j1Form || j2Lista === j1Form || j1Lista === j2Form || j2Lista === j2Form;
-    });
-
-    if (yaSeEncuentraInscripto) {
-      return alert("🚨 ¡Error de duplicación! Uno o ambos jugadores ya están registrados en este torneo.");
-    }
-
+    setCargando(true);
     try {
-      await API.post(`/torneos/${torneoDetalle.id}/inscripciones`, {
-        categoriaSelected: formInscripcion.categoriaSelected,
-        jugador1: formInscripcion.jugador1,
-        telefono1: formInscripcion.telefono1,
-        jugador2: formInscripcion.jugador2,
-        telefono2: formInscripcion.telefono2,
-        restriccionHoraria: formInscripcion.restriccionHoraria
-      });
+      const payload = {
+        torneoId: torneoDetalle.id || torneoDetalle._id,
+        categoria: formData.categoriaSeleccionada,
+        jugador1: formData.jugador1,
+        jugador2: formData.jugador2,
+        restricciones: formData.restriccionesHorarias
+      };
 
-      alert(`¡Inscripción exitosa en ${formInscripcion.categoriaSelected}!`);
-      onInscripcionExitosa(); 
-      onClose(); 
+      await API.post('/inscripciones/nueva', payload);
+      alert('✅ ¡Inscripción registrada con éxito!');
+      onInscripcionExitosa();
+      onClose();
     } catch (error) {
       console.error("Error al inscribir:", error);
-      const mensajeError = error.response?.data?.error || "Ocurrió un error al inscribir la pareja.";
-      alert(mensajeError);
+      alert(error.response?.data?.error || "Hubo un error al procesar la inscripción");
+    } finally {
+      setCargando(false);
     }
   };
 
   return (
-    <div style={styles.modalOverlay}>
-      <div style={{ ...styles.tarjetaFormulario, maxWidth: '600px', width: '90%', margin: 'auto', position: 'relative' }}>
-        <h3 style={styles.subtituloForm}>Inscripción: {torneoDetalle.nombre}</h3>
+    <div style={styles.modalBackdrop}>
+      <div style={styles.modalContent}>
         
-        <form onSubmit={ejecutarInscripcion}>
+        <div style={styles.header}>
+          <h3 style={styles.titulo}>📝 Inscripción al Torneo</h3>
+          <p style={styles.subtitulo}>{torneoDetalle.nombre}</p>
+          <button onClick={onClose} style={styles.btnCerrar} title="Cerrar">❌</button>
+        </div>
+
+        <form style={styles.formContainer}>
+          
           {/* SELECCIÓN DE CATEGORÍA */}
-          <div style={styles.grupoInput}>
-            <label style={styles.label}>Categoría a Anotarse</label>
-            <select
-              required
-              name="categoriaSelected"
-              value={formInscripcion.categoriaSelected}
-              onChange={manejarCambioInscripcion}
-              style={styles.input}
-            >
-              <option value="">Selecciona una categoría...</option>
-              {torneoDetalle.categoria?.split(' | ').map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* DATOS JUGADOR 1 */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px', marginTop: '12px' }}>
-            <div style={styles.grupoInput}>
-              <label style={styles.label}>Jugador 1 (Tú)</label>
-              <input required name="jugador1" value={formInscripcion.jugador1} onChange={manejarCambioInscripcion} style={styles.input} placeholder="Nombre completo" />
-            </div>
-            <div style={styles.grupoInput}>
-              <label style={styles.label}>Teléfono</label>
-              <input required name="telefono1" value={formInscripcion.telefono1} onChange={manejarCambioInscripcion} style={styles.input} placeholder="Ej: 3624112233" />
+          <div style={styles.seccion}>
+            <label style={styles.labelTitle}>1. ¿En qué categoría se anotan?</label>
+            <div style={styles.chipContainer}>
+              {categoriasTorneo.map(cat => {
+                const activo = formData.categoriaSeleccionada === cat.trim();
+                return (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, categoriaSeleccionada: cat.trim() })}
+                    style={activo ? styles.chipActivo : styles.chipInactivo}
+                  >
+                    {cat.trim()}
+                  </button>
+                )
+              })}
             </div>
           </div>
 
-          {/* DATOS JUGADOR 2 */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-            <div style={styles.grupoInput}>
-              <label style={styles.label}>Jugador 2 (Compañero/a)</label>
-              <input required name="jugador2" value={formInscripcion.jugador2} onChange={manejarCambioInscripcion} style={styles.input} placeholder="Nombre completo" />
-            </div>
-            <div style={styles.grupoInput}>
-              <label style={styles.label}>Teléfono Compañero</label>
-              <input required name="telefono2" value={formInscripcion.telefono2} onChange={manejarCambioInscripcion} style={styles.input} placeholder="Nro de celular" />
-            </div>
-          </div>
-
-          {/* BLOQUE RESTRICCIONES HORARIAS */}
-          <div style={estiloRestricciones}>
-            <label style={{ ...styles.label, fontWeight: '700', display: 'block', marginBottom: '12px', color: '#EAEAEA' }}>
-              ¿Tienen restricciones horarias?
-            </label>
-            <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-              <button
-                type="button"
-                onClick={() => setTieneRestriccion(true)}
-                style={{
-                  ...estiloBotonSiNo,
-                  borderColor: tieneRestriccion ? 'rgba(255, 51, 51, 0.4)' : 'rgba(255, 255, 255, 0.08)',
-                  color: tieneRestriccion ? '#ff4d4d' : '#8A8A8A'
-                }}
-              >
-                Sí, hay restricciones
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setTieneRestriccion(false);
-                  setOpcionesHorarias([]);
-                  setFormInscripcion(prev => ({ ...prev, restriccionHoraria: '' }));
-                }}
-                style={{
-                  ...estiloBotonSiNo,
-                  borderColor: !tieneRestriccion ? 'rgba(0, 255, 102, 0.4)' : 'rgba(255, 255, 255, 0.08)',
-                  color: !tieneRestriccion ? '#00ff66' : '#8A8A8A'
-                }}
-              >
-                No, libre
-              </button>
-            </div>
-
-            {tieneRestriccion && (
-              <div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '12px' }}>
-                  {['Viernes Noche', 'Sábado Mañana', 'Sábado Tarde', 'Domingo Mañana'].map((opc) => {
-                    const check = opcionesHorarias.includes(opc);
-                    return (
-                      <button
-                        key={opc}
-                        type="button"
-                        onClick={() => toggleOpcionHoraria(opc)}
-                        style={{
-                          ...styles.badgeCategoriaForm,
-                          backgroundColor: check ? 'rgba(255, 77, 77, 0.1)' : 'transparent',
-                          color: check ? '#ff4d4d' : '#8A8A8A',
-                          border: check ? '1px solid rgba(255, 77, 77, 0.2)' : '1px solid rgba(255, 255, 255, 0.08)'
-                        }}
-                      >
-                        {opc}
-                      </button>
-                    );
-                  })}
-                </div>
-                <input
-                  type="text"
-                  placeholder="Detalle adicional (Ej: No puedo de 14 a 16hs)"
-                  value={detalleHorarioLibre}
-                  onChange={manejarCambioTextoLibre}
-                  style={styles.input}
-                />
+          <div style={styles.row}>
+            {/* JUGADOR 1 */}
+            <div style={styles.jugadorCard}>
+              <h4 style={styles.jugadorTitulo}>Jugador 1</h4>
+              <div style={styles.grupoInput}>
+                <label style={styles.label}>Nombre Completo</label>
+                <input required value={formData.jugador1.nombre} onChange={(e) => handleJugadorChange('jugador1', 'nombre', e.target.value)} style={styles.input} placeholder="Ej: Juan Pérez" />
               </div>
-            )}
+              <div style={styles.grupoInput}>
+                <label style={styles.label}>DNI</label>
+                <input required type="number" value={formData.jugador1.dni} onChange={(e) => handleJugadorChange('jugador1', 'dni', e.target.value)} style={styles.input} placeholder="Sin puntos" />
+              </div>
+              <div style={styles.grupoInput}>
+                <label style={styles.label}>Teléfono</label>
+                <input required type="tel" value={formData.jugador1.telefono} onChange={(e) => handleJugadorChange('jugador1', 'telefono', e.target.value)} style={styles.input} placeholder="Código de área + número" />
+              </div>
+            </div>
+
+            {/* JUGADOR 2 */}
+            <div style={styles.jugadorCard}>
+              <h4 style={styles.jugadorTitulo}>Jugador 2</h4>
+              <div style={styles.grupoInput}>
+                <label style={styles.label}>Nombre Completo</label>
+                <input required value={formData.jugador2.nombre} onChange={(e) => handleJugadorChange('jugador2', 'nombre', e.target.value)} style={styles.input} placeholder="Ej: Martín Gómez" />
+              </div>
+              <div style={styles.grupoInput}>
+                <label style={styles.label}>DNI</label>
+                <input required type="number" value={formData.jugador2.dni} onChange={(e) => handleJugadorChange('jugador2', 'dni', e.target.value)} style={styles.input} placeholder="Sin puntos" />
+              </div>
+              <div style={styles.grupoInput}>
+                <label style={styles.label}>Teléfono</label>
+                <input required type="tel" value={formData.jugador2.telefono} onChange={(e) => handleJugadorChange('jugador2', 'telefono', e.target.value)} style={styles.input} placeholder="Código de área + número" />
+              </div>
+            </div>
           </div>
 
-          {/* ACCIONES DEL FORMULARIO */}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
-            <button type="button" onClick={onClose} style={estiloSecundario}>
-              Cancelar
-            </button>
-            <button type="submit" style={styles.botonPrimario}>
-              Confirmar Inscripción
-            </button>
+          {/* RESTRICCIONES HORARIAS */}
+          <div style={styles.seccion}>
+            <label style={styles.labelTitle}>3. Restricciones Horarias</label>
+            <p style={styles.textoAyuda}>Seleccioná los horarios en los que la pareja <strong>NO puede jugar</strong> por motivos de trabajo o fuerza mayor.</p>
+            <div style={styles.chipContainer}>
+              {horariosDisponibles.map(horario => {
+                const restringido = formData.restriccionesHorarias.includes(horario);
+                return (
+                  <button
+                    key={horario}
+                    type="button"
+                    onClick={() => toggleRestriccionHoraria(horario)}
+                    style={restringido ? styles.chipRestringido : styles.chipInactivo}
+                  >
+                    {horario}
+                  </button>
+                )
+              })}
+            </div>
           </div>
+
         </form>
+
+        <div style={styles.footerAcciones}>
+          <button type="button" onClick={onClose} style={styles.btnCancelar}>Cancelar</button>
+          <button type="button" onClick={handleSubmit} disabled={cargando} style={styles.btnInscribir}>
+            {cargando ? 'Procesando...' : 'Confirmar Inscripción'}
+          </button>
+        </div>
+
       </div>
     </div>
   );
 };
 
-export default FormInscripcionModal;
+// Estilos Premium Dark/Neon adaptados
+const styles = {
+  modalBackdrop: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, padding: '20px' },
+  modalContent: { backgroundColor: '#161618', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', width: '100%', maxWidth: '750px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' },
+  
+  header: { position: 'relative', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '24px' },
+  titulo: { color: '#39FF14', margin: '0 0 4px 0', fontSize: '22px', fontWeight: '800' },
+  subtitulo: { color: '#8E8E93', margin: 0, fontSize: '14px', fontWeight: '600' },
+  btnCerrar: { position: 'absolute', top: '24px', right: '24px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#8E8E93' },
+  
+  formContainer: { padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '32px' },
+  
+  seccion: { display: 'flex', flexDirection: 'column', gap: '12px' },
+  labelTitle: { color: '#ffffff', fontSize: '16px', fontWeight: '700' },
+  textoAyuda: { color: '#8E8E93', fontSize: '13px', margin: '-4px 0 8px 0' },
+  
+  row: { display: 'flex', gap: '20px', flexWrap: 'wrap' },
+  jugadorCard: { flex: 1, minWidth: '280px', backgroundColor: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)', display: 'flex', flexDirection: 'column', gap: '16px' },
+  jugadorTitulo: { color: '#EAEAEA', margin: 0, fontSize: '16px', fontWeight: '700', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' },
+  
+  grupoInput: { display: 'flex', flexDirection: 'column', gap: '8px' },
+  label: { color: '#8E8E93', fontSize: '13px', fontWeight: '600' },
+  input: { backgroundColor: 'rgba(255, 255, 255, 0.05)', color: '#ffffff', border: '1px solid rgba(255, 255, 255, 0.1)', padding: '14px', borderRadius: '12px', outline: 'none', fontSize: '14px', transition: 'border-color 0.2s ease' },
+  
+  chipContainer: { display: 'flex', flexWrap: 'wrap', gap: '10px' },
+  chipInactivo: { padding: '10px 18px', backgroundColor: 'transparent', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: '24px', color: '#8E8E93', fontSize: '14px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease' },
+  chipActivo: { padding: '10px 18px', backgroundColor: 'rgba(57, 255, 20, 0.1)', border: '1px solid rgba(57, 255, 20, 0.4)', borderRadius: '24px', color: '#39FF14', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s ease' },
+  
+  // Chip Rojo/Naranja para bloqueos de horario
+  chipRestringido: { padding: '10px 18px', backgroundColor: 'rgba(255, 77, 77, 0.1)', border: '1px solid rgba(255, 77, 77, 0.5)', borderRadius: '24px', color: '#ff4d4d', fontSize: '14px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s ease' },
+  
+  footerAcciones: { display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '24px', backgroundColor: 'rgba(0,0,0,0.2)', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' },
+  btnCancelar: { backgroundColor: 'transparent', color: '#8E8E93', border: '1px solid rgba(255,255,255,0.1)', padding: '14px 24px', borderRadius: '14px', cursor: 'pointer', fontWeight: '600', fontSize: '15px' },
+  btnInscribir: { backgroundColor: '#39FF14', color: '#0F0F10', border: 'none', padding: '14px 24px', borderRadius: '14px', fontWeight: '800', cursor: 'pointer', fontSize: '15px' }
+};

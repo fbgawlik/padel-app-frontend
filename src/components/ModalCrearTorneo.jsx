@@ -3,11 +3,9 @@ import React, { useState } from 'react';
 import API from '../services/api';
 
 const ModalCrearTorneo = ({ onClose, onTorneoCreado }) => {
-  // Arreglos de categorías separados por rama
   const categoriasDamas = ['1ra Damas', '2da Damas', '3ra Damas', '4ta Damas', '5ta Damas', '6ta Damas', '7ma Damas', '8va Damas'];
   const categoriasCaballeros = ['1ra Caballeros', '2da Caballeros', '3ra Caballeros', '4ta Caballeros', '5ta Caballeros', '6ta Caballeros', '7ma Caballeros', '8va Caballeros'];
   
-  // Opciones de cupos (múltiplos de 3, de 12 a 24)
   const opcionesCupos = [12, 15, 18, 21, 24];
 
   const [formData, setFormData] = useState({
@@ -15,7 +13,7 @@ const ModalCrearTorneo = ({ onClose, onTorneoCreado }) => {
     fechaInicio: '',
     fechaFin: '',
     categorias: [], 
-    cupoParejas: 12, // Cupo por defecto
+    cupoParejas: 12, 
     precio: '',
     premios: '',
     reglas: 'REGLAS DEL TORNEO:\n\n1. Todas las parejas que no pertenezcan a la categoría correspondiente serán descalificadas sin devolución de la inscripción.\n2. Tolerancia máxima de espera: 15 minutos respecto al horario programado.\n3. El sistema de juego será en formato de zonas y luego llaves eliminatorias.'
@@ -23,44 +21,34 @@ const ModalCrearTorneo = ({ onClose, onTorneoCreado }) => {
   
   const [cargando, setCargando] = useState(false);
 
-  // Manejador de inputs de texto/fechas estándar
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Manejador para los botones de las categorías (Toggle)
   const toggleCategoria = (cat) => {
     setFormData((prev) => {
       const seleccionadas = prev.categorias.includes(cat)
         ? prev.categorias.filter((c) => c !== cat)
         : [...prev.categorias, cat];
       
-      // Ordenar alfabéticamente para mantener un orden lógico
       seleccionadas.sort((a, b) => a.localeCompare(b));
-      
       return { ...prev, categorias: seleccionadas };
     });
   };
 
-  // Manejador para los botones de cupos
   const seleccionarCupo = (cupo) => {
     setFormData({ ...formData, cupoParejas: cupo });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (formData.categorias.length === 0) {
       return alert('⚠️ Por favor, seleccioná al menos una categoría para el torneo.');
     }
 
     setCargando(true);
     try {
-      const payload = {
-        ...formData,
-        categoria: formData.categorias.join(' | ') 
-      };
-
+      const payload = { ...formData, categoria: formData.categorias.join(' | ') };
       const res = await API.post('/torneos/crear', payload);
       alert('🏆 ¡Torneo creado con éxito!');
       onTorneoCreado(res.data);
@@ -76,15 +64,13 @@ const ModalCrearTorneo = ({ onClose, onTorneoCreado }) => {
   return (
     <div style={styles.modalBackdrop}>
       <div style={styles.modalContent}>
-        {/* Header Fijo */}
+        
         <div style={styles.header}>
           <h3 style={styles.titulo}>➕ Crear Nuevo Torneo</h3>
           <button onClick={onClose} style={styles.btnCerrar} title="Cerrar">❌</button>
         </div>
 
-        {/* Formulario con Scroll */}
         <form style={styles.formContainer}>
-          
           <div style={styles.grupoInput}>
             <label style={styles.label}>Nombre del Torneo</label>
             <input required name="nombre" value={formData.nombre} onChange={handleChange} style={styles.input} placeholder="Ej: Copa ADN Pádel - Edición Invierno" />
@@ -101,14 +87,12 @@ const ModalCrearTorneo = ({ onClose, onTorneoCreado }) => {
             </div>
           </div>
 
-          {/* SELECCIÓN DE CATEGORÍAS (DAMAS Y CABALLEROS) */}
           <div style={styles.grupoInput}>
             <label style={styles.label}>Categorías a Disputar</label>
             
-            {/* Sub-sección Damas */}
             <div style={styles.subSeccionCategorias}>
               <span style={styles.subLabel}>👩 Damas</span>
-              <div style={styles.badgeContainer}>
+              <div style={styles.chipContainer}>
                 {categoriasDamas.map(cat => {
                   const activo = formData.categorias.includes(cat);
                   return (
@@ -116,24 +100,18 @@ const ModalCrearTorneo = ({ onClose, onTorneoCreado }) => {
                       key={cat}
                       type="button"
                       onClick={() => toggleCategoria(cat)}
-                      style={{
-                        ...styles.badgeBtn,
-                        backgroundColor: activo ? 'rgba(0, 255, 102, 0.15)' : 'transparent',
-                        color: activo ? '#00ff66' : '#8A8A8A',
-                        border: activo ? '1px solid #00ff66' : '1px solid rgba(255,255,255,0.1)'
-                      }}
+                      style={activo ? styles.chipActivo : styles.chipInactivo}
                     >
-                      {cat.split(' ')[0]} {/* Muestra solo "1ra", "2da", etc. para ahorrar espacio */}
+                      {cat.split(' ')[0]}
                     </button>
                   )
                 })}
               </div>
             </div>
 
-            {/* Sub-sección Caballeros */}
             <div style={styles.subSeccionCategorias}>
               <span style={styles.subLabel}>👨 Caballeros</span>
-              <div style={styles.badgeContainer}>
+              <div style={styles.chipContainer}>
                 {categoriasCaballeros.map(cat => {
                   const activo = formData.categorias.includes(cat);
                   return (
@@ -141,12 +119,7 @@ const ModalCrearTorneo = ({ onClose, onTorneoCreado }) => {
                       key={cat}
                       type="button"
                       onClick={() => toggleCategoria(cat)}
-                      style={{
-                        ...styles.badgeBtn,
-                        backgroundColor: activo ? 'rgba(0, 255, 102, 0.15)' : 'transparent',
-                        color: activo ? '#00ff66' : '#8A8A8A',
-                        border: activo ? '1px solid #00ff66' : '1px solid rgba(255,255,255,0.1)'
-                      }}
+                      style={activo ? styles.chipActivo : styles.chipInactivo}
                     >
                       {cat.split(' ')[0]}
                     </button>
@@ -158,24 +131,24 @@ const ModalCrearTorneo = ({ onClose, onTorneoCreado }) => {
           </div>
 
           <div style={styles.row}>
-            {/* NUEVA SELECCIÓN DE CUPOS CON BOTONES */}
             <div style={styles.grupoInput}>
               <label style={styles.label}>Cupo de Parejas (Por Categoría)</label>
-              <div style={styles.badgeContainer}>
+              <div style={styles.chipContainer}>
                 {opcionesCupos.map(cupo => {
                   const activo = formData.cupoParejas === cupo;
+                  // Usamos un azul/celeste neón para diferenciar los cupos de las categorías
+                  const chipCupoActivo = {
+                    ...styles.chipActivo,
+                    backgroundColor: 'rgba(0, 229, 255, 0.1)',
+                    color: '#00e5ff',
+                    borderColor: 'rgba(0, 229, 255, 0.4)'
+                  };
                   return (
                     <button
                       key={cupo}
                       type="button"
                       onClick={() => seleccionarCupo(cupo)}
-                      style={{
-                        ...styles.badgeBtn,
-                        backgroundColor: activo ? 'rgba(0, 229, 255, 0.15)' : 'transparent',
-                        color: activo ? '#00e5ff' : '#8A8A8A',
-                        border: activo ? '1px solid #00e5ff' : '1px solid rgba(255,255,255,0.1)',
-                        padding: '8px 20px'
-                      }}
+                      style={activo ? chipCupoActivo : styles.chipInactivo}
                     >
                       {cupo}
                     </button>
@@ -198,7 +171,7 @@ const ModalCrearTorneo = ({ onClose, onTorneoCreado }) => {
               value={formData.premios} 
               onChange={handleChange} 
               style={{...styles.input, height: '60px', resize: 'vertical'}} 
-              placeholder="Ej: Campeones: Paletas + Trofeo. Subcampeones: Indumentaria + Medalla."
+              placeholder="Ej: Campeones: Paletas + Trofeo..."
             />
           </div>
 
@@ -215,7 +188,6 @@ const ModalCrearTorneo = ({ onClose, onTorneoCreado }) => {
 
         </form>
 
-        {/* Footer con Botones Fijos */}
         <div style={styles.footerAcciones}>
           <button type="button" onClick={onClose} style={styles.btnCancelar}>Cancelar</button>
           <button type="button" onClick={handleSubmit} disabled={cargando} style={styles.btnCrear}>
@@ -228,31 +200,63 @@ const ModalCrearTorneo = ({ onClose, onTorneoCreado }) => {
   );
 };
 
-// Estilos actualizados
+// Estilos Premium Dark/Neon adaptados para el Modal
 const styles = {
   modalBackdrop: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, padding: '20px' },
-  modalContent: { backgroundColor: '#141414', border: '1px solid rgba(0, 255, 102, 0.3)', borderRadius: '16px', width: '100%', maxWidth: '650px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 40px rgba(0,255,102,0.1)' },
+  modalContent: { backgroundColor: '#161618', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', width: '100%', maxWidth: '650px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' },
   
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '20px 24px' },
-  titulo: { color: '#00ff66', margin: 0, fontSize: '20px', fontWeight: '800', textTransform: 'uppercase' },
-  btnCerrar: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '18px', filter: 'grayscale(100%)', transition: 'transform 0.2s' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '24px' },
+  titulo: { color: '#39FF14', margin: 0, fontSize: '20px', fontWeight: '800' },
+  btnCerrar: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#8E8E93' },
   
-  formContainer: { padding: '20px 24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '22px' },
+  formContainer: { padding: '24px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px' },
   
   row: { display: 'flex', gap: '20px', flexWrap: 'wrap' },
   grupoInput: { display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: '220px' },
-  label: { color: '#EAEAEA', fontSize: '13px', fontWeight: '600' },
-  input: { backgroundColor: '#1A1A1A', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 14px', borderRadius: '10px', outline: 'none', fontSize: '14px', transition: 'border-color 0.2s' },
-  helpText: { fontSize: '11px', color: '#666', marginTop: '2px' },
+  label: { color: '#EAEAEA', fontSize: '14px', fontWeight: '600' },
   
-  subSeccionCategorias: { backgroundColor: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)' },
-  subLabel: { display: 'block', color: '#8A8A8A', fontSize: '12px', fontWeight: '700', marginBottom: '8px', textTransform: 'uppercase' },
-  badgeContainer: { display: 'flex', flexWrap: 'wrap', gap: '8px' },
-  badgeBtn: { padding: '8px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s ease' },
+  // Input Moderno
+  input: { 
+    backgroundColor: 'rgba(255, 255, 255, 0.05)', 
+    color: '#ffffff', 
+    border: '1px solid rgba(255, 255, 255, 0.1)', 
+    padding: '16px', 
+    borderRadius: '14px', 
+    outline: 'none', 
+    fontSize: '15px', 
+    transition: 'border-color 0.2s ease' 
+  },
+  helpText: { fontSize: '12px', color: '#ff4d4d', marginTop: '4px', fontWeight: '500' },
   
-  footerAcciones: { display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '20px 24px', backgroundColor: 'rgba(0,0,0,0.2)', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' },
-  btnCancelar: { backgroundColor: 'transparent', color: '#8A8A8A', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 20px', borderRadius: '10px', cursor: 'pointer', fontWeight: '600', transition: 'all 0.2s' },
-  btnCrear: { backgroundColor: '#00ff66', color: '#000', border: 'none', padding: '12px 24px', borderRadius: '10px', fontWeight: '800', cursor: 'pointer', transition: 'transform 0.1s, box-shadow 0.2s' }
+  subSeccionCategorias: { backgroundColor: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' },
+  subLabel: { display: 'block', color: '#8E8E93', fontSize: '12px', fontWeight: '700', marginBottom: '12px', textTransform: 'uppercase' },
+  
+  // Estructura Choice Chips
+  chipContainer: { display: 'flex', flexWrap: 'wrap', gap: '10px' },
+  chipInactivo: { 
+    padding: '10px 20px', 
+    backgroundColor: 'transparent', 
+    border: '1px solid rgba(255, 255, 255, 0.15)', 
+    borderRadius: '24px', 
+    color: '#8E8E93', 
+    fontSize: '14px', 
+    fontWeight: '600', 
+    cursor: 'pointer', 
+    transition: 'all 0.2s ease' 
+  },
+  chipActivo: { 
+    padding: '10px 20px', 
+    backgroundColor: 'rgba(57, 255, 20, 0.1)', 
+    border: '1px solid rgba(57, 255, 20, 0.4)', 
+    borderRadius: '24px', 
+    color: '#39FF14', 
+    fontSize: '14px', 
+    fontWeight: '700', 
+    cursor: 'pointer', 
+    transition: 'all 0.2s ease' 
+  },
+  
+  footerAcciones: { display: 'flex', justifyContent: 'flex-end', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.05)', padding: '24px', backgroundColor: 'rgba(0,0,0,0.2)', borderBottomLeftRadius: '24px', borderBottomRightRadius: '24px' },
+  btnCancelar: { backgroundColor: 'transparent', color: '#8E8E93', border: '1px solid rgba(255,255,255,0.1)', padding: '14px 24px', borderRadius: '14px', cursor: 'pointer', fontWeight: '600', fontSize: '15px' },
+  btnCrear: { backgroundColor: '#39FF14', color: '#0F0F10', border: 'none', padding: '14px 24px', borderRadius: '14px', fontWeight: '800', cursor: 'pointer', fontSize: '15px' }
 };
-
-export default ModalCrearTorneo;
