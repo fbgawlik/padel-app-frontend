@@ -136,23 +136,22 @@ export const TorneosScreen = () => {
           torneoDetalle={torneoSeleccionado} 
           onClose={() => setMostrarModalInscripcion(false)} 
           onInscripcionExitosa={() => window.location.reload()} 
-          styles={styles} 
+          // NOTA: Eliminé la prop 'styles={styles}' porque el nuevo modal ya es autocontenido.
         />
       )}
     </div>
   );
 };
 
-// Estilos Premium (Dashboard Vibe)
 const styles = {
+  // SOLUCIÓN AL PADDING: Unificamos el padding (Arriba, Derecha, Abajo(110px para la nav), Izquierda)
   contenedorPadre: { 
-    padding: '24px 16px', 
+    padding: '24px 16px 110px 16px', 
     backgroundColor: '#0F0F10', 
     minHeight: '100vh',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
   },
   
-  // Header Premium
   headerPremium: { 
     display: 'flex', 
     justifyContent: 'space-between', 
@@ -191,14 +190,12 @@ const styles = {
     transition: 'all 0.2s'
   },
 
-  // Grid de Tarjetas
   grid: { 
     display: 'grid', 
     gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
     gap: '20px' 
   },
 
-  // Empty State Elegante
   emptyStateContenedor: {
     display: 'flex',
     flexDirection: 'column',
@@ -245,18 +242,15 @@ const styles = {
     cursor: 'pointer'
   },
 
-  // Modales
   modalBackdrop: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, padding: '20px' },
   modalContent: { backgroundColor: '#161618', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '24px', width: '100%', maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' },
   modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '16px', marginBottom: '20px' },
   btnCerrar: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#8E8E93', transition: 'color 0.2s' },
   
-  // Selector (Input Moderno Temporal hasta hacer Choice Chips)
   selectorContenedor: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', backgroundColor: 'rgba(255,255,255,0.03)', padding: '12px 16px', borderRadius: '16px' },
   selectDark: { backgroundColor: 'rgba(255,255,255,0.05)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 14px', borderRadius: '12px', outline: 'none', fontWeight: '600', fontSize: '14px', flex: 1 },
 
-  // Utilidades de Carga y Error
   loadingContainer: { display: 'flex', justifyContent: 'center', padding: '60px' },
   spinner: { width: '40px', height: '40px', border: '4px solid rgba(57, 255, 20, 0.2)', borderTop: '4px solid #39FF14', borderRadius: '50%', animation: 'spin 1s linear infinite' },
-  alerta: { backgroundColor: 'rgba(255,51,51,0.1)', color: '#ff4d4d', padding: '16px', borderRadius: '14px', fontWeight: '600', textAlign: 'center' },
+  alerta: { backgroundColor: 'rgba(255,51,51,0.1)', color: '#ff4d4d', padding: '16px', borderRadius: '14px', fontWeight: '600', textAlign: 'center' }
 };

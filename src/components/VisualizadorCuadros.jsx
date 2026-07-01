@@ -6,7 +6,7 @@ const VisualizadorCuadros = ({ torneoId, torneo, categoria, usuario, onUpdateRes
   const [partidos, setPartidos] = useState([]);
   const [zonas, setZonas] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [pestanaActiva, setPestanaActiva] = useState('info'); // Por defecto abre en "info"
+  const [pestanaActiva, setPestanaActiva] = useState('info'); 
 
   const puedeEditar = usuario?.rol === 'admin_complejo' || usuario?.rol === 'organizador';
 
@@ -93,8 +93,8 @@ const VisualizadorCuadros = ({ torneoId, torneo, categoria, usuario, onUpdateRes
           
           <div style={styles.inscripcionBanner}>
             <div>
-              <h4 style={{ margin: '0 0 5px 0', color: '#fff' }}>¡Asegurá tu lugar!</h4>
-              <p style={{ margin: 0, color: '#8A8A8A', fontSize: '13px' }}>Inscripciones abiertas para la categoría {categoria}.</p>
+              <h4 style={{ margin: '0 0 5px 0', color: '#fff', fontSize: '18px' }}>¡Asegurá tu lugar!</h4>
+              <p style={{ margin: 0, color: '#8E8E93', fontSize: '14px' }}>Inscripciones abiertas para la categoría {categoria}.</p>
             </div>
             <button style={styles.btnInscribirse} onClick={onAbrirInscripcion}>
               ✍️ Inscribirse Ahora
@@ -116,18 +116,18 @@ const VisualizadorCuadros = ({ torneoId, torneo, categoria, usuario, onUpdateRes
                   <div style={styles.headerZona}>{zona.nombre}</div>
                   <div style={styles.listaPartidos}>
                     {partidosDeZona.length === 0 ? (
-                      <div style={{ color: '#555', fontSize: '12px', textAlign: 'center', padding: '10px' }}>
+                      <div style={{ color: '#8E8E93', fontSize: '13px', textAlign: 'center', padding: '12px' }}>
                         Esperando emparejamientos...
                       </div>
                     ) : (
                       partidosDeZona.map(partido => (
                         <div key={partido.id} style={styles.filaPartido}>
                           <div style={styles.infoParejas}>
-                            <div style={partido.estado === 'finalizado' ? { ...styles.parejaTexto, color: '#8A8A8A' } : styles.parejaTexto}>
+                            <div style={partido.estado === 'finalizado' ? { ...styles.parejaTexto, color: '#8E8E93' } : styles.parejaTexto}>
                               {obtenerNombresPareja(partido.pareja1)}
                             </div>
                             <div style={styles.vs}>vs</div>
-                            <div style={partido.estado === 'finalizado' ? { ...styles.parejaTexto, color: '#8A8A8A' } : styles.parejaTexto}>
+                            <div style={partido.estado === 'finalizado' ? { ...styles.parejaTexto, color: '#8E8E93' } : styles.parejaTexto}>
                               {obtenerNombresPareja(partido.pareja2)}
                             </div>
                           </div>
@@ -218,7 +218,7 @@ const VisualizadorCuadros = ({ torneoId, torneo, categoria, usuario, onUpdateRes
                     />
                     {partido.estado === 'finalizado' && partido.resultado && (
                       <div style={styles.tarjetaCampeon}>
-                        <div style={{ fontSize: '24px' }}>🏆</div>
+                        <div style={{ fontSize: '28px' }}>🏆</div>
                         <div style={styles.tituloCampeon}>¡CAMPEONES!</div>
                         <div style={styles.nombreCampeon}>
                           Torneo Finalizado
@@ -268,53 +268,58 @@ const TarjetaPartidoBracket = ({ partido, onNombres, isAdmin, onEdit }) => {
   );
 };
 
-// Estilos premium integrados a la paleta Dark/Neon de ADN Pádel
+// Estilos premium integrados a la paleta Dark/Neon unificada (#39FF14 y #161618)
 const styles = {
   contenedor: { marginTop: '15px' },
-  textoCargando: { color: '#8A8A8A', textAlign: 'center', padding: '20px', fontSize: '14px' },
-  textoVacio: { color: '#8A8A8A', textAlign: 'center', padding: '30px', fontSize: '14px', fontStyle: 'italic' },
-  contenedorTabs: { display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '10px' },
-  tabButton: { flex: 1, padding: '12px', borderRadius: '10px', backgroundColor: 'transparent', border: 'none', color: '#8A8A8A', fontWeight: '600', fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s ease' },
-  tabActive: { backgroundColor: 'rgba(0, 255, 102, 0.08)', color: '#00ff66', border: '1px solid rgba(0, 255, 102, 0.15)' },
-  seccionZonas: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' },
-  tarjetaZona: { backgroundColor: '#141414', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.04)', overflow: 'hidden' },
-  headerZona: { backgroundColor: 'rgba(255,255,255,0.02)', padding: '12px 16px', color: '#EAEAEA', fontWeight: '700', fontSize: '14px', borderBottom: '1px solid rgba(255,255,255,0.04)' },
+  textoCargando: { color: '#8E8E93', textAlign: 'center', padding: '20px', fontSize: '14px' },
+  textoVacio: { color: '#8E8E93', textAlign: 'center', padding: '40px', fontSize: '15px', fontStyle: 'italic' },
+  
+  contenedorTabs: { display: 'flex', gap: '10px', marginBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '12px', overflowX: 'auto' },
+  tabButton: { flex: 1, minWidth: '150px', padding: '12px', borderRadius: '12px', backgroundColor: 'transparent', border: 'none', color: '#8E8E93', fontWeight: '600', fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s ease', whiteSpace: 'nowrap' },
+  tabActive: { backgroundColor: 'rgba(57, 255, 20, 0.08)', color: '#39FF14', border: '1px solid rgba(57, 255, 20, 0.2)' },
+  
+  seccionZonas: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' },
+  tarjetaZona: { backgroundColor: '#161618', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' },
+  headerZona: { backgroundColor: 'rgba(255,255,255,0.03)', padding: '14px 16px', color: '#ffffff', fontWeight: '700', fontSize: '15px', borderBottom: '1px solid rgba(255,255,255,0.05)' },
   listaPartidos: { padding: '12px' },
-  filaPartido: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 8px', borderBottom: '1px solid rgba(255,255,255,0.02)', gap: '8px' },
+  filaPartido: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 8px', borderBottom: '1px solid rgba(255,255,255,0.03)', gap: '12px' },
   infoParejas: { flex: 1 },
-  parejaTexto: { color: '#EAEAEA', fontSize: '13px', fontWeight: '500' },
-  vs: { color: '#555', fontSize: '10px', margin: '2px 0', fontWeight: '700', textTransform: 'uppercase' },
-  resultadoContenedor: { display: 'flex', alignItems: 'center', gap: '6px' },
-  badgeResultado: { backgroundColor: 'rgba(0, 229, 255, 0.1)', color: '#00e5ff', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', border: '1px solid rgba(0, 229, 255, 0.15)' },
-  badgeProgramado: { backgroundColor: 'rgba(255,255,255,0.04)', color: '#666', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '600' },
-  btnEditarScore: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', padding: '4px', filter: 'grayscale(100%) brightness(200%)' },
+  parejaTexto: { color: '#EAEAEA', fontSize: '14px', fontWeight: '600' },
+  vs: { color: '#8E8E93', fontSize: '11px', margin: '4px 0', fontWeight: '700', textTransform: 'uppercase' },
+  
+  resultadoContenedor: { display: 'flex', alignItems: 'center', gap: '8px' },
+  badgeResultado: { backgroundColor: 'rgba(0, 229, 255, 0.1)', color: '#00e5ff', padding: '6px 10px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', border: '1px solid rgba(0, 229, 255, 0.2)' },
+  badgeProgramado: { backgroundColor: 'rgba(255,255,255,0.05)', color: '#8E8E93', padding: '6px 10px', borderRadius: '8px', fontSize: '13px', fontWeight: '600' },
+  btnEditarScore: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '14px', padding: '6px', borderRadius: '6px', transition: 'background 0.2s' },
   
   // Bracket Styles
-  contenedorBracket: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', overflowX: 'auto', paddingBottom: '15px' },
-  columnaRonda: { display: 'flex', flexDirection: 'column', minWidth: '220px' },
-  tituloRonda: { color: '#8A8A8A', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '15px', textAlign: 'center', letterSpacing: '1px' },
-  bloquePartidosRonda: { display: 'flex', flexDirection: 'column', justifyContent: 'space-around', flex: 1, gap: '20px' },
-  itemVacioRonda: { color: '#444', textAlign: 'center', padding: '20px', fontStyle: 'italic', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: '12px' },
-  tarjetaPartidoBracket: { backgroundColor: '#141414', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '12px', padding: '10px', display: 'flex', flexDirection: 'column', gap: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' },
-  bloqueJugadorBracket: { padding: '6px 8px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.01)' },
-  nombreJugadorBracket: { color: '#EAEAEA', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' },
-  divisorBracket: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px' },
-  textoResultadoBracket: { color: '#00ff66', fontSize: '12px', fontWeight: '800' },
-  textoVsBracket: { color: '#555', fontSize: '10px', fontWeight: '700' },
-  miniBtnEdit: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px' },
-  contenedorFinalYCampeon: { display: 'flex', flexDirection: 'column', gap: '15px' },
-  tarjetaCampeon: { backgroundColor: 'rgba(0, 255, 102, 0.04)', border: '1px dashed #00ff66', borderRadius: '12px', padding: '15px', textAlign: 'center', marginTop: '10px' },
-  tituloCampeon: { color: '#00ff66', fontSize: '14px', fontWeight: '800', marginTop: '5px' },
-  nombreCampeon: { color: '#EAEAEA', fontSize: '12px', marginTop: '4px', fontWeight: '600' },
+  contenedorBracket: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', overflowX: 'auto', paddingBottom: '20px' },
+  columnaRonda: { display: 'flex', flexDirection: 'column', minWidth: '240px' },
+  tituloRonda: { color: '#8E8E93', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '20px', textAlign: 'center', letterSpacing: '1px' },
+  bloquePartidosRonda: { display: 'flex', flexDirection: 'column', justifyContent: 'space-around', flex: 1, gap: '24px' },
+  itemVacioRonda: { color: '#555', textAlign: 'center', padding: '24px', fontStyle: 'italic', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '14px' },
+  
+  tarjetaPartidoBracket: { backgroundColor: '#161618', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px', boxShadow: '0 6px 16px rgba(0,0,0,0.3)' },
+  bloqueJugadorBracket: { padding: '8px 10px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' },
+  nombreJugadorBracket: { color: '#ffffff', fontSize: '13px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' },
+  divisorBracket: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px' },
+  textoResultadoBracket: { color: '#39FF14', fontSize: '13px', fontWeight: '800' },
+  textoVsBracket: { color: '#8E8E93', fontSize: '11px', fontWeight: '700' },
+  miniBtnEdit: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', opacity: 0.8 },
+  
+  contenedorFinalYCampeon: { display: 'flex', flexDirection: 'column', gap: '16px' },
+  tarjetaCampeon: { backgroundColor: 'rgba(57, 255, 20, 0.05)', border: '1px dashed #39FF14', borderRadius: '14px', padding: '20px', textAlign: 'center', marginTop: '12px' },
+  tituloCampeon: { color: '#39FF14', fontSize: '16px', fontWeight: '800', marginTop: '8px', textTransform: 'uppercase' },
+  nombreCampeon: { color: '#ffffff', fontSize: '14px', marginTop: '6px', fontWeight: '600' },
 
   // Estilos Info y Botón Inscripción
-  seccionInfo: { display: 'flex', flexDirection: 'column', gap: '20px', padding: '10px 0' },
-  infoGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' },
-  infoCard: { backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', padding: '15px', display: 'flex', flexDirection: 'column', gap: '5px' },
-  infoLabel: { color: '#8A8A8A', fontSize: '12px', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '1px' },
-  infoDato: { color: '#EAEAEA', fontSize: '15px', fontWeight: '500' },
-  inscripcionBanner: { backgroundColor: 'rgba(0, 255, 102, 0.05)', border: '1px dashed rgba(0, 255, 102, 0.3)', borderRadius: '14px', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px', marginTop: '10px' },
-  btnInscribirse: { backgroundColor: '#00ff66', color: '#000', padding: '12px 24px', borderRadius: '12px', border: 'none', fontWeight: '800', fontSize: '15px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0, 255, 102, 0.2)' }
+  seccionInfo: { display: 'flex', flexDirection: 'column', gap: '24px', padding: '12px 0' },
+  infoGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' },
+  infoCard: { backgroundColor: '#161618', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' },
+  infoLabel: { color: '#8E8E93', fontSize: '13px', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '1px' },
+  infoDato: { color: '#ffffff', fontSize: '16px', fontWeight: '600' },
+  inscripcionBanner: { backgroundColor: 'rgba(57, 255, 20, 0.05)', border: '1px solid rgba(57, 255, 20, 0.2)', borderRadius: '16px', padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginTop: '12px' },
+  btnInscribirse: { backgroundColor: '#39FF14', color: '#0F0F10', padding: '14px 28px', borderRadius: '14px', border: 'none', fontWeight: '800', fontSize: '15px', cursor: 'pointer', boxShadow: '0 4px 20px rgba(57, 255, 20, 0.15)', transition: 'transform 0.1s' }
 };
 
 export default VisualizadorCuadros;

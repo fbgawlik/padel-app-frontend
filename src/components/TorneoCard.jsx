@@ -6,7 +6,6 @@ export const TorneoCard = ({ torneo, onVerDetalles, onEditar, esAdmin }) => {
     <div style={styles.card}>
       <div style={styles.header}>
         <h3 style={styles.titulo}>{torneo.nombre}</h3>
-        {/* Usamos el verde neón para el estado del torneo */}
         <span style={styles.badge}>{torneo.estado || 'Activo'}</span> 
       </div>
       
@@ -20,11 +19,12 @@ export const TorneoCard = ({ torneo, onVerDetalles, onEditar, esAdmin }) => {
       </div>
       
       <div style={styles.actions}>
-        <button onClick={() => onVerDetalles(torneo)} style={styles.btnPrincipal}>
+        <button onClick={() => onVerDetalles(torneo)} style={styles.btnAccion}>
           Ver Cuadros / Detalles
         </button>
+        
         {esAdmin && (
-          <button onClick={() => onEditar(torneo)} style={styles.btnAdmin}> 
+          <button onClick={() => onEditar(torneo)} style={styles.btnEditar}> 
             Editar
           </button>
         )}
@@ -33,7 +33,6 @@ export const TorneoCard = ({ torneo, onVerDetalles, onEditar, esAdmin }) => {
   );
 };
 
-// Estilos actualizados a la estética Premium Dark/Neon
 const styles = {
   card: {
     backgroundColor: '#161618',
@@ -44,7 +43,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between',
-    minHeight: '200px' // Mantiene consistencia en el grid
+    minHeight: '200px'
   },
   header: { 
     display: 'flex', 
@@ -91,27 +90,29 @@ const styles = {
     gap: '12px',
     marginTop: 'auto' 
   },
-  btnPrincipal: { 
-    flex: 1,
-    backgroundColor: '#39FF14', // Acento principal
-    color: '#0F0F10', 
-    border: 'none',
-    padding: '12px',
+  btnAccion: {
+    flex: 1, 
+    backgroundColor: 'rgba(57, 255, 20, 0.05)',
+    color: '#39FF14',
+    border: '1px solid rgba(57, 255, 20, 0.4)',
+    padding: '12px 18px',
     borderRadius: '12px',
+    cursor: 'pointer',
     fontWeight: '700',
     fontSize: '14px',
-    cursor: 'pointer',
-    transition: 'transform 0.1s ease',
+    transition: 'all 0.2s ease',
+    textAlign: 'center'
   },
-  btnAdmin: { 
-    backgroundColor: 'transparent', 
-    color: '#ff4d4d', // Rojo sutil para acciones destructivas/edición
-    border: '1px solid rgba(255, 77, 77, 0.3)',
-    padding: '12px 16px',
+  btnEditar: {
+    backgroundColor: 'rgba(255, 77, 77, 0.05)',
+    color: '#ff4d4d',
+    border: '1px solid rgba(255, 77, 77, 0.4)',
+    padding: '12px 18px',
     borderRadius: '12px',
-    fontWeight: '600',
-    fontSize: '14px',
     cursor: 'pointer',
-    transition: 'background-color 0.2s ease',
+    fontWeight: '700',
+    fontSize: '14px',
+    transition: 'all 0.2s ease',
+    textAlign: 'center'
   }
 };
