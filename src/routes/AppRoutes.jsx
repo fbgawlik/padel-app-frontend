@@ -12,12 +12,15 @@ import ReservarTurnoScreen from '../screens/ReservarTurnoScreen';
 import ClasesScreen from '../screens/ClasesScreen'; 
 import CrearClaseScreen from '../screens/CrearClaseScreen';
 import { TorneosScreen } from '../screens/TorneosScreen';
-import BuscadorClubesScreen from '../screens/BuscadorClubesScreen'; // AGREGADO
-import TiendaScreen from '../screens/TiendaScreen'; // AGREGADO
+import BuscadorClubesScreen from '../screens/BuscadorClubesScreen'; 
+import TiendaScreen from '../screens/TiendaScreen'; 
 import MisReservasScreen from '../screens/MisReservasScreen';
 import PerfilScreen from '../screens/PerfilScreen';
 import Layout from '../components/Layout'; 
 import RankingScreen from "../screens/RankingScreen";
+
+// 🔥 IMPORTAMOS LA NUEVA PANTALLA
+import PerfilPublicoScreen from '../screens/PerfilPublicoScreen'; 
 
 const RutaPrivada = ({ children }) => {
   const { usuario, loading } = useContext(AuthContext);
@@ -56,22 +59,19 @@ const AppRoutes = () => {
         }>
           <Route path="/dashboard" element={<DashboardScreen />} />
           <Route path="/gestion-complejo" element={<GestionComplejo />} />
-          
-          {/* AQUÍ AGREGAS TU NUEVA RUTA */}
           <Route path="/mis-reservas" element={<MisReservasScreen />} />
-          
           <Route path="/turnos" element={<BuscadorClubesScreen />} />
           <Route path="/reservar/:id" element={<ReservarTurnoScreen />} />
-          
           <Route path="/tienda" element={<TiendaScreen />} />
           <Route path="/tienda/:id" element={<TiendaScreen />} />
-          
           <Route path="/torneos" element={<TorneosScreen />} />
           <Route path="/clases" element={<ClasesScreen />} />
           <Route path="/crear-clase" element={<CrearClaseScreen />} />
           <Route path="/ranking" element={<RankingScreen />} />
-
           <Route path="/perfil" element={<PerfilScreen />} />
+          
+          {/* 🔥 AQUÍ AGREGAMOS LA NUEVA RUTA PARA EL PERFIL PÚBLICO */}
+          <Route path="/jugador/:id" element={<PerfilPublicoScreen />} />
         </Route>
 
         <Route path="*" element={<Navigate to={usuario ? "/dashboard" : "/login"} />} />

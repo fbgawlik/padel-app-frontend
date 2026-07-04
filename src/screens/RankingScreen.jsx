@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // 1. Importamos useNavigate
 
 const RankingScreen = () => {
   // Estados para manejar la información visual
   const [jugadores, setJugadores] = useState([]);
   const [categoria, setCategoria] = useState('5ta'); // Categoría por defecto
   const [cargando, setCargando] = useState(true);
+  
+  // 2. Inicializamos la navegación
+  const navigate = useNavigate(); 
 
   // Array de categorías disponibles para el selector
   const categoriasDisponibles = ['1ra', '2da', '3ra', '4ta', '5ta', '6ta', '7ma', '8va'];
@@ -74,7 +78,12 @@ const RankingScreen = () => {
                 </tr>
               ) : (
                 jugadores.map((jugador, index) => (
-                  <tr key={jugador.id} className="hover:bg-gray-50 border-b">
+                  // 3. Modificamos el <tr> con cursor-pointer y el evento onClick
+                  <tr 
+                    key={jugador.id} 
+                    className="hover:bg-gray-50 border-b cursor-pointer transition-colors"
+                    onClick={() => navigate(`/jugador/${jugador.usuarioId || jugador.usuario.id}`)}
+                  >
                     <td className="p-4 font-bold text-gray-600">
                       {index + 1}
                     </td>
