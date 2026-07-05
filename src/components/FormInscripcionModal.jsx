@@ -212,3 +212,6 @@ const styles = {
   btnCancelar: { backgroundColor: 'transparent', color: '#8E8E93', border: '1px solid rgba(255,255,255,0.1)', padding: '14px 24px', borderRadius: '14px', cursor: 'pointer', fontWeight: '600', fontSize: '15px' },
   btnInscribir: { backgroundColor: '#39FF14', color: '#0F0F10', border: 'none', padding: '14px 24px', borderRadius: '14px', fontWeight: '800', cursor: 'pointer', fontSize: '15px' }
 };
+
+// 👇 ESTA ES LA LÍNEA QUE FALTABA PARA QUE FUNCIONE EL IMPORT 👇
+export default FormInscripcionModal;
