@@ -6,7 +6,13 @@ const VisualizadorCuadros = ({ torneoId, torneo, categoria, usuario, onUpdateRes
   const [partidos, setPartidos] = useState([]);
   const [zonas, setZonas] = useState([]);
   const [cargando, setCargando] = useState(true);
-  const [pestanaActiva, setPestanaActiva] = useState('info'); 
+  
+  // Pestañas principales del video: fixture, cronograma, galeria
+  const [pestanaActiva, setPestanaActiva] = useState('fixture'); 
+  // Sub-filtros para el Cronograma (Días)
+  const [diaSeleccionado, setDiaSeleccionado] = useState('Vie 7');
+  // Sub-filtros para la Galería
+  const [subFiltroGaleria, setSubFiltroGaleria] = useState('Todo');
 
   const puedeEditar = usuario?.rol === 'admin_complejo' || usuario?.rol === 'organizador';
 
@@ -37,7 +43,7 @@ const VisualizadorCuadros = ({ torneoId, torneo, categoria, usuario, onUpdateRes
   }, [torneoId, categoria]);
 
   if (cargando) {
-    return <div style={styles.textoCargando}>Cargando fixture interactivo...</div>;
+    return <div style={styles.textoCargando}>Cargando interfaz premium...</div>;
   }
 
   const partidosCuartos = partidos.filter(p => p.tipoFase === 'CUARTOS');
@@ -49,277 +55,422 @@ const VisualizadorCuadros = ({ torneoId, torneo, categoria, usuario, onUpdateRes
     return `${parejaObj.jugador1} / ${parejaObj.jugador2}`;
   };
 
+  // Mock de días para el slider horizontal del Cronograma
+  const diasCronograma = [
+    { id: 'Vie 7', diaSemana: 'Vie', numero: '7', mes: 'ago' },
+    { id: 'Sáb 8', diaSemana: 'Sáb', numero: '8', mes: 'ago' },
+    { id: 'Dom 9', diaSemana: 'Dom', numero: '9', mes: 'ago' },
+  ];
+
+  // Mock de archivos multimedia para la Galería
+  const fotosMock = [
+    { id: 1, type: 'photo', url: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=500' },
+    { id: 2, type: 'photo', url: 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=500' },
+    { id: 3, type: 'photo', url: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=500' },
+  ];
+
   return (
-    <div style={styles.contenedor}>
-      {/* Selector de Pestañas Premium (Tabs) */}
-      <div style={styles.contenedorTabs}>
+    <div style={styles.contenedorPrincipal}>
+      
+      {/* ─── BANNER SUPERIOR DEL TORNEO (Estilo ADN PÁDEL) ─── */}
+      <div style={styles.bannerTorneo}>
+        <div style={styles.overlayBanner}>
+          <span style={styles.subtituloApp}>🏆 CIRCUITO DE PÁDEL</span>
+          <h1 style={styles.tituloTorneo}>{torneo?.nombre || "TORNEO INDEFINIDO"}</h1>
+          <p style={styles.datosBanner}>Categoría seleccionada: {categoria}</p>
+        </div>
+      </div>
+
+      {/* ─── PESTAÑAS PRINCIPALES DEL VIDEO ─── */}
+      <div style={styles.contenedorTabsPrincipales}>
         <button 
-          onClick={() => setPestanaActiva('info')}
-          style={{...styles.tabButton, ...(pestanaActiva === 'info' ? styles.tabActive : {})}}
+          onClick={() => setPestanaActiva('fixture')}
+          style={{...styles.tabPrincipal, ...(pestanaActiva === 'fixture' ? styles.tabPrincipalActive : {})}}
         >
-          ℹ️ Información
+          Fixture
         </button>
         <button 
-          onClick={() => setPestanaActiva('zonas')}
-          style={{...styles.tabButton, ...(pestanaActiva === 'zonas' ? styles.tabActive : {})}}
+          onClick={() => setPestanaActiva('cronograma')}
+          style={{...styles.tabPrincipal, ...(pestanaActiva === 'cronograma' ? styles.tabPrincipalActive : {})}}
         >
-          🎾 Fase de Grupos ({zonas.length})
+          Cronograma
         </button>
         <button 
-          onClick={() => setPestanaActiva('llaves')}
-          style={{...styles.tabButton, ...(pestanaActiva === 'llaves' ? styles.tabActive : {})}}
+          onClick={() => setPestanaActiva('galeria')}
+          style={{...styles.tabPrincipal, ...(pestanaActiva === 'galeria' ? styles.tabPrincipalActive : {})}}
         >
-          🏆 Llaves Eliminatorias
+          Galería
         </button>
       </div>
 
-      {/* CONTENIDO 0: INFORMACIÓN */}
-      {pestanaActiva === 'info' && torneo && (
-        <div style={styles.seccionInfo}>
-          <div style={styles.infoGrid}>
-            <div style={styles.infoCard}>
-              <span style={styles.infoLabel}>Fechas</span>
-              <span style={styles.infoDato}>{torneo.fechaInicio} al {torneo.fechaFin}</span>
-            </div>
-            <div style={styles.infoCard}>
-              <span style={styles.infoLabel}>Complejo</span>
-              <span style={styles.infoDato}>{torneo.complejo?.nombre || 'Por definir'}</span>
-            </div>
-            <div style={styles.infoCard}>
-              <span style={styles.infoLabel}>Cupo Máximo</span>
-              <span style={styles.infoDato}>{torneo.cupoParejas || 16} parejas por categoría</span>
-            </div>
-          </div>
-          
-          <div style={styles.inscripcionBanner}>
-            <div>
-              <h4 style={{ margin: '0 0 5px 0', color: '#fff', fontSize: '18px' }}>¡Asegurá tu lugar!</h4>
-              <p style={{ margin: 0, color: '#8E8E93', fontSize: '14px' }}>Inscripciones abiertas para la categoría {categoria}.</p>
-            </div>
-            <button style={styles.btnInscribirse} onClick={onAbrirInscripcion}>
-              ✍️ Inscribirse Ahora
-            </button>
-          </div>
-        </div>
-      )}
+      {/* ─── CONTENIDO DE LAS VISTAS ─── */}
+      <div style={styles.cuerpoContenido}>
 
-      {/* CONTENIDO 1: FASE DE GRUPOS */}
-      {pestanaActiva === 'zonas' && (
-        <div style={styles.seccionZonas}>
-          {zonas.length === 0 ? (
-            <p style={styles.textoVacio}>Aún no se generaron las zonas para esta categoría.</p>
-          ) : (
-            zonas.map(zona => {
-              const partidosDeZona = partidos.filter(p => p.zonaId === zona.id);
-              return (
-                <div key={zona.id} style={styles.tarjetaZona}>
-                  <div style={styles.headerZona}>{zona.nombre}</div>
-                  <div style={styles.listaPartidos}>
-                    {partidosDeZona.length === 0 ? (
-                      <div style={{ color: '#8E8E93', fontSize: '13px', textAlign: 'center', padding: '12px' }}>
-                        Esperando emparejamientos...
-                      </div>
-                    ) : (
-                      partidosDeZona.map(partido => (
-                        <div key={partido.id} style={styles.filaPartido}>
-                          <div style={styles.infoParejas}>
-                            <div style={partido.estado === 'finalizado' ? { ...styles.parejaTexto, color: '#8E8E93' } : styles.parejaTexto}>
-                              {obtenerNombresPareja(partido.pareja1)}
-                            </div>
-                            <div style={styles.vs}>vs</div>
-                            <div style={partido.estado === 'finalizado' ? { ...styles.parejaTexto, color: '#8E8E93' } : styles.parejaTexto}>
-                              {obtenerNombresPareja(partido.pareja2)}
-                            </div>
-                          </div>
-                          
-                          <div style={styles.resultadoContenedor}>
-                            {partido.estado === 'finalizado' ? (
-                              <span style={styles.badgeResultado}>{partido.resultado}</span>
-                            ) : (
-                              <span style={styles.badgeProgramado}>Pendiente</span>
-                            )}
-                            
-                            {puedeEditar && onUpdateResultado && (
-                              <button 
-                                onClick={() => onUpdateResultado(partido)} 
-                                style={styles.btnEditarScore}
-                                title="Cargar marcador"
-                              >
-                                ✏️
-                              </button>
-                            )}
-                          </div>
+        {/* 1. VISTA: FIXTURE (Fase de grupos y llaves juntas con scroll o acordeón) */}
+        {pestanaActiva === 'fixture' && (
+          <div>
+            <h3 style={styles.seccionTituloInterno}>Zonas y Llaves Eliminatorias</h3>
+            
+            {/* Render de Fase de Grupos / Zonas */}
+            <div style={styles.seccionZonas}>
+              {zonas.map(zona => {
+                const partidosDeZona = partidos.filter(p => p.zonaId === zona.id);
+                return (
+                  <div key={zona.id} style={styles.tarjetaZona}>
+                    <div style={styles.headerZona}>{zona.nombre}</div>
+                    <div style={styles.listaPartidosMini}>
+                      {partidosDeZona.map(partido => (
+                        <div key={partido.id} style={styles.filaPartidoMini}>
+                          <span>{obtenerNombresPareja(partido.pareja1)} <b style={{color: '#39FF14'}}>vs</b> {obtenerNombresPareja(partido.pareja2)}</span>
+                          <span style={styles.resultadoMini}>{partido.resultado || 'Pendiente'}</span>
                         </div>
-                      ))
-                    )}
+                      ))}
+                    </div>
                   </div>
+                );
+              })}
+            </div>
+
+            {/* Bracket Horizontal */}
+            <div style={styles.contenedorBracket}>
+              <div style={styles.columnaRonda}>
+                <div style={styles.tituloRonda}>Cuartos</div>
+                {partidosCuartos.map(p => <TarjetaPartidoBracket key={p.id} partido={p} onNombres={obtenerNombresPareja} isAdmin={puedeEditar} onEdit={onUpdateResultado} />)}
+              </div>
+              <div style={styles.columnaRonda}>
+                <div style={styles.tituloRonda}>Semifinal</div>
+                {partidosSemis.map(p => <TarjetaPartidoBracket key={p.id} partido={p} onNombres={obtenerNombresPareja} isAdmin={puedeEditar} onEdit={onUpdateResultado} />)}
+              </div>
+              <div style={styles.columnaRonda}>
+                <div style={styles.tituloRonda}>Final</div>
+                {partidosFinal.map(p => <TarjetaPartidoBracket key={p.id} partido={p} onNombres={obtenerNombresPareja} isAdmin={puedeEditar} onEdit={onUpdateResultado} />)}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2. VISTA: CRONOGRAMA (Por horarios e indicador vertical) */}
+        {pestanaActiva === 'cronograma' && (
+          <div>
+            {/* Slider Horizontal de Días del Video */}
+            <div style={styles.sliderDiasContainer}>
+              {diasCronograma.map(dia => {
+                const isSelected = diaSeleccionado === dia.id;
+                return (
+                  <button 
+                    key={dia.id}
+                    onClick={() => setDiaSeleccionado(dia.id)}
+                    style={{...styles.tarjetaDiaBtn, ...(isSelected ? styles.tarjetaDiaBtnActive : {})}}
+                  >
+                    <span style={styles.diaTextoArriba}>{dia.diaSemana}</span>
+                    <span style={{...styles.diaNumero, color: isSelected ? '#39FF14' : '#fff'}}>{dia.numero}</span>
+                    <span style={styles.diaTextoAbajo}>{dia.mes}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div style={styles.infoPartidosCount}>Viernes 7 de Agosto — {partidos.length} partidos programados</div>
+
+            {/* Lista de Partidos Estilo Timeline */}
+            <div style={styles.timelineContenedor}>
+              {partidos.length === 0 ? (
+                <p style={styles.textoVacio}>No hay partidos cargados para este día.</p>
+              ) : (
+                partidos.map((partido, index) => (
+                  <div key={partido.id || index} style={styles.filaTimelinePartido}>
+                    
+                    {/* Bloque Izquierdo: Hora */}
+                    <div style={styles.timelineBloqueHora}>
+                      <div style={styles.timelineHoraTexto}>{partido.hora || "16:45"}</div>
+                      <div style={styles.timelineDiaSub}>VIE</div>
+                    </div>
+
+                    {/* Separador de línea vertical del video */}
+                    <div style={styles.timelineLineaVertical}>
+                      <div style={styles.timelineCirculoNodo} />
+                    </div>
+
+                    {/* Bloque Derecho: Detalles e información del partido */}
+                    <div style={styles.timelineCardDetalle}>
+                      <div style={styles.timelineHeaderBadges}>
+                        <span style={styles.badgeEstadoVideo}>
+                          {partido.estado === 'finalizado' ? '● FINALIZADO' : '● PROGRAMADO'}
+                        </span>
+                        <span style={styles.badgeCategoriaVideo}>{categoria}</span>
+                        <span style={styles.badgeZonaVideo}>{partido.zonaId ? 'Fase de Grupos' : 'Eliminatorias'}</span>
+                      </div>
+
+                      <div style={styles.timelineVersusNombres}>
+                        <div style={styles.timelineJugadorRenglon}>{obtenerNombresPareja(partido.pareja1)}</div>
+                        <div style={styles.timelineVsSeparador}>vs</div>
+                        <div style={styles.timelineJugadorRenglon}>{obtenerNombresPareja(partido.pareja2)}</div>
+                      </div>
+
+                      <div style={styles.timelineFooterSede}>
+                        📍 {torneo?.complejo?.nombre || 'Complejo Principal'} — Cancha 1
+                        {partido.resultado && <span style={styles.resultadoBadgeTimeline}>Resultado: {partido.resultado}</span>}
+                      </div>
+
+                      {puedeEditar && onUpdateResultado && (
+                        <button onClick={() => onUpdateResultado(partido)} style={styles.btnCargarScoreTimeline}>
+                          ✏️ Modificar Marcador
+                        </button>
+                      )}
+                    </div>
+
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 3. VISTA: GALERÍA (Grid de imágenes y multimedia) */}
+        {pestanaActiva === 'galeria' && (
+          <div>
+            {/* Sub-tabs de la galería: Todo, Fotos, Videos */}
+            <div style={styles.contenedorSubChips}>
+              {['Todo', 'Fotos', 'Videos'].map(opt => (
+                <button
+                  key={opt}
+                  onClick={() => setSubFiltroGaleria(opt)}
+                  style={{...styles.chipSubFiltro, ...(subFiltroGaleria === opt ? styles.chipSubFiltroActive : {})}}
+                >
+                  {opt}
+                </button>
+              ))}
+              <span style={styles.contadorArchivos}>6 ARCHIVOS</span>
+            </div>
+
+            {/* Grid de Fotos Premium */}
+            <div style={styles.gridGaleria}>
+              {fotosMock.map(foto => (
+                <div key={foto.id} style={styles.tarjetaImagenGaleria}>
+                  <img src={foto.url} alt="Torneo" style={styles.imagenGaleriaSrc} />
+                  <div style={styles.overlayImagenGradient} />
                 </div>
-              );
-            })
-          )}
-        </div>
-      )}
-
-      {/* CONTENIDO 2: LLAVES ELIMINATORIAS (Bracket Horizontal) */}
-      {pestanaActiva === 'llaves' && (
-        <div style={styles.contenedorBracket}>
-          
-          <div style={styles.columnaRonda}>
-            <div style={styles.tituloRonda}>Cuartos de Final</div>
-            <div style={styles.bloquePartidosRonda}>
-              {partidosCuartos.length === 0 ? (
-                <div style={styles.itemVacioRonda}>Fase no iniciada</div>
-              ) : (
-                partidosCuartos.map(partido => (
-                  <TarjetaPartidoBracket 
-                    key={partido.id} 
-                    partido={partido} 
-                    onNombres={obtenerNombresPareja}
-                    isAdmin={puedeEditar} 
-                    onEdit={onUpdateResultado}
-                  />
-                ))
-              )}
+              ))}
             </div>
           </div>
+        )}
 
-          <div style={styles.columnaRonda}>
-            <div style={styles.tituloRonda}>Semifinales</div>
-            <div style={styles.bloquePartidosRonda}>
-              {partidosSemis.length === 0 ? (
-                <div style={styles.itemVacioRonda}>Fase no iniciada</div>
-              ) : (
-                partidosSemis.map(partido => (
-                  <TarjetaPartidoBracket 
-                    key={partido.id} 
-                    partido={partido} 
-                    onNombres={obtenerNombresPareja}
-                    isAdmin={puedeEditar} 
-                    onEdit={onUpdateResultado}
-                  />
-                ))
-              )}
-            </div>
-          </div>
-
-          <div style={styles.columnaRonda}>
-            <div style={styles.tituloRonda}>Gran Final</div>
-            <div style={styles.bloquePartidosRonda}>
-              {partidosFinal.length === 0 ? (
-                <div style={styles.itemVacioRonda}>Fase no iniciada</div>
-              ) : (
-                partidosFinal.map(partido => (
-                  <div key={partido.id} style={styles.contenedorFinalYCampeon}>
-                    <TarjetaPartidoBracket 
-                      partido={partido} 
-                      onNombres={obtenerNombresPareja}
-                      isAdmin={puedeEditar} 
-                      onEdit={onUpdateResultado}
-                    />
-                    {partido.estado === 'finalizado' && partido.resultado && (
-                      <div style={styles.tarjetaCampeon}>
-                        <div style={{ fontSize: '28px' }}>🏆</div>
-                        <div style={styles.tituloCampeon}>¡CAMPEONES!</div>
-                        <div style={styles.nombreCampeon}>
-                          Torneo Finalizado
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-        </div>
-      )}
+      </div>
     </div>
   );
 };
 
-// Subcomponente estilizado para cada partido del Bracket
+// Componente auxiliar estilizado para los brackets en la pestaña Fixture
 const TarjetaPartidoBracket = ({ partido, onNombres, isAdmin, onEdit }) => {
-  const jugador1Empty = !partido.pareja1;
-  const jugador2Empty = !partido.pareja2;
-
   return (
     <div style={styles.tarjetaPartidoBracket}>
-      <div style={{ ...styles.bloqueJugadorBracket, opacity: jugador1Empty ? 0.5 : 1 }}>
-        <span style={styles.nombreJugadorBracket}>
-          {onNombres(partido.pareja1)}
-        </span>
+      <div style={styles.bloqueJugadorBracket}>
+        <span style={styles.nombreJugadorBracket}>{onNombres(partido.pareja1)}</span>
       </div>
-      
       <div style={styles.divisorBracket}>
         <span style={partido.resultado ? styles.textoResultadoBracket : styles.textoVsBracket}>
           {partido.resultado || 'VS'}
         </span>
-        {isAdmin && onEdit && (
-          <button onClick={() => onEdit(partido)} style={styles.miniBtnEdit}>✏️</button>
-        )}
+        {isAdmin && onEdit && <button onClick={() => onEdit(partido)} style={styles.miniBtnEdit}>✏️</button>}
       </div>
-
-      <div style={{ ...styles.bloqueJugadorBracket, opacity: jugador2Empty ? 0.5 : 1 }}>
-        <span style={styles.nombreJugadorBracket}>
-          {onNombres(partido.pareja2)}
-        </span>
+      <div style={styles.bloqueJugadorBracket}>
+        <span style={styles.nombreJugadorBracket}>{onNombres(partido.pareja2)}</span>
       </div>
     </div>
   );
 };
 
-// Estilos premium integrados a la paleta Dark/Neon unificada (#39FF14 y #161618)
+// ─── ESTILOS PREMIUM TOTALMENTE BASADOS EN EL VIDEO DE REFERENCIA ───
 const styles = {
-  contenedor: { marginTop: '15px' },
-  textoCargando: { color: '#8E8E93', textAlign: 'center', padding: '20px', fontSize: '14px' },
-  textoVacio: { color: '#8E8E93', textAlign: 'center', padding: '40px', fontSize: '15px', fontStyle: 'italic' },
-  
-  contenedorTabs: { display: 'flex', gap: '10px', marginBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '12px', overflowX: 'auto' },
-  tabButton: { flex: 1, minWidth: '150px', padding: '12px', borderRadius: '12px', backgroundColor: 'transparent', border: 'none', color: '#8E8E93', fontWeight: '600', fontSize: '14px', cursor: 'pointer', transition: 'all 0.2s ease', whiteSpace: 'nowrap' },
-  tabActive: { backgroundColor: 'rgba(57, 255, 20, 0.08)', color: '#39FF14', border: '1px solid rgba(57, 255, 20, 0.2)' },
-  
-  seccionZonas: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' },
-  tarjetaZona: { backgroundColor: '#161618', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' },
-  headerZona: { backgroundColor: 'rgba(255,255,255,0.03)', padding: '14px 16px', color: '#ffffff', fontWeight: '700', fontSize: '15px', borderBottom: '1px solid rgba(255,255,255,0.05)' },
-  listaPartidos: { padding: '12px' },
-  filaPartido: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 8px', borderBottom: '1px solid rgba(255,255,255,0.03)', gap: '12px' },
-  infoParejas: { flex: 1 },
-  parejaTexto: { color: '#EAEAEA', fontSize: '14px', fontWeight: '600' },
-  vs: { color: '#8E8E93', fontSize: '11px', margin: '4px 0', fontWeight: '700', textTransform: 'uppercase' },
-  
-  resultadoContenedor: { display: 'flex', alignItems: 'center', gap: '8px' },
-  badgeResultado: { backgroundColor: 'rgba(0, 229, 255, 0.1)', color: '#00e5ff', padding: '6px 10px', borderRadius: '8px', fontSize: '13px', fontWeight: '700', border: '1px solid rgba(0, 229, 255, 0.2)' },
-  badgeProgramado: { backgroundColor: 'rgba(255,255,255,0.05)', color: '#8E8E93', padding: '6px 10px', borderRadius: '8px', fontSize: '13px', fontWeight: '600' },
-  btnEditarScore: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '14px', padding: '6px', borderRadius: '6px', transition: 'background 0.2s' },
-  
-  // Bracket Styles
-  contenedorBracket: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px', overflowX: 'auto', paddingBottom: '20px' },
-  columnaRonda: { display: 'flex', flexDirection: 'column', minWidth: '240px' },
-  tituloRonda: { color: '#8E8E93', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '20px', textAlign: 'center', letterSpacing: '1px' },
-  bloquePartidosRonda: { display: 'flex', flexDirection: 'column', justifyContent: 'space-around', flex: 1, gap: '24px' },
-  itemVacioRonda: { color: '#555', textAlign: 'center', padding: '24px', fontStyle: 'italic', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '14px' },
-  
-  tarjetaPartidoBracket: { backgroundColor: '#161618', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px', boxShadow: '0 6px 16px rgba(0,0,0,0.3)' },
-  bloqueJugadorBracket: { padding: '8px 10px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' },
-  nombreJugadorBracket: { color: '#ffffff', fontSize: '13px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' },
-  divisorBracket: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 10px' },
-  textoResultadoBracket: { color: '#39FF14', fontSize: '13px', fontWeight: '800' },
-  textoVsBracket: { color: '#8E8E93', fontSize: '11px', fontWeight: '700' },
-  miniBtnEdit: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', opacity: 0.8 },
-  
-  contenedorFinalYCampeon: { display: 'flex', flexDirection: 'column', gap: '16px' },
-  tarjetaCampeon: { backgroundColor: 'rgba(57, 255, 20, 0.05)', border: '1px dashed #39FF14', borderRadius: '14px', padding: '20px', textAlign: 'center', marginTop: '12px' },
-  tituloCampeon: { color: '#39FF14', fontSize: '16px', fontWeight: '800', marginTop: '8px', textTransform: 'uppercase' },
-  nombreCampeon: { color: '#ffffff', fontSize: '14px', marginTop: '6px', fontWeight: '600' },
+  contenedorPrincipal: { backgroundColor: '#0F0F11', color: '#ffffff', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' },
+  textoCargando: { color: '#8E8E93', textAlign: 'center', padding: '40px', fontSize: '15px' },
+  textoVacio: { color: '#8E8E93', padding: '20px', fontStyle: 'italic' },
 
-  // Estilos Info y Botón Inscripción
-  seccionInfo: { display: 'flex', flexDirection: 'column', gap: '24px', padding: '12px 0' },
-  infoGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' },
-  infoCard: { backgroundColor: '#161618', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' },
-  infoLabel: { color: '#8E8E93', fontSize: '13px', textTransform: 'uppercase', fontWeight: '700', letterSpacing: '1px' },
-  infoDato: { color: '#ffffff', fontSize: '16px', fontWeight: '600' },
-  inscripcionBanner: { backgroundColor: 'rgba(57, 255, 20, 0.05)', border: '1px solid rgba(57, 255, 20, 0.2)', borderRadius: '16px', padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginTop: '12px' },
-  btnInscribirse: { backgroundColor: '#39FF14', color: '#0F0F10', padding: '14px 28px', borderRadius: '14px', border: 'none', fontWeight: '800', fontSize: '15px', cursor: 'pointer', boxShadow: '0 4px 20px rgba(57, 255, 20, 0.15)', transition: 'transform 0.1s' }
+  // Banner Superior
+  bannerTorneo: {
+    position: 'relative',
+    height: '160px',
+    background: 'linear-gradient(135deg, #1A1A1E 0%, #25252A 100%)',
+    backgroundImage: 'url("https://images.unsplash.com/photo-1592656094267-764a4506f368?w=800")', // Fondo deportivo abstracto sutil
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    display: 'flex',
+    alignItems: 'flex-end',
+  },
+  overlayBanner: {
+    width: '100%',
+    padding: '20px',
+    background: 'linear-gradient(to top, #0F0F11 0%, rgba(15,15,17,0.4) 100%)',
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  subtituloApp: { color: '#39FF14', fontSize: '11px', fontWeight: '800', letterSpacing: '2px', marginBottom: '4px' },
+  tituloTorneo: { margin: 0, fontSize: '26px', fontWeight: '900', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.5px' },
+  datosBanner: { margin: '2px 0 0 0', color: '#A5A5A9', fontSize: '13px', fontWeight: '500' },
+
+  // Pestañas Principales Integradas (Estilo Flat Horizontal Underlined)
+  contenedorTabsPrincipales: {
+    display: 'flex',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+    backgroundColor: '#0F0F11',
+    position: 'sticky',
+    top: 0,
+    zIndex: 100,
+  },
+  tabPrincipal: {
+    flex: 1,
+    padding: '16px 10px',
+    background: 'none',
+    border: 'none',
+    color: '#8E8E93',
+    fontSize: '15px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    textAlign: 'center',
+    transition: 'all 0.2s ease',
+    borderBottom: '3px solid transparent',
+  },
+  tabPrincipalActive: {
+    color: '#ffffff',
+    borderBottom: '3px solid #39FF14', // Línea verde neón inferior activa
+  },
+
+  cuerpoContenido: { padding: '16px' },
+
+  // Slider de Fechas (Cronograma)
+  sliderDiasContainer: {
+    display: 'flex',
+    gap: '10px',
+    overflowX: 'auto',
+    paddingBottom: '12px',
+    marginBottom: '16px',
+    scrollbarWidth: 'none',
+  },
+  tarjetaDiaBtn: {
+    minWidth: '75px',
+    padding: '10px 6px',
+    backgroundColor: '#161619',
+    border: '1px solid rgba(255,255,255,0.04)',
+    borderRadius: '14px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  },
+  tarjetaDiaBtnActive: {
+    backgroundColor: 'rgba(57, 255, 20, 0.05)',
+    border: '1px solid rgba(57, 255, 20, 0.3)',
+  },
+  diaTextoArriba: { color: '#8E8E93', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase' },
+  diaNumero: { fontSize: '20px', fontWeight: '800', margin: '4px 0' },
+  diaTextoAbajo: { color: '#8E8E93', fontSize: '11px' },
+  infoPartidosCount: { color: '#8E8E93', fontSize: '13px', fontWeight: '600', marginBottom: '20px', textTransform: 'capitalize' },
+
+  // Lista Estilo Timeline (Cronograma)
+  timelineContenedor: { display: 'flex', flexDirection: 'column', gap: '4px' },
+  filaTimelinePartido: { display: 'flex', position: 'relative', alignItems: 'stretch' },
+  
+  timelineBloqueHora: {
+    width: '55px',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'flex-start',
+    paddingTop: '14px',
+    alignItems: 'flex-end',
+    paddingRight: '10px',
+  },
+  timelineHoraTexto: { color: '#ffffff', fontSize: '15px', fontWeight: '800' },
+  timelineDiaSub: { color: '#8E8E93', fontSize: '10px', fontWeight: '700' },
+
+  timelineLineaVertical: {
+    position: 'relative',
+    width: '20px',
+    display: 'flex',
+    justifyContent: 'center',
+  },
+  timelineCirculoNodo: {
+    position: 'absolute',
+    top: '18px',
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%',
+    backgroundColor: '#39FF14',
+    zIndex: 2,
+    boxShadow: '0 0 8px #39FF14',
+  },
+  
+  timelineCardDetalle: {
+    flex: 1,
+    backgroundColor: '#161619',
+    borderRadius: '16px',
+    padding: '14px 16px',
+    marginBottom: '14px',
+    border: '1px solid rgba(255,255,255,0.03)',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+  },
+  timelineHeaderBadges: { display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px', alignItems: 'center' },
+  badgeEstadoVideo: { backgroundColor: 'rgba(0, 229, 255, 0.08)', color: '#00e5ff', padding: '3px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', border: '1px solid rgba(0, 229, 255, 0.15)' },
+  badgeCategoriaVideo: { backgroundColor: 'rgba(255,255,255,0.06)', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '700' },
+  badgeZonaVideo: { color: '#8E8E93', fontSize: '11px', fontWeight: '600' },
+
+  timelineVersusNombres: { display: 'flex', flexDirection: 'column', gap: '4px', margin: '12px 0' },
+  timelineJugadorRenglon: { color: '#ffffff', fontSize: '14px', fontWeight: '700' },
+  timelineVsSeparador: { color: '#555559', fontSize: '10px', fontWeight: '800', margin: '2px 0', textTransform: 'uppercase' },
+  timelineFooterSede: { color: '#8E8E93', fontSize: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' },
+  resultadoBadgeTimeline: { color: '#39FF14', fontWeight: '700' },
+  btnCargarScoreTimeline: { marginTop: '10px', width: '100%', padding: '8px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer' },
+
+  // Galería
+  contenedorSubChips: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' },
+  chipSubFiltro: { padding: '8px 16px', borderRadius: '20px', backgroundColor: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8E8E93', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
+  chipSubFiltroActive: { backgroundColor: '#ffffff', color: '#000', border: '1px solid #fff', fontWeight: '700' },
+  contadorArchivos: { marginLeft: 'auto', color: '#8E8E93', fontSize: '12px', fontWeight: '700' },
+  gridGaleria: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px' },
+  tarjetaImagenGaleria: { position: 'relative', height: '180px', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#161619' },
+  imagenGaleriaSrc: { width: '100%', height: '100%', objectFit: 'cover' },
+  overlayImagenGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '40px', background: 'linear-gradient(to top, rgba(0,0,0,0.5), transparent)' },
+
+  // Fixture / Brackets Auxiliares
+  seccionTituloInterno: { color: '#fff', fontSize: '16px', marginBottom: '14px', fontWeight: '700' },
+  seccionZonas: { display: 'grid', gridTemplateColumns: '1fr', gap: '14px', marginBottom: '24px' },
+  tarjetaZona: { backgroundColor: '#161619', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.03)', overflow: 'hidden' },
+  headerZona: { backgroundColor: 'rgba(255,255,255,0.02)', padding: '10px 14px', fontWeight: '700', fontSize: '13px', color: '#39FF14' },
+  listaPartidosMini: { padding: '10px' },
+  filaPartidoMini: { display: 'flex', justifyContent: 'space-between', fontSize: '13px', padding: '6px 4px', borderBottom: '1px solid rgba(255,255,255,0.02)' },
+  resultadoMini: { fontWeight: '700', color: '#00e5ff' },
+
+  contenedorBracket: { display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '14px', marginTop: '20px' },
+  columnaRonda: { display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '200px', flex: 1 },
+  tituloRonda: { color: '#8E8E93', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', textAlign: 'center', marginBottom: '4px' },
+  tarjetaPartidoBracket: { backgroundColor: '#161619', borderRadius: '12px', padding: '10px', border: '1px solid rgba(255,255,255,0.04)' },
+  bloqueJugadorBracket: { padding: '6px 8px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px' },
+  nombreJugadorBracket: { color: '#fff', fontSize: '12px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' },
+  divisorBracket: { display: 'flex', justifyContent: 'space-between', padding: '4px 6px', alignItems: 'center' },
+  textoResultadoBracket: { color: '#39FF14', fontSize: '12px', fontWeight: '800' },
+  textoVsBracket: { color: '#8E8E93', fontSize: '10px' },
+  miniBtnEdit: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px' }
 };
+
+// Insertar la línea de tiempo vertical inyectando estilos globales para el pseudo-elemento (CSS Line)
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement("style");
+  styleSheet.innerText = `
+    div[style*="timelineContenedor"] > div::before {
+      content: "";
+      position: absolute;
+      left: 64px;
+      top: 18px;
+      bottom: -14px;
+      width: 2px;
+      background-color: rgba(255, 255, 255, 0.05);
+      z-index: 1;
+    }
+    div[style*="timelineContenedor"] > div:last-child::before {
+      display: none;
+    }
+  `;
+  document.head.appendChild(styleSheet);
+}
 
 export default VisualizadorCuadros;
