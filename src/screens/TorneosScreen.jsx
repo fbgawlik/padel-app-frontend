@@ -3,7 +3,6 @@ import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom'; 
 import { useTorneos } from '../hooks/useTorneos';
 import { TorneoCard } from '../components/TorneoCard';
-import VisualizadorCuadros from '../components/VisualizadorCuadros'; 
 import { AuthContext } from '../context/AuthContext';
 import ModalCrearTorneo from '../components/ModalCrearTorneo'; 
 import FormInscripcionModal from '../components/FormInscripcionModal'; 
@@ -13,18 +12,15 @@ export const TorneosScreen = () => {
   const navigate = useNavigate(); 
   const { usuario } = useContext(AuthContext);
   
-  const [torneoSeleccionado, setTorneoSeleccionado] = useState(null);
-  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
   const [mostrarModalCrear, setMostrarModalCrear] = useState(false); 
   const [mostrarModalInscripcion, setMostrarModalInscripcion] = useState(false); 
 
   const esAdmin = usuario?.rol === 'admin_complejo' || usuario?.rol === 'organizador';
 
+  // AQUÍ ESTÁ EL CAMBIO PRINCIPAL: Ahora navegamos a la URL de la nueva pantalla
   const manejarVerDetalles = (torneo) => {
-    setTorneoSeleccionado(torneo);
-    if (torneo.categoria) {
-      setCategoriaSeleccionada(torneo.categoria.split(' | ')[0]);
-    }
+    const id = torneo.id || torneo._id;
+    navigate(`/dashboard/torneo/${id}`);
   };
 
   if (cargando) return (
@@ -82,46 +78,6 @@ export const TorneosScreen = () => {
         </div>
       )}
 
-      {/* MODAL: VER DETALLES / CUADROS */}
-      {torneoSeleccionado && (
-        <div style={styles.modalBackdrop}>
-          <div style={styles.modalContent}>
-            
-            <div style={styles.modalHeader}>
-              <h3 style={{ color: '#39FF14', margin: 0, fontSize: '20px' }}>{torneoSeleccionado.nombre}</h3>
-              <button onClick={() => setTorneoSeleccionado(null)} style={styles.btnCerrar}>❌</button>
-            </div>
-
-            <div style={styles.selectorContenedor}>
-              <label style={{ color: '#8E8E93', fontSize: '14px', fontWeight: '600' }}>Filtro por Categoría:</label>
-              <select 
-                value={categoriaSeleccionada} 
-                onChange={(e) => setCategoriaSeleccionada(e.target.value)}
-                style={styles.selectDark}
-              >
-                {torneoSeleccionado.categoria?.split(' | ').map(cat => (
-                  <option key={cat.trim()} value={cat.trim()}>{cat.trim()}</option>
-                ))}
-              </select>
-            </div>
-
-            {categoriaSeleccionada ? (
-              <VisualizadorCuadros 
-                torneoId={torneoSeleccionado.id || torneoSeleccionado._id} 
-                torneo={torneoSeleccionado} 
-                categoria={categoriaSeleccionada}
-                usuario={usuario}
-                onUpdateResultado={(partido) => alert(`Lógica para cargar score del partido ${partido.id}`)}
-                onAbrirInscripcion={() => setMostrarModalInscripcion(true)} 
-              />
-            ) : (
-              <p style={{color: '#8E8E93', fontStyle: 'italic'}}>Selecciona una categoría para ver los cuadros.</p>
-            )}
-
-          </div>
-        </div>
-      )}
-
       {/* MODAL: CREAR NUEVO TORNEO */}
       {mostrarModalCrear && (
         <ModalCrearTorneo 
@@ -130,13 +86,11 @@ export const TorneosScreen = () => {
         />
       )}
 
-      {/* MODAL: INSCRIPCIÓN */}
+      {/* MODAL: INSCRIPCIÓN (Lo conservamos por si lo utilizas globalmente en esta vista) */}
       {mostrarModalInscripcion && (
         <FormInscripcionModal 
-          torneoDetalle={torneoSeleccionado} 
           onClose={() => setMostrarModalInscripcion(false)} 
           onInscripcionExitosa={() => window.location.reload()} 
-          // NOTA: Eliminé la prop 'styles={styles}' porque el nuevo modal ya es autocontenido.
         />
       )}
     </div>
@@ -241,14 +195,6 @@ const styles = {
     fontSize: '15px',
     cursor: 'pointer'
   },
-
-  modalBackdrop: { position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, padding: '20px' },
-  modalContent: { backgroundColor: '#161618', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '24px', width: '100%', maxWidth: '1000px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' },
-  modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '16px', marginBottom: '20px' },
-  btnCerrar: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '16px', color: '#8E8E93', transition: 'color 0.2s' },
-  
-  selectorContenedor: { display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px', backgroundColor: 'rgba(255,255,255,0.03)', padding: '12px 16px', borderRadius: '16px' },
-  selectDark: { backgroundColor: 'rgba(255,255,255,0.05)', color: '#ffffff', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 14px', borderRadius: '12px', outline: 'none', fontWeight: '600', fontSize: '14px', flex: 1 },
 
   loadingContainer: { display: 'flex', justifyContent: 'center', padding: '60px' },
   spinner: { width: '40px', height: '40px', border: '4px solid rgba(57, 255, 20, 0.2)', borderTop: '4px solid #39FF14', borderRadius: '50%', animation: 'spin 1s linear infinite' },
