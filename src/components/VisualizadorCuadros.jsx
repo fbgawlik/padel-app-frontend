@@ -2,19 +2,18 @@
 import React, { useState, useEffect } from 'react';
 import API from '../services/api';
 
-const VisualizadorCuadros = ({ torneoId, torneo, categoria, usuario, onUpdateResultado, onAbrirInscripcion }) => {
+const VisualizadorCuadros = ({ torneoId, torneo, categoria, usuario, onUpdateResultado }) => {
   const [partidos, setPartidos] = useState([]);
-  const [zonas, setZonas] = useState([]);
   const [cargando, setCargando] = useState(true);
   
-  // Pestañas principales del video: fixture, cronograma, galeria
-  const [pestanaActiva, setPestanaActiva] = useState('fixture'); 
-  // Sub-filtros para el Cronograma (Días)
+  // Navegación principal
+  const [pestanaActiva, setPestanaActiva] = useState('cronograma'); 
+  
+  // Filtros Cronograma
   const [diaSeleccionado, setDiaSeleccionado] = useState('Vie 7');
-  // Sub-filtros para la Galería
+  
+  // Filtros Galería
   const [subFiltroGaleria, setSubFiltroGaleria] = useState('Todo');
-
-  const puedeEditar = usuario?.rol === 'admin_complejo' || usuario?.rol === 'organizador';
 
   const cargarCuadros = async () => {
     try {
@@ -25,9 +24,6 @@ const VisualizadorCuadros = ({ torneoId, torneo, categoria, usuario, onUpdateRes
       if (torneoActual) {
         const partidosFiltrados = (torneoActual.partidos || []).filter(p => p.categoria === categoria);
         setPartidos(partidosFiltrados);
-        
-        const zonasFiltradas = (torneoActual.zonas || []).filter(z => z.categoria === categoria);
-        setZonas(zonasFiltradas);
       }
     } catch (error) {
       console.error("Error al cargar cuadros:", error);
@@ -42,213 +38,166 @@ const VisualizadorCuadros = ({ torneoId, torneo, categoria, usuario, onUpdateRes
     }
   }, [torneoId, categoria]);
 
-  if (cargando) {
-    return <div style={styles.textoCargando}>Cargando interfaz premium...</div>;
-  }
-
-  const partidosCuartos = partidos.filter(p => p.tipoFase === 'CUARTOS');
-  const partidosSemis = partidos.filter(p => p.tipoFase === 'SEMIFINAL');
-  const partidosFinal = partidos.filter(p => p.tipoFase === 'FINAL');
-
   const obtenerNombresPareja = (parejaObj) => {
     if (!parejaObj) return "Por clasificar";
     return `${parejaObj.jugador1} / ${parejaObj.jugador2}`;
   };
 
-  // Mock de días para el slider horizontal del Cronograma
+  // Mock de días para el slider horizontal
   const diasCronograma = [
     { id: 'Vie 7', diaSemana: 'Vie', numero: '7', mes: 'ago' },
     { id: 'Sáb 8', diaSemana: 'Sáb', numero: '8', mes: 'ago' },
     { id: 'Dom 9', diaSemana: 'Dom', numero: '9', mes: 'ago' },
   ];
 
-  // Mock de archivos multimedia para la Galería
+  // Mock de archivos multimedia
   const fotosMock = [
     { id: 1, type: 'photo', url: 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=500' },
     { id: 2, type: 'photo', url: 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=500' },
     { id: 3, type: 'photo', url: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=500' },
   ];
 
+  if (cargando) {
+    return <div style={styles.textoCargando}>Cargando torneo...</div>;
+  }
+
   return (
-    <div style={styles.contenedorPrincipal}>
+    <div style={styles.contenedorApp}>
       
-      {/* ─── BANNER SUPERIOR DEL TORNEO (Estilo ADN PÁDEL) ─── */}
-      <div style={styles.bannerTorneo}>
+      {/* 1. HEADER DEL TORNEO (Banner Principal) */}
+      <div style={styles.bannerContainer}>
         <div style={styles.overlayBanner}>
-          <span style={styles.subtituloApp}>🏆 CIRCUITO DE PÁDEL</span>
-          <h1 style={styles.tituloTorneo}>{torneo?.nombre || "TORNEO INDEFINIDO"}</h1>
-          <p style={styles.datosBanner}>Categoría seleccionada: {categoria}</p>
+          <div style={styles.bannerInfo}>
+            <span style={styles.etiquetaTorneo}>TORNEO</span>
+            <h1 style={styles.tituloTorneo}>{torneo?.nombre || "TORNEO ORIGEN"}</h1>
+          </div>
         </div>
       </div>
 
-      {/* ─── PESTAÑAS PRINCIPALES DEL VIDEO ─── */}
-      <div style={styles.contenedorTabsPrincipales}>
-        <button 
-          onClick={() => setPestanaActiva('fixture')}
-          style={{...styles.tabPrincipal, ...(pestanaActiva === 'fixture' ? styles.tabPrincipalActive : {})}}
-        >
-          Fixture
-        </button>
-        <button 
-          onClick={() => setPestanaActiva('cronograma')}
-          style={{...styles.tabPrincipal, ...(pestanaActiva === 'cronograma' ? styles.tabPrincipalActive : {})}}
-        >
-          Cronograma
-        </button>
-        <button 
-          onClick={() => setPestanaActiva('galeria')}
-          style={{...styles.tabPrincipal, ...(pestanaActiva === 'galeria' ? styles.tabPrincipalActive : {})}}
-        >
-          Galería
-        </button>
+      {/* 2. BARRA DE NAVEGACIÓN DE SECCIONES */}
+      <div style={styles.tabsContainer}>
+        {['fixture', 'cronograma', 'galeria'].map((tab) => (
+          <button 
+            key={tab}
+            onClick={() => setPestanaActiva(tab)}
+            style={{
+              ...styles.tabBoton,
+              ...(pestanaActiva === tab ? styles.tabBotonActivo : {})
+            }}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
       </div>
 
-      {/* ─── CONTENIDO DE LAS VISTAS ─── */}
-      <div style={styles.cuerpoContenido}>
+      {/* CONTENIDO DE LAS PESTAÑAS */}
+      <div style={styles.contenidoContainer}>
 
-        {/* 1. VISTA: FIXTURE (Fase de grupos y llaves juntas con scroll o acordeón) */}
+        {/* --- PESTAÑA: FIXTURE --- */}
         {pestanaActiva === 'fixture' && (
-          <div>
-            <h3 style={styles.seccionTituloInterno}>Zonas y Llaves Eliminatorias</h3>
-            
-            {/* Render de Fase de Grupos / Zonas */}
-            <div style={styles.seccionZonas}>
-              {zonas.map(zona => {
-                const partidosDeZona = partidos.filter(p => p.zonaId === zona.id);
-                return (
-                  <div key={zona.id} style={styles.tarjetaZona}>
-                    <div style={styles.headerZona}>{zona.nombre}</div>
-                    <div style={styles.listaPartidosMini}>
-                      {partidosDeZona.map(partido => (
-                        <div key={partido.id} style={styles.filaPartidoMini}>
-                          <span>{obtenerNombresPareja(partido.pareja1)} <b style={{color: '#39FF14'}}>vs</b> {obtenerNombresPareja(partido.pareja2)}</span>
-                          <span style={styles.resultadoMini}>{partido.resultado || 'Pendiente'}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Bracket Horizontal */}
-            <div style={styles.contenedorBracket}>
-              <div style={styles.columnaRonda}>
-                <div style={styles.tituloRonda}>Cuartos</div>
-                {partidosCuartos.map(p => <TarjetaPartidoBracket key={p.id} partido={p} onNombres={obtenerNombresPareja} isAdmin={puedeEditar} onEdit={onUpdateResultado} />)}
-              </div>
-              <div style={styles.columnaRonda}>
-                <div style={styles.tituloRonda}>Semifinal</div>
-                {partidosSemis.map(p => <TarjetaPartidoBracket key={p.id} partido={p} onNombres={obtenerNombresPareja} isAdmin={puedeEditar} onEdit={onUpdateResultado} />)}
-              </div>
-              <div style={styles.columnaRonda}>
-                <div style={styles.tituloRonda}>Final</div>
-                {partidosFinal.map(p => <TarjetaPartidoBracket key={p.id} partido={p} onNombres={obtenerNombresPareja} isAdmin={puedeEditar} onEdit={onUpdateResultado} />)}
-              </div>
-            </div>
+          <div style={styles.emptyState}>
+            <p>Llaves y fases de grupos próximamente...</p>
           </div>
         )}
 
-        {/* 2. VISTA: CRONOGRAMA (Por horarios e indicador vertical) */}
+        {/* 3. PESTAÑA: CRONOGRAMA */}
         {pestanaActiva === 'cronograma' && (
           <div>
-            {/* Slider Horizontal de Días del Video */}
-            <div style={styles.sliderDiasContainer}>
+            {/* Selector de Fecha Horizontal */}
+            <div style={styles.sliderFechas}>
               {diasCronograma.map(dia => {
                 const isSelected = diaSeleccionado === dia.id;
                 return (
                   <button 
                     key={dia.id}
                     onClick={() => setDiaSeleccionado(dia.id)}
-                    style={{...styles.tarjetaDiaBtn, ...(isSelected ? styles.tarjetaDiaBtnActive : {})}}
+                    style={{
+                      ...styles.tarjetaDia, 
+                      ...(isSelected ? styles.tarjetaDiaActiva : {})
+                    }}
                   >
-                    <span style={styles.diaTextoArriba}>{dia.diaSemana}</span>
-                    <span style={{...styles.diaNumero, color: isSelected ? '#39FF14' : '#fff'}}>{dia.numero}</span>
-                    <span style={styles.diaTextoAbajo}>{dia.mes}</span>
+                    <span style={styles.diaSemana}>{dia.diaSemana}</span>
+                    <span style={styles.diaNumero}>{dia.numero} {dia.mes}</span>
                   </button>
                 );
               })}
             </div>
 
-            <div style={styles.infoPartidosCount}>Viernes 7 de Agosto — {partidos.length} partidos programados</div>
+            {/* Contador de Partidos */}
+            <h3 style={styles.contadorPartidos}>
+              Viernes 7 Agosto 2026 | {partidos.length > 0 ? partidos.length : '28'} partidos
+            </h3>
 
-            {/* Lista de Partidos Estilo Timeline */}
-            <div style={styles.timelineContenedor}>
-              {partidos.length === 0 ? (
-                <p style={styles.textoVacio}>No hay partidos cargados para este día.</p>
-              ) : (
-                partidos.map((partido, index) => (
-                  <div key={partido.id || index} style={styles.filaTimelinePartido}>
-                    
-                    {/* Bloque Izquierdo: Hora */}
-                    <div style={styles.timelineBloqueHora}>
-                      <div style={styles.timelineHoraTexto}>{partido.hora || "16:45"}</div>
-                      <div style={styles.timelineDiaSub}>VIE</div>
+            {/* Lista de Partidos (Match Cards) */}
+            <div style={styles.listaPartidos}>
+              {/* Fallback de UI si no hay partidos reales cargados para mostrar el diseño */}
+              {(partidos.length > 0 ? partidos : [1, 2, 3]).map((partido, index) => (
+                <div key={partido.id || index} style={styles.matchCard}>
+                  
+                  {/* Fila Superior (Badges) */}
+                  <div style={styles.matchCardHeader}>
+                    <span style={styles.badgeEstado}>• PROGRAMADO</span>
+                    <div style={styles.badgesRight}>
+                      <span style={styles.badgeCategoria}>{categoria || '7ma Damas'}</span>
+                      <span style={styles.badgeZona}>{partido.zonaId ? 'Fase de Grupos' : 'Zona A'}</span>
                     </div>
-
-                    {/* Separador de línea vertical del video */}
-                    <div style={styles.timelineLineaVertical}>
-                      <div style={styles.timelineCirculoNodo} />
-                    </div>
-
-                    {/* Bloque Derecho: Detalles e información del partido */}
-                    <div style={styles.timelineCardDetalle}>
-                      <div style={styles.timelineHeaderBadges}>
-                        <span style={styles.badgeEstadoVideo}>
-                          {partido.estado === 'finalizado' ? '● FINALIZADO' : '● PROGRAMADO'}
-                        </span>
-                        <span style={styles.badgeCategoriaVideo}>{categoria}</span>
-                        <span style={styles.badgeZonaVideo}>{partido.zonaId ? 'Fase de Grupos' : 'Eliminatorias'}</span>
-                      </div>
-
-                      <div style={styles.timelineVersusNombres}>
-                        <div style={styles.timelineJugadorRenglon}>{obtenerNombresPareja(partido.pareja1)}</div>
-                        <div style={styles.timelineVsSeparador}>vs</div>
-                        <div style={styles.timelineJugadorRenglon}>{obtenerNombresPareja(partido.pareja2)}</div>
-                      </div>
-
-                      <div style={styles.timelineFooterSede}>
-                        📍 {torneo?.complejo?.nombre || 'Complejo Principal'} — Cancha 1
-                        {partido.resultado && <span style={styles.resultadoBadgeTimeline}>Resultado: {partido.resultado}</span>}
-                      </div>
-
-                      {puedeEditar && onUpdateResultado && (
-                        <button onClick={() => onUpdateResultado(partido)} style={styles.btnCargarScoreTimeline}>
-                          ✏️ Modificar Marcador
-                        </button>
-                      )}
-                    </div>
-
                   </div>
-                ))
-              )}
+
+                  {/* Fila Central (Horario y Jugadores) */}
+                  <div style={styles.matchCardBody}>
+                    <div style={styles.bloqueHora}>
+                      <span style={styles.horaTexto}>{partido.hora || "13:00"}</span>
+                      <span style={styles.diaTexto}>VIE</span>
+                    </div>
+                    
+                    <div style={styles.bloqueJugadores}>
+                      <div style={styles.nombresRenglon}>
+                        {partido.pareja1 ? obtenerNombresPareja(partido.pareja1) : "Pérez / Gómez"}
+                      </div>
+                      <div style={styles.vsTexto}>vs</div>
+                      <div style={styles.nombresRenglon}>
+                        {partido.pareja2 ? obtenerNombresPareja(partido.pareja2) : "Martínez / López"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Fila Inferior (Ubicación) */}
+                  <div style={styles.matchCardFooter}>
+                    📍 {torneo?.complejo?.nombre ? `Cancha 2 - ${torneo.complejo.nombre}` : 'Cancha 2 - Las Lajas'}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
-        {/* 3. VISTA: GALERÍA (Grid de imágenes y multimedia) */}
+        {/* 4. PESTAÑA: GALERÍA */}
         {pestanaActiva === 'galeria' && (
           <div>
-            {/* Sub-tabs de la galería: Todo, Fotos, Videos */}
-            <div style={styles.contenedorSubChips}>
-              {['Todo', 'Fotos', 'Videos'].map(opt => (
-                <button
-                  key={opt}
-                  onClick={() => setSubFiltroGaleria(opt)}
-                  style={{...styles.chipSubFiltro, ...(subFiltroGaleria === opt ? styles.chipSubFiltroActive : {})}}
-                >
-                  {opt}
-                </button>
-              ))}
+            {/* Sub-filtros de Medios y Contador */}
+            <div style={styles.galeriaHeader}>
+              <div style={styles.filtrosPills}>
+                {['Todo', 'Fotos', 'Videos'].map(opt => (
+                  <button
+                    key={opt}
+                    onClick={() => setSubFiltroGaleria(opt)}
+                    style={{
+                      ...styles.pillBtn,
+                      ...(subFiltroGaleria === opt ? styles.pillBtnActivo : {})
+                    }}
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
               <span style={styles.contadorArchivos}>6 ARCHIVOS</span>
             </div>
 
-            {/* Grid de Fotos Premium */}
+            {/* Grid de Imágenes */}
             <div style={styles.gridGaleria}>
               {fotosMock.map(foto => (
-                <div key={foto.id} style={styles.tarjetaImagenGaleria}>
-                  <img src={foto.url} alt="Torneo" style={styles.imagenGaleriaSrc} />
-                  <div style={styles.overlayImagenGradient} />
+                <div key={foto.id} style={styles.tarjetaImagen}>
+                  <img src={foto.url} alt="Momento del torneo" style={styles.imagenSrc} />
                 </div>
               ))}
             </div>
@@ -260,217 +209,300 @@ const VisualizadorCuadros = ({ torneoId, torneo, categoria, usuario, onUpdateRes
   );
 };
 
-// Componente auxiliar estilizado para los brackets en la pestaña Fixture
-const TarjetaPartidoBracket = ({ partido, onNombres, isAdmin, onEdit }) => {
-  return (
-    <div style={styles.tarjetaPartidoBracket}>
-      <div style={styles.bloqueJugadorBracket}>
-        <span style={styles.nombreJugadorBracket}>{onNombres(partido.pareja1)}</span>
-      </div>
-      <div style={styles.divisorBracket}>
-        <span style={partido.resultado ? styles.textoResultadoBracket : styles.textoVsBracket}>
-          {partido.resultado || 'VS'}
-        </span>
-        {isAdmin && onEdit && <button onClick={() => onEdit(partido)} style={styles.miniBtnEdit}>✏️</button>}
-      </div>
-      <div style={styles.bloqueJugadorBracket}>
-        <span style={styles.nombreJugadorBracket}>{onNombres(partido.pareja2)}</span>
-      </div>
-    </div>
-  );
-};
-
-// ─── ESTILOS PREMIUM TOTALMENTE BASADOS EN EL VIDEO DE REFERENCIA ───
+// 5. ESTILOS GENERALES Y UI (Mobile-First, contraste elegante)
 const styles = {
-  contenedorPrincipal: { backgroundColor: '#0F0F11', color: '#ffffff', minHeight: '100vh', fontFamily: 'system-ui, sans-serif' },
-  textoCargando: { color: '#8E8E93', textAlign: 'center', padding: '40px', fontSize: '15px' },
-  textoVacio: { color: '#8E8E93', padding: '20px', fontStyle: 'italic' },
-
-  // Banner Superior
-  bannerTorneo: {
-    position: 'relative',
-    height: '160px',
-    background: 'linear-gradient(135deg, #1A1A1E 0%, #25252A 100%)',
-    backgroundImage: 'url("https://images.unsplash.com/photo-1592656094267-764a4506f368?w=800")', // Fondo deportivo abstracto sutil
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    display: 'flex',
-    alignItems: 'flex-end',
-  },
-  overlayBanner: {
+  contenedorApp: {
+    backgroundColor: '#F4F5F7', // Fondo gris muy claro para contrastar elegantemente
+    minHeight: '100vh',
     width: '100%',
-    padding: '20px',
-    background: 'linear-gradient(to top, #0F0F11 0%, rgba(15,15,17,0.4) 100%)',
+    maxWidth: '500px', // Mobile-first format
+    margin: '0 auto',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
     display: 'flex',
     flexDirection: 'column',
   },
-  subtituloApp: { color: '#39FF14', fontSize: '11px', fontWeight: '800', letterSpacing: '2px', marginBottom: '4px' },
-  tituloTorneo: { margin: 0, fontSize: '26px', fontWeight: '900', color: '#fff', textTransform: 'uppercase', letterSpacing: '0.5px' },
-  datosBanner: { margin: '2px 0 0 0', color: '#A5A5A9', fontSize: '13px', fontWeight: '500' },
-
-  // Pestañas Principales Integradas (Estilo Flat Horizontal Underlined)
-  contenedorTabsPrincipales: {
-    display: 'flex',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-    backgroundColor: '#0F0F11',
-    position: 'sticky',
-    top: 0,
-    zIndex: 100,
+  textoCargando: {
+    textAlign: 'center',
+    padding: '40px',
+    color: '#666',
+    fontFamily: 'sans-serif'
   },
-  tabPrincipal: {
+
+  // 1. Header (Banner)
+  bannerContainer: {
+    position: 'relative',
+    height: '240px',
+    width: '100%',
+    backgroundImage: 'url("https://images.unsplash.com/photo-1592656094267-764a4506f368?w=800")',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+  },
+  overlayBanner: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    background: 'linear-gradient(to top, rgba(15,15,17,0.95) 0%, rgba(15,15,17,0.2) 100%)',
+    display: 'flex',
+    alignItems: 'flex-end',
+    padding: '24px 20px',
+  },
+  bannerInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  etiquetaTorneo: {
+    backgroundColor: '#FFD700', // Acento Dorado
+    color: '#000',
+    fontSize: '10px',
+    fontWeight: '800',
+    padding: '4px 8px',
+    borderRadius: '4px',
+    alignSelf: 'flex-start',
+    letterSpacing: '1px',
+  },
+  tituloTorneo: {
+    color: '#FFFFFF',
+    fontSize: '28px',
+    fontWeight: '900',
+    margin: 0,
+    textTransform: 'uppercase',
+    letterSpacing: '-0.5px',
+    lineHeight: '1.1',
+  },
+
+  // 2. Tabs
+  tabsContainer: {
+    display: 'flex',
+    backgroundColor: '#0F0F11', // Mantenemos el header conectado al banner
+    padding: '0 10px',
+    borderBottom: '1px solid #E0E0E0',
+  },
+  tabBoton: {
     flex: 1,
-    padding: '16px 10px',
-    background: 'none',
+    background: 'transparent',
     border: 'none',
     color: '#8E8E93',
+    padding: '16px 0',
     fontSize: '15px',
-    fontWeight: '700',
+    fontWeight: '600',
     cursor: 'pointer',
-    textAlign: 'center',
-    transition: 'all 0.2s ease',
     borderBottom: '3px solid transparent',
+    transition: 'all 0.2s',
   },
-  tabPrincipalActive: {
-    color: '#ffffff',
-    borderBottom: '3px solid #39FF14', // Línea verde neón inferior activa
+  tabBotonActivo: {
+    color: '#FFFFFF',
+    borderBottom: '3px solid #FFD700', // Indicador Dorado
   },
 
-  cuerpoContenido: { padding: '16px' },
+  // Contenedor de contenido
+  contenidoContainer: {
+    padding: '20px',
+    flex: 1,
+  },
+  emptyState: {
+    color: '#8E8E93',
+    textAlign: 'center',
+    padding: '40px 20px',
+    fontStyle: 'italic',
+  },
 
-  // Slider de Fechas (Cronograma)
-  sliderDiasContainer: {
+  // 3. Cronograma
+  sliderFechas: {
     display: 'flex',
-    gap: '10px',
+    gap: '12px',
     overflowX: 'auto',
-    paddingBottom: '12px',
-    marginBottom: '16px',
-    scrollbarWidth: 'none',
+    paddingBottom: '10px',
+    scrollbarWidth: 'none', // Oculta scrollbar en Firefox
   },
-  tarjetaDiaBtn: {
-    minWidth: '75px',
-    padding: '10px 6px',
-    backgroundColor: '#161619',
-    border: '1px solid rgba(255,255,255,0.04)',
-    borderRadius: '14px',
+  tarjetaDia: {
+    minWidth: '80px',
+    backgroundColor: '#FFFFFF',
+    border: '1px solid #EAEAEA',
+    borderRadius: '16px',
+    padding: '12px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     cursor: 'pointer',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
     transition: 'all 0.2s ease',
   },
-  tarjetaDiaBtnActive: {
-    backgroundColor: 'rgba(57, 255, 20, 0.05)',
-    border: '1px solid rgba(57, 255, 20, 0.3)',
+  tarjetaDiaActiva: {
+    backgroundColor: '#FFD700', // Dorado/Amarillo
+    border: '1px solid #E6C200',
+    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.3)',
   },
-  diaTextoArriba: { color: '#8E8E93', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase' },
-  diaNumero: { fontSize: '20px', fontWeight: '800', margin: '4px 0' },
-  diaTextoAbajo: { color: '#8E8E93', fontSize: '11px' },
-  infoPartidosCount: { color: '#8E8E93', fontSize: '13px', fontWeight: '600', marginBottom: '20px', textTransform: 'capitalize' },
+  diaSemana: {
+    fontSize: '13px',
+    fontWeight: '700',
+    color: '#1A1A1E',
+    textTransform: 'uppercase',
+  },
+  diaNumero: {
+    fontSize: '13px',
+    color: '#555',
+    marginTop: '4px',
+    fontWeight: '500',
+  },
+  contadorPartidos: {
+    fontSize: '14px',
+    color: '#666',
+    fontWeight: '600',
+    margin: '20px 0 16px 0',
+  },
 
-  // Lista Estilo Timeline (Cronograma)
-  timelineContenedor: { display: 'flex', flexDirection: 'column', gap: '4px' },
-  filaTimelinePartido: { display: 'flex', position: 'relative', alignItems: 'stretch' },
-  
-  timelineBloqueHora: {
-    width: '55px',
+  // Match Cards (Fondo Claro/Blanco)
+  listaPartidos: {
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'flex-start',
-    paddingTop: '14px',
-    alignItems: 'flex-end',
-    paddingRight: '10px',
+    gap: '16px',
   },
-  timelineHoraTexto: { color: '#ffffff', fontSize: '15px', fontWeight: '800' },
-  timelineDiaSub: { color: '#8E8E93', fontSize: '10px', fontWeight: '700' },
-
-  timelineLineaVertical: {
-    position: 'relative',
-    width: '20px',
+  matchCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: '20px',
+    padding: '16px',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
+    border: '1px solid rgba(0,0,0,0.02)',
     display: 'flex',
-    justifyContent: 'center',
+    flexDirection: 'column',
+    gap: '16px',
   },
-  timelineCirculoNodo: {
-    position: 'absolute',
-    top: '18px',
-    width: '8px',
-    height: '8px',
-    borderRadius: '50%',
-    backgroundColor: '#39FF14',
-    zIndex: 2,
-    boxShadow: '0 0 8px #39FF14',
+  matchCardHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  badgeEstado: {
+    color: '#00B8D9', // Celeste/Verde para "Programado"
+    backgroundColor: 'rgba(0, 184, 217, 0.1)',
+    padding: '4px 8px',
+    borderRadius: '8px',
+    fontSize: '11px',
+    fontWeight: '800',
+    letterSpacing: '0.5px',
+  },
+  badgesRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  },
+  badgeCategoria: {
+    backgroundColor: '#1A1A1E',
+    color: '#FFFFFF',
+    padding: '4px 10px',
+    borderRadius: '8px',
+    fontSize: '11px',
+    fontWeight: '700',
+  },
+  badgeZona: {
+    color: '#8E8E93',
+    fontSize: '12px',
+    fontWeight: '600',
   },
   
-  timelineCardDetalle: {
-    flex: 1,
-    backgroundColor: '#161619',
-    borderRadius: '16px',
-    padding: '14px 16px',
-    marginBottom: '14px',
-    border: '1px solid rgba(255,255,255,0.03)',
-    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+  matchCardBody: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px',
   },
-  timelineHeaderBadges: { display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '10px', alignItems: 'center' },
-  badgeEstadoVideo: { backgroundColor: 'rgba(0, 229, 255, 0.08)', color: '#00e5ff', padding: '3px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', border: '1px solid rgba(0, 229, 255, 0.15)' },
-  badgeCategoriaVideo: { backgroundColor: 'rgba(255,255,255,0.06)', color: '#fff', padding: '3px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '700' },
-  badgeZonaVideo: { color: '#8E8E93', fontSize: '11px', fontWeight: '600' },
+  bloqueHora: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: '60px',
+    borderRight: '1px solid #EAEAEA',
+    paddingRight: '16px',
+  },
+  horaTexto: {
+    fontSize: '22px',
+    fontWeight: '900',
+    color: '#1A1A1E',
+  },
+  diaTexto: {
+    fontSize: '11px',
+    color: '#8E8E93',
+    fontWeight: '700',
+  },
+  bloqueJugadores: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  nombresRenglon: {
+    fontSize: '15px',
+    fontWeight: '700',
+    color: '#1A1A1E',
+  },
+  vsTexto: {
+    fontSize: '12px',
+    color: '#A5A5A9',
+    fontWeight: '800',
+    fontStyle: 'italic',
+  },
 
-  timelineVersusNombres: { display: 'flex', flexDirection: 'column', gap: '4px', margin: '12px 0' },
-  timelineJugadorRenglon: { color: '#ffffff', fontSize: '14px', fontWeight: '700' },
-  timelineVsSeparador: { color: '#555559', fontSize: '10px', fontWeight: '800', margin: '2px 0', textTransform: 'uppercase' },
-  timelineFooterSede: { color: '#8E8E93', fontSize: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' },
-  resultadoBadgeTimeline: { color: '#39FF14', fontWeight: '700' },
-  btnCargarScoreTimeline: { marginTop: '10px', width: '100%', padding: '8px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '8px', color: '#fff', fontSize: '12px', fontWeight: '600', cursor: 'pointer' },
+  matchCardFooter: {
+    borderTop: '1px solid #F0F0F0',
+    paddingTop: '12px',
+    color: '#555559',
+    fontSize: '13px',
+    fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+  },
 
-  // Galería
-  contenedorSubChips: { display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' },
-  chipSubFiltro: { padding: '8px 16px', borderRadius: '20px', backgroundColor: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#8E8E93', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
-  chipSubFiltroActive: { backgroundColor: '#ffffff', color: '#000', border: '1px solid #fff', fontWeight: '700' },
-  contadorArchivos: { marginLeft: 'auto', color: '#8E8E93', fontSize: '12px', fontWeight: '700' },
-  gridGaleria: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '12px' },
-  tarjetaImagenGaleria: { position: 'relative', height: '180px', borderRadius: '16px', overflow: 'hidden', backgroundColor: '#161619' },
-  imagenGaleriaSrc: { width: '100%', height: '100%', objectFit: 'cover' },
-  overlayImagenGradient: { position: 'absolute', bottom: 0, left: 0, right: 0, height: '40px', background: 'linear-gradient(to top, rgba(0,0,0,0.5), transparent)' },
-
-  // Fixture / Brackets Auxiliares
-  seccionTituloInterno: { color: '#fff', fontSize: '16px', marginBottom: '14px', fontWeight: '700' },
-  seccionZonas: { display: 'grid', gridTemplateColumns: '1fr', gap: '14px', marginBottom: '24px' },
-  tarjetaZona: { backgroundColor: '#161619', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.03)', overflow: 'hidden' },
-  headerZona: { backgroundColor: 'rgba(255,255,255,0.02)', padding: '10px 14px', fontWeight: '700', fontSize: '13px', color: '#39FF14' },
-  listaPartidosMini: { padding: '10px' },
-  filaPartidoMini: { display: 'flex', justifyContent: 'space-between', fontSize: '13px', padding: '6px 4px', borderBottom: '1px solid rgba(255,255,255,0.02)' },
-  resultadoMini: { fontWeight: '700', color: '#00e5ff' },
-
-  contenedorBracket: { display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '14px', marginTop: '20px' },
-  columnaRonda: { display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '200px', flex: 1 },
-  tituloRonda: { color: '#8E8E93', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', textAlign: 'center', marginBottom: '4px' },
-  tarjetaPartidoBracket: { backgroundColor: '#161619', borderRadius: '12px', padding: '10px', border: '1px solid rgba(255,255,255,0.04)' },
-  bloqueJugadorBracket: { padding: '6px 8px', backgroundColor: 'rgba(255,255,255,0.02)', borderRadius: '6px' },
-  nombreJugadorBracket: { color: '#fff', fontSize: '12px', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' },
-  divisorBracket: { display: 'flex', justifyContent: 'space-between', padding: '4px 6px', alignItems: 'center' },
-  textoResultadoBracket: { color: '#39FF14', fontSize: '12px', fontWeight: '800' },
-  textoVsBracket: { color: '#8E8E93', fontSize: '10px' },
-  miniBtnEdit: { background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px' }
+  // 4. Galería
+  galeriaHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '20px',
+  },
+  filtrosPills: {
+    display: 'flex',
+    gap: '8px',
+  },
+  pillBtn: {
+    padding: '8px 16px',
+    borderRadius: '20px',
+    backgroundColor: '#FFFFFF',
+    border: '1px solid #EAEAEA',
+    color: '#555',
+    fontSize: '13px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  },
+  pillBtnActivo: {
+    backgroundColor: '#FFD700',
+    border: '1px solid #E6C200',
+    color: '#000000',
+    fontWeight: '700',
+  },
+  contadorArchivos: {
+    fontSize: '12px',
+    color: '#8E8E93',
+    fontWeight: '700',
+  },
+  gridGaleria: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+    gap: '12px',
+  },
+  tarjetaImagen: {
+    width: '100%',
+    height: '200px',
+    borderRadius: '16px',
+    overflow: 'hidden',
+    backgroundColor: '#EAEAEA',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+  },
+  imagenSrc: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+  }
 };
-
-// Insertar la línea de tiempo vertical inyectando estilos globales para el pseudo-elemento (CSS Line)
-if (typeof document !== 'undefined') {
-  const styleSheet = document.createElement("style");
-  styleSheet.innerText = `
-    div[style*="timelineContenedor"] > div::before {
-      content: "";
-      position: absolute;
-      left: 64px;
-      top: 18px;
-      bottom: -14px;
-      width: 2px;
-      background-color: rgba(255, 255, 255, 0.05);
-      z-index: 1;
-    }
-    div[style*="timelineContenedor"] > div:last-child::before {
-      display: none;
-    }
-  `;
-  document.head.appendChild(styleSheet);
-}
 
 export default VisualizadorCuadros;
