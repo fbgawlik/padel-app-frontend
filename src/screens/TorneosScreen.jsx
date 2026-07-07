@@ -1,12 +1,17 @@
 // src/screens/TorneosScreen.jsx
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react'; // 👈 Importamos useContext
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import { useQuery } from '@tanstack/react-query';
+import { AuthContext } from '../context/AuthContext'; // 👈 Importamos tu contexto de autenticación
 
 const TorneosScreen = () => {
   const navigate = useNavigate();
+  const { usuario } = useContext(AuthContext); // 👈 Obtenemos el usuario logueado
   const [busqueda, setBusqueda] = useState('');
+
+  // Validamos si el usuario tiene permisos de administración/organización
+  const esOrganizador = usuario?.rol === 'admin_complejo' || usuario?.rol === 'organizador';
 
   // Fetch de torneos
   const { data: torneos = [], isLoading, isError } = useQuery({
@@ -17,7 +22,7 @@ const TorneosScreen = () => {
     }
   });
 
-  // Dividimos los datos para simular "Destacados" (los primeros 3) y "Recomendados" (el resto)
+  // Dividimos los datos para "Destacados" y "Recomendados"
   const torneosDestacados = torneos.slice(0, 3);
   const torneosRecomendados = torneos.filter(t => t.nombre.toLowerCase().includes(busqueda.toLowerCase()));
 
@@ -69,6 +74,22 @@ const TorneosScreen = () => {
           </svg>
         </button>
       </div>
+
+      {/* 🔐 PANEL DE ACCIÓN EXCLUSIVO PARA ADMIN / ORGANIZADOR */}
+      {esOrganizador && (
+        <div style={styles.panelAdminContainer}>
+          <div style={styles.panelAdminInfo}>
+            <h3 style={styles.panelAdminTitle}>Panel de Control</h3>
+            <p style={styles.panelAdminSub}>Gestiona las competiciones del club</p>
+          </div>
+          <button 
+            onClick={() => navigate('/torneos/crear')} 
+            style={styles.botonCrearTorneo}
+          >
+            <span>➕ Crear Torneo</span>
+          </button>
+        </div>
+      )}
 
       {/* SECCIÓN: DESTACADOS (Scroll Horizontal) */}
       <div style={styles.section}>
@@ -174,7 +195,7 @@ const styles = {
   header: {
     display: 'flex',
     alignItems: 'center',
-    padding: '24px 16px',
+    padding: '24px 16px 16px 16px',
     gap: '12px',
   },
   iconButton: {
@@ -194,6 +215,48 @@ const styles = {
     width: '48px', height: '48px', borderRadius: '14px', backgroundColor: 'rgba(57, 255, 20, 0.1)',
     border: '1px solid rgba(57, 255, 20, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center',
     cursor: 'pointer'
+  },
+
+  // NUEVO: PANEL ADMINISTRADOR
+  panelAdminContainer: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#161618',
+    padding: '16px',
+    margin: '0 16px 24px 16px',
+    borderRadius: '20px',
+    border: '1px solid rgba(57, 255, 20, 0.2)', // Borde neón sutil para denotar área especial
+    boxShadow: '0 8px 32px rgba(57, 255, 20, 0.05)'
+  },
+  panelAdminInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px'
+  },
+  panelAdminTitle: {
+    margin: 0,
+    fontSize: '15px',
+    fontWeight: '700',
+    color: '#ffffff'
+  },
+  panelAdminSub: {
+    margin: 0,
+    fontSize: '12px',
+    color: '#8E8E93',
+    fontWeight: '500'
+  },
+  botonCrearTorneo: {
+    backgroundColor: '#39FF14',
+    color: '#0F0F10',
+    border: 'none',
+    padding: '10px 16px',
+    borderRadius: '12px',
+    fontWeight: '700',
+    fontSize: '13px',
+    cursor: 'pointer',
+    boxShadow: '0 4px 12px rgba(57, 255, 20, 0.3)',
+    transition: 'transform 0.2s ease',
   },
 
   // SECCIONES
