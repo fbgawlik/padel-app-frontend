@@ -17,7 +17,7 @@ const TorneosScreen = () => {
     }
   });
 
-  // Dividimos los datos para simular "Populares" (los primeros 3) y "Recomendados" (el resto)
+  // Dividimos los datos para simular "Destacados" (los primeros 3) y "Recomendados" (el resto)
   const torneosDestacados = torneos.slice(0, 3);
   const torneosRecomendados = torneos.filter(t => t.nombre.toLowerCase().includes(busqueda.toLowerCase()));
 
@@ -29,7 +29,7 @@ const TorneosScreen = () => {
 
   if (isError) return (
     <div style={styles.centerContainer}>
-      <p style={{ color: '#ff4d4d', fontWeight: 'bold' }}>Error al cargar los torneos.</p>
+      <div style={styles.alerta}><span>⚠️ Error al cargar los torneos.</span></div>
     </div>
   );
 
@@ -38,12 +38,12 @@ const TorneosScreen = () => {
       {/* CABECERA Y BUSCADOR */}
       <div style={styles.header}>
         <button onClick={() => navigate(-1)} style={styles.iconButton}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1A1A1E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EAEAEA" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 18l-6-6 6-6"/>
           </svg>
         </button>
         <div style={styles.searchContainer}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A0A0A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '12px' }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '12px' }}>
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
@@ -56,7 +56,7 @@ const TorneosScreen = () => {
           />
         </div>
         <button style={styles.filterButton}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="4" y1="21" x2="4" y2="14"></line>
             <line x1="4" y1="10" x2="4" y2="3"></line>
             <line x1="12" y1="21" x2="12" y2="12"></line>
@@ -93,7 +93,7 @@ const TorneosScreen = () => {
                 <div style={styles.glassPanel}>
                   <h3 style={styles.glassTitle}>{torneo.nombre}</h3>
                   <div style={styles.glassDetails}>
-                    <span>📍 {torneo.complejo?.nombre || 'Sede a confirmar'}</span>
+                    <span style={{ color: '#EAEAEA' }}>📍 {torneo.complejo?.nombre || 'Sede a confirmar'}</span>
                     <span style={styles.priceTag}>
                       ${torneo.precioInscripcion?.toLocaleString() || '0'}
                     </span>
@@ -125,7 +125,7 @@ const TorneosScreen = () => {
                   style={styles.cardImage} 
                 />
                 <button style={styles.likeButton}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6C63FF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                   </svg>
                 </button>
@@ -141,7 +141,7 @@ const TorneosScreen = () => {
                     <span style={styles.footerPrice}>${torneo.precioInscripcion?.toLocaleString() || '0'}</span>
                   </div>
                   <div style={styles.badgeRating}>
-                    <span style={{color: '#FFF', fontWeight: 'bold', fontSize: '12px'}}>
+                    <span style={{color: '#39FF14', fontWeight: 'bold', fontSize: '12px'}}>
                       {torneo.categoria || 'Gen'}
                     </span>
                   </div>
@@ -157,51 +157,50 @@ const TorneosScreen = () => {
   );
 };
 
-// --- ESTILOS INSPIRADOS EN LA APP DE VIAJES ---
+// --- ESTILOS ADAPTADOS AL TEMA DARK PREMIUM NEÓN ---
 const styles = {
-  centerContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: '#F8F9FA' },
-  spinner: { width: '40px', height: '40px', border: '4px solid rgba(108, 99, 255, 0.2)', borderTop: '4px solid #6C63FF', borderRadius: '50%', animation: 'spin 1s linear infinite' },
-  
+  centerContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'transparent' },
+  spinner: { width: '32px', height: '32px', border: '3px solid rgba(57, 255, 20, 0.2)', borderTop: '3px solid #39FF14', borderRadius: '50%', animation: 'spin 1s linear infinite' },
+  alerta: { backgroundColor: 'rgba(255,51,51,0.1)', color: '#ff4d4d', padding: '16px', borderRadius: '12px', fontWeight: '600' },
+
   screenContainer: {
-    backgroundColor: '#F8F9FA', // Fondo claro limpio
-    minHeight: '100vh',
+    backgroundColor: 'transparent',
     width: '100%',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-    paddingBottom: '100px',
+    paddingBottom: '110px', 
   },
 
   // CABECERA
   header: {
     display: 'flex',
     alignItems: 'center',
-    padding: '20px 16px',
+    padding: '24px 16px',
     gap: '12px',
-    marginTop: '10px'
   },
   iconButton: {
-    background: 'none', border: 'none', cursor: 'pointer', padding: '8px',
+    background: '#161618', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', padding: '10px',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#FFFFFF', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+    borderRadius: '14px',
   },
   searchContainer: {
-    flex: 1, display: 'flex', alignItems: 'center', backgroundColor: '#FFFFFF',
-    borderRadius: '16px', height: '48px', boxShadow: '0 2px 12px rgba(0,0,0,0.03)'
+    flex: 1, display: 'flex', alignItems: 'center', backgroundColor: '#161618',
+    borderRadius: '16px', height: '48px', border: '1px solid rgba(255,255,255,0.05)'
   },
   searchInput: {
     border: 'none', background: 'transparent', outline: 'none', padding: '0 12px',
-    width: '100%', fontSize: '15px', color: '#1A1A1E', fontWeight: '500'
+    width: '100%', fontSize: '15px', color: '#ffffff', fontWeight: '500'
   },
   filterButton: {
-    width: '48px', height: '48px', borderRadius: '16px', backgroundColor: '#6C63FF', // Morado moderno del video
-    border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    cursor: 'pointer', boxShadow: '0 4px 12px rgba(108, 99, 255, 0.3)'
+    width: '48px', height: '48px', borderRadius: '14px', backgroundColor: 'rgba(57, 255, 20, 0.1)',
+    border: '1px solid rgba(57, 255, 20, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    cursor: 'pointer'
   },
 
   // SECCIONES
-  section: { marginTop: '10px', marginBottom: '30px' },
+  section: { marginBottom: '32px' },
   sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', marginBottom: '16px' },
-  sectionTitle: { fontSize: '20px', fontWeight: '800', color: '#1A1A1E', margin: 0 },
-  showAll: { fontSize: '14px', fontWeight: '600', color: '#A0A0A5', cursor: 'pointer' },
+  sectionTitle: { fontSize: '18px', fontWeight: '700', color: '#fff', margin: 0 },
+  showAll: { color: '#39FF14', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
 
   // SCROLL HORIZONTAL (Populares)
   horizontalScroll: {
@@ -209,47 +208,48 @@ const styles = {
     msOverflowStyle: 'none', scrollbarWidth: 'none'
   },
   heroCard: {
-    minWidth: '240px', height: '320px', borderRadius: '28px', position: 'relative',
-    overflow: 'hidden', cursor: 'pointer', boxShadow: '0 8px 24px rgba(0,0,0,0.08)'
+    minWidth: '260px', height: '320px', borderRadius: '24px', position: 'relative',
+    overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.03)',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
   },
   heroImage: { width: '100%', height: '100%', objectFit: 'cover' },
   heroOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    background: 'linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.8) 100%)',
+    background: 'linear-gradient(to bottom, rgba(0,0,0,0) 30%, rgba(10,10,11,0.9) 100%)',
     display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '12px'
   },
   glassPanel: {
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', backdropFilter: 'blur(10px)',
-    WebkitBackdropFilter: 'blur(10px)', borderRadius: '20px', padding: '16px',
-    border: '1px solid rgba(255,255,255,0.3)'
+    backgroundColor: 'rgba(18, 18, 20, 0.6)', backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)', borderRadius: '16px', padding: '16px',
+    border: '1px solid rgba(255,255,255,0.05)'
   },
-  glassTitle: { color: '#FFF', fontSize: '18px', fontWeight: '800', margin: '0 0 8px 0' },
-  glassDetails: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: '#FFF', fontSize: '13px', fontWeight: '600' },
-  priceTag: { backgroundColor: '#FFF', color: '#1A1A1E', padding: '4px 8px', borderRadius: '10px', fontWeight: '800' },
+  glassTitle: { color: '#FFF', fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0' },
+  glassDetails: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', fontWeight: '600' },
+  priceTag: { backgroundColor: 'rgba(57, 255, 20, 0.15)', color: '#39FF14', padding: '4px 8px', borderRadius: '8px', fontWeight: '800' },
 
   // LISTA VERTICAL (Recomendados)
-  verticalList: { display: 'flex', flexDirection: 'column', gap: '20px', padding: '0 16px' },
+  verticalList: { display: 'flex', flexDirection: 'column', gap: '16px', padding: '0 16px' },
   standardCard: {
-    backgroundColor: '#FFFFFF', borderRadius: '24px', padding: '12px',
-    boxShadow: '0 4px 16px rgba(0,0,0,0.04)', cursor: 'pointer', border: '1px solid #F0F0F0'
+    backgroundColor: '#161618', borderRadius: '24px', padding: '16px',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.2)', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.03)'
   },
   cardImageContainer: { position: 'relative', width: '100%', height: '180px', borderRadius: '16px', overflow: 'hidden', marginBottom: '16px' },
   cardImage: { width: '100%', height: '100%', objectFit: 'cover' },
   likeButton: {
     position: 'absolute', top: '12px', right: '12px', width: '36px', height: '36px',
-    borderRadius: '50%', backgroundColor: '#FFFFFF', border: 'none',
-    display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', cursor: 'pointer'
+    borderRadius: '12px', backgroundColor: 'rgba(18, 18, 20, 0.8)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
   },
-  cardInfo: { padding: '0 8px' },
-  cardTitle: { fontSize: '18px', fontWeight: '800', color: '#1A1A1E', margin: '0 0 4px 0' },
+  cardInfo: { padding: '0 4px' },
+  cardTitle: { fontSize: '18px', fontWeight: '700', color: '#fff', margin: '0 0 4px 0' },
   cardLocation: { fontSize: '13px', color: '#8E8E93', fontWeight: '500', margin: '0 0 16px 0' },
   cardFooter: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   footerLeft: { display: 'flex', flexDirection: 'column' },
-  footerLabel: { fontSize: '11px', color: '#A0A0A5', fontWeight: '600', textTransform: 'uppercase' },
-  footerPrice: { fontSize: '20px', fontWeight: '900', color: '#1A1A1E' },
+  footerLabel: { fontSize: '11px', color: '#8E8E93', fontWeight: '600', textTransform: 'uppercase' },
+  footerPrice: { fontSize: '20px', fontWeight: '800', color: '#fff' },
   badgeRating: {
-    backgroundColor: '#6C63FF', padding: '6px 12px', borderRadius: '12px',
-    display: 'flex', alignItems: 'center', gap: '4px', boxShadow: '0 2px 8px rgba(108, 99, 255, 0.4)'
+    backgroundColor: 'rgba(57, 255, 20, 0.1)', padding: '6px 12px', borderRadius: '12px',
+    display: 'flex', alignItems: 'center', border: '1px solid rgba(57, 255, 20, 0.2)'
   }
 };
 
