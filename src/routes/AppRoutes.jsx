@@ -21,8 +21,6 @@ import RankingScreen from "../screens/RankingScreen";
 import TorneoDetalleScreen from '../screens/TorneoDetalleScreen'; 
 import PerfilPublicoScreen from '../screens/PerfilPublicoScreen';
 
-// 🔥 IMPORTAMOS LA NUEVA PANTALLA
-import PerfilPublicoScreen from '../screens/PerfilPublicoScreen'; 
 
 const RutaPrivada = ({ children }) => {
   const { usuario, loading } = useContext(AuthContext);
