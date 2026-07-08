@@ -1,16 +1,17 @@
 // src/screens/TorneosScreen.jsx
-import React, { useState, useContext } from 'react'; // 👈 Importamos useContext
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import { useQuery } from '@tanstack/react-query';
-import { AuthContext } from '../context/AuthContext'; // 👈 Importamos tu contexto de autenticación
+import { AuthContext } from '../context/AuthContext';
 
 const TorneosScreen = () => {
   const navigate = useNavigate();
-  const { usuario } = useContext(AuthContext); // 👈 Obtenemos el usuario logueado
+  const { usuario } = useContext(AuthContext);
   const [busqueda, setBusqueda] = useState('');
+  const [mostrarBuscador, setMostrarBuscador] = useState(false);
 
-  // Validamos si el usuario tiene permisos de administración/organización
+  // Validación de permisos
   const esOrganizador = usuario?.rol === 'admin_complejo' || usuario?.rol === 'organizador';
 
   // Fetch de torneos
@@ -22,9 +23,9 @@ const TorneosScreen = () => {
     }
   });
 
-  // Dividimos los datos para "Destacados" y "Recomendados"
-  const torneosDestacados = torneos.slice(0, 3);
-  const torneosRecomendados = torneos.filter(t => t.nombre.toLowerCase().includes(busqueda.toLowerCase()));
+  const torneosFiltrados = torneos.filter(t => 
+    t.nombre.toLowerCase().includes(busqueda.toLowerCase())
+  );
 
   if (isLoading) return (
     <div style={styles.centerContainer}>
@@ -40,145 +41,131 @@ const TorneosScreen = () => {
 
   return (
     <div style={styles.screenContainer}>
-      {/* CABECERA Y BUSCADOR */}
-      <div style={styles.header}>
-        <button onClick={() => navigate(-1)} style={styles.iconButton}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#EAEAEA" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6"/>
-          </svg>
-        </button>
-        <div style={styles.searchContainer}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '12px' }}>
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <input 
-            type="text" 
-            placeholder="Buscar torneos..." 
-            style={styles.searchInput}
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-          />
-        </div>
-        <button style={styles.filterButton}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="4" y1="21" x2="4" y2="14"></line>
-            <line x1="4" y1="10" x2="4" y2="3"></line>
-            <line x1="12" y1="21" x2="12" y2="12"></line>
-            <line x1="12" y1="8" x2="12" y2="3"></line>
-            <line x1="20" y1="21" x2="20" y2="16"></line>
-            <line x1="20" y1="12" x2="20" y2="3"></line>
-            <line x1="1" y1="14" x2="7" y2="14"></line>
-            <line x1="9" y1="8" x2="15" y2="8"></line>
-            <line x1="17" y1="16" x2="23" y2="16"></line>
-          </svg>
-        </button>
-      </div>
-
-      {/* 🔐 PANEL DE ACCIÓN EXCLUSIVO PARA ADMIN / ORGANIZADOR */}
-      {esOrganizador && (
-        <div style={styles.panelAdminContainer}>
-          <div style={styles.panelAdminInfo}>
-            <h3 style={styles.panelAdminTitle}>Panel de Control</h3>
-            <p style={styles.panelAdminSub}>Gestiona las competiciones del club</p>
-          </div>
-          <button 
-            onClick={() => navigate('/torneos/crear')} 
-            style={styles.botonCrearTorneo}
-          >
-            <span>➕ Crear Torneo</span>
+      
+      {/* ─── BARRA SUPERIOR (Inspirada en la referencia) ─── */}
+      <div style={styles.topBar}>
+        <div style={styles.topLeft}>
+          <button onClick={() => navigate(-1)} style={styles.iconButton}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 18l-6-6 6-6"/>
+            </svg>
           </button>
-        </div>
-      )}
-
-      {/* SECCIÓN: DESTACADOS (Scroll Horizontal) */}
-      <div style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>Destacados</h2>
-          <span style={styles.showAll}>Ver todos</span>
+          <span style={styles.brandText}>
+            <span style={{color: '#39FF14'}}>🎾</span> PADEL<span style={{fontWeight: '400'}}>APP</span>
+          </span>
         </div>
         
-        <div style={styles.horizontalScroll}>
-          {torneosDestacados.map(torneo => (
-            <div 
-              key={torneo.id} 
-              style={styles.heroCard}
-              onClick={() => navigate(`/torneos/${torneo.id}`)}
-            >
-              <img 
-                src={torneo.complejo?.imagenUrl || 'https://images.unsplash.com/photo-1592656094267-764a4506f368?w=500'} 
-                alt={torneo.nombre} 
-                style={styles.heroImage} 
-              />
-              <div style={styles.heroOverlay}>
-                <div style={styles.glassPanel}>
-                  <h3 style={styles.glassTitle}>{torneo.nombre}</h3>
-                  <div style={styles.glassDetails}>
-                    <span style={{ color: '#EAEAEA' }}>📍 {torneo.complejo?.nombre || 'Sede a confirmar'}</span>
-                    <span style={styles.priceTag}>
-                      ${torneo.precioInscripcion?.toLocaleString() || '0'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+        <div style={styles.topRight}>
+          <button onClick={() => setMostrarBuscador(!mostrarBuscador)} style={styles.circleButton}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A0A0A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </button>
+          <div style={styles.avatar}>
+            {usuario?.nombre ? usuario.nombre.substring(0, 2).toUpperCase() : 'JD'}
+          </div>
         </div>
       </div>
 
-      {/* SECCIÓN: TODOS LOS TORNEOS (Lista Vertical) */}
-      <div style={styles.section}>
-        <div style={styles.sectionHeader}>
-          <h2 style={styles.sectionTitle}>Recomendados</h2>
-        </div>
+      {/* ─── TÍTULOS Y BUSCADOR ─── */}
+      <div style={styles.headerSection}>
+        <p style={styles.subTitle}>TORNEOS</p>
+        <h1 style={styles.mainTitle}>Lista de Torneos Existentes</h1>
+        
+        {mostrarBuscador && (
+          <div style={styles.searchContainer}>
+            <input 
+              type="text" 
+              placeholder="Buscar por nombre..." 
+              style={styles.searchInput}
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              autoFocus
+            />
+          </div>
+        )}
+      </div>
 
-        <div style={styles.verticalList}>
-          {torneosRecomendados.length > 0 ? torneosRecomendados.map(torneo => (
-            <div 
-              key={torneo.id} 
-              style={styles.standardCard}
-              onClick={() => navigate(`/torneos/${torneo.id}`)}
-            >
-              <div style={styles.cardImageContainer}>
-                <img 
-                  src={torneo.complejo?.imagenUrl || 'https://images.unsplash.com/photo-1554068865-24cecd4e34e8?w=500'} 
-                  alt={torneo.nombre} 
-                  style={styles.cardImage} 
-                />
-                <button style={styles.likeButton}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                  </svg>
-                </button>
-              </div>
+      {/* ─── LISTA DE TORNEOS (Layout Vertical Unificado) ─── */}
+      <div style={styles.listContainer}>
+        
+        {/* BOTÓN CREAR TORNEO (Solo Admin) */}
+        {esOrganizador && (
+          <button style={styles.botonCrear} onClick={() => navigate('/torneos/crear')}>
+            <span>➕</span> CREAR NUEVO TORNEO
+          </button>
+        )}
+
+        {torneosFiltrados.length > 0 ? torneosFiltrados.map((torneo, index) => {
+          // Simulamos el estado (Próximo / En Curso) para que se vea como la referencia
+          const esEnCurso = index % 3 === 0; 
+
+          return (
+            <div key={torneo.id} style={styles.card}>
               
-              <div style={styles.cardInfo}>
-                <h3 style={styles.cardTitle}>{torneo.nombre}</h3>
-                <p style={styles.cardLocation}>{torneo.complejo?.nombre || 'Complejo Deportivo'}</p>
-                
-                <div style={styles.cardFooter}>
-                  <div style={styles.footerLeft}>
-                    <span style={styles.footerLabel}>Inscripción desde</span>
-                    <span style={styles.footerPrice}>${torneo.precioInscripcion?.toLocaleString() || '0'}</span>
-                  </div>
-                  <div style={styles.badgeRating}>
-                    <span style={{color: '#39FF14', fontWeight: 'bold', fontSize: '12px'}}>
-                      {torneo.categoria || 'Gen'}
-                    </span>
-                  </div>
+              {/* Etiqueta de Estado */}
+              <div style={styles.badgeContainer}>
+                <div style={{
+                  ...styles.statusDot, 
+                  backgroundColor: esEnCurso ? '#39FF14' : '#FF9F0A'
+                }} />
+                <span style={{
+                  ...styles.statusText,
+                  color: esEnCurso ? '#39FF14' : '#FF9F0A'
+                }}>
+                  {esEnCurso ? 'EN CURSO' : 'PRÓXIMO'}
+                </span>
+              </div>
+
+              {/* Título del Torneo */}
+              <h2 style={styles.cardTitle}>{torneo.nombre}</h2>
+
+              {/* Grilla de Detalles (3 columnas) */}
+              <div style={styles.gridDetails}>
+                <div style={styles.gridItem}>
+                  <span style={styles.gridLabel}>Complejo</span>
+                  <span style={styles.gridValue}>{torneo.complejo?.nombre?.substring(0,15) || 'Sede A Conf.'}</span>
+                </div>
+                <div style={styles.gridItem}>
+                  <span style={styles.gridLabel}>Categoría</span>
+                  <span style={styles.gridValue}>{torneo.categoria || 'General'}</span>
+                </div>
+                <div style={styles.gridItem}>
+                  <span style={styles.gridLabel}>Inscripción</span>
+                  <span style={styles.gridValue}>${torneo.precioInscripcion?.toLocaleString() || '0'}</span>
                 </div>
               </div>
+
+              {/* Fechas / Info extra */}
+              <div style={styles.dateContainer}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A0A0A5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{marginRight: '6px'}}>
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>{torneo.fechaInicio ? `Inicia: ${torneo.fechaInicio}` : 'Fecha a confirmar'}</span>
+              </div>
+
+              {/* Botón de Acción Principal */}
+              <button 
+                style={styles.actionButton}
+                onClick={() => navigate(`/torneos/${torneo.id}`)}
+              >
+                VER DETALLES
+              </button>
             </div>
-          )) : (
-            <p style={{ color: '#8E8E93', textAlign: 'center', marginTop: '20px' }}>No se encontraron torneos.</p>
-          )}
-        </div>
+          )
+        }) : (
+          <p style={styles.textoVacio}>No se encontraron torneos disponibles.</p>
+        )}
       </div>
     </div>
   );
 };
 
-// --- ESTILOS ADAPTADOS AL TEMA DARK PREMIUM NEÓN ---
+// --- ESTILOS INSPIRADOS EN LA IMAGEN DE REFERENCIA (Adaptados al Neón Verde) ---
 const styles = {
   centerContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: 'transparent' },
   spinner: { width: '32px', height: '32px', border: '3px solid rgba(57, 255, 20, 0.2)', borderTop: '3px solid #39FF14', borderRadius: '50%', animation: 'spin 1s linear infinite' },
@@ -188,132 +175,103 @@ const styles = {
     backgroundColor: 'transparent',
     width: '100%',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-    paddingBottom: '110px', 
+    paddingBottom: '110px', // Mantiene el espacio vital para el BottomNavigation
   },
 
-  // CABECERA
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '24px 16px 16px 16px',
-    gap: '12px',
-  },
-  iconButton: {
-    background: '#161618', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', padding: '10px',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    borderRadius: '14px',
-  },
-  searchContainer: {
-    flex: 1, display: 'flex', alignItems: 'center', backgroundColor: '#161618',
-    borderRadius: '16px', height: '48px', border: '1px solid rgba(255,255,255,0.05)'
-  },
-  searchInput: {
-    border: 'none', background: 'transparent', outline: 'none', padding: '0 12px',
-    width: '100%', fontSize: '15px', color: '#ffffff', fontWeight: '500'
-  },
-  filterButton: {
-    width: '48px', height: '48px', borderRadius: '14px', backgroundColor: 'rgba(57, 255, 20, 0.1)',
-    border: '1px solid rgba(57, 255, 20, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    cursor: 'pointer'
-  },
-
-  // NUEVO: PANEL ADMINISTRADOR
-  panelAdminContainer: {
+  // BARRA SUPERIOR
+  topBar: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#161618',
-    padding: '16px',
-    margin: '0 16px 24px 16px',
-    borderRadius: '20px',
-    border: '1px solid rgba(57, 255, 20, 0.2)', // Borde neón sutil para denotar área especial
-    boxShadow: '0 8px 32px rgba(57, 255, 20, 0.05)'
+    padding: '20px 20px 10px 20px',
   },
-  panelAdminInfo: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px'
-  },
-  panelAdminTitle: {
-    margin: 0,
-    fontSize: '15px',
-    fontWeight: '700',
-    color: '#ffffff'
-  },
-  panelAdminSub: {
-    margin: 0,
-    fontSize: '12px',
-    color: '#8E8E93',
-    fontWeight: '500'
-  },
-  botonCrearTorneo: {
-    backgroundColor: '#39FF14',
-    color: '#0F0F10',
-    border: 'none',
-    padding: '10px 16px',
-    borderRadius: '12px',
-    fontWeight: '700',
-    fontSize: '13px',
-    cursor: 'pointer',
-    boxShadow: '0 4px 12px rgba(57, 255, 20, 0.3)',
-    transition: 'transform 0.2s ease',
-  },
-
-  // SECCIONES
-  section: { marginBottom: '32px' },
-  sectionHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', marginBottom: '16px' },
-  sectionTitle: { fontSize: '18px', fontWeight: '700', color: '#fff', margin: 0 },
-  showAll: { color: '#39FF14', fontSize: '13px', fontWeight: '600', cursor: 'pointer' },
-
-  // SCROLL HORIZONTAL (Populares)
-  horizontalScroll: {
-    display: 'flex', overflowX: 'auto', gap: '16px', padding: '0 16px 20px 16px',
-    msOverflowStyle: 'none', scrollbarWidth: 'none'
-  },
-  heroCard: {
-    minWidth: '260px', height: '320px', borderRadius: '24px', position: 'relative',
-    overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.03)',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
-  },
-  heroImage: { width: '100%', height: '100%', objectFit: 'cover' },
-  heroOverlay: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    background: 'linear-gradient(to bottom, rgba(0,0,0,0) 30%, rgba(10,10,11,0.9) 100%)',
-    display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: '12px'
-  },
-  glassPanel: {
-    backgroundColor: 'rgba(18, 18, 20, 0.6)', backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)', borderRadius: '16px', padding: '16px',
-    border: '1px solid rgba(255,255,255,0.05)'
-  },
-  glassTitle: { color: '#FFF', fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0' },
-  glassDetails: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px', fontWeight: '600' },
-  priceTag: { backgroundColor: 'rgba(57, 255, 20, 0.15)', color: '#39FF14', padding: '4px 8px', borderRadius: '8px', fontWeight: '800' },
-
-  // LISTA VERTICAL (Recomendados)
-  verticalList: { display: 'flex', flexDirection: 'column', gap: '16px', padding: '0 16px' },
-  standardCard: {
-    backgroundColor: '#161618', borderRadius: '24px', padding: '16px',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.2)', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.03)'
-  },
-  cardImageContainer: { position: 'relative', width: '100%', height: '180px', borderRadius: '16px', overflow: 'hidden', marginBottom: '16px' },
-  cardImage: { width: '100%', height: '100%', objectFit: 'cover' },
-  likeButton: {
-    position: 'absolute', top: '12px', right: '12px', width: '36px', height: '36px',
-    borderRadius: '12px', backgroundColor: 'rgba(18, 18, 20, 0.8)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)',
+  topLeft: { display: 'flex', alignItems: 'center', gap: '12px' },
+  topRight: { display: 'flex', alignItems: 'center', gap: '12px' },
+  iconButton: { background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex' },
+  brandText: { color: '#FFF', fontSize: '18px', fontWeight: '800', letterSpacing: '1px' },
+  
+  circleButton: {
+    width: '40px', height: '40px', borderRadius: '20px',
+    backgroundColor: '#1C1C1E', border: '1px solid rgba(255,255,255,0.05)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
   },
-  cardInfo: { padding: '0 4px' },
-  cardTitle: { fontSize: '18px', fontWeight: '700', color: '#fff', margin: '0 0 4px 0' },
-  cardLocation: { fontSize: '13px', color: '#8E8E93', fontWeight: '500', margin: '0 0 16px 0' },
-  cardFooter: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  footerLeft: { display: 'flex', flexDirection: 'column' },
-  footerLabel: { fontSize: '11px', color: '#8E8E93', fontWeight: '600', textTransform: 'uppercase' },
-  footerPrice: { fontSize: '20px', fontWeight: '800', color: '#fff' },
-  badgeRating: {
-    backgroundColor: 'rgba(57, 255, 20, 0.1)', padding: '6px 12px', borderRadius: '12px',
-    display: 'flex', alignItems: 'center', border: '1px solid rgba(57, 255, 20, 0.2)'
-  }
+  avatar: {
+    width: '40px', height: '40px', borderRadius: '20px',
+    backgroundColor: '#334155', color: '#FFF', fontSize: '14px', fontWeight: '700',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)'
+  },
+
+  // SECCIÓN TÍTULO
+  headerSection: {
+    padding: '10px 20px 20px 20px',
+  },
+  subTitle: { color: '#8E8E93', fontSize: '13px', fontWeight: '600', letterSpacing: '1px', margin: '0 0 4px 0' },
+  mainTitle: { color: '#FFF', fontSize: '26px', fontWeight: '700', margin: 0, letterSpacing: '-0.5px' },
+  
+  searchContainer: { marginTop: '16px' },
+  searchInput: {
+    width: '100%', padding: '14px 16px', borderRadius: '12px',
+    backgroundColor: '#1C1C1E', border: '1px solid rgba(255,255,255,0.1)',
+    color: '#FFF', fontSize: '15px', outline: 'none', boxSizing: 'border-box'
+  },
+
+  // LISTA Y TARJETAS
+  listContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+    padding: '0 20px 20px 20px',
+  },
+  
+  botonCrear: {
+    width: '100%', padding: '16px', borderRadius: '16px',
+    backgroundColor: 'rgba(57, 255, 20, 0.05)', border: '1px dashed #39FF14',
+    color: '#39FF14', fontSize: '15px', fontWeight: '700', letterSpacing: '0.5px',
+    cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px',
+    transition: 'all 0.2s ease',
+  },
+
+  card: {
+    backgroundColor: '#1C1C1E', // Fondo gris oscuro sólido, como en la referencia
+    borderRadius: '16px',
+    padding: '20px',
+    border: '1px solid rgba(255, 255, 255, 0.03)',
+  },
+  badgeContainer: {
+    display: 'inline-flex', alignItems: 'center', gap: '6px',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)', padding: '4px 10px',
+    borderRadius: '12px', marginBottom: '12px'
+  },
+  statusDot: { width: '6px', height: '6px', borderRadius: '50%' },
+  statusText: { fontSize: '11px', fontWeight: '700', letterSpacing: '0.5px' },
+  
+  cardTitle: {
+    color: '#FFF', fontSize: '20px', fontWeight: '700',
+    margin: '0 0 16px 0', textTransform: 'uppercase', letterSpacing: '0.5px',
+    lineHeight: '1.2'
+  },
+
+  gridDetails: {
+    display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '16px'
+  },
+  gridItem: { display: 'flex', flexDirection: 'column', gap: '4px' },
+  gridLabel: { color: '#8E8E93', fontSize: '12px', fontWeight: '500' },
+  gridValue: { color: '#FFF', fontSize: '14px', fontWeight: '600' },
+
+  dateContainer: {
+    display: 'flex', alignItems: 'center', color: '#A0A0A5', fontSize: '13px',
+    fontWeight: '500', marginBottom: '20px', paddingBottom: '16px',
+    borderBottom: '1px solid rgba(255,255,255,0.05)'
+  },
+
+  actionButton: {
+    width: '100%', padding: '14px', borderRadius: '12px',
+    backgroundColor: 'rgba(84, 101, 126, 0.2)', // Tono similar al botón de la referencia (azulado/grisáceo)
+    color: '#8EA1BB', border: 'none', fontSize: '14px', fontWeight: '700',
+    cursor: 'pointer', letterSpacing: '0.5px'
+  },
+
+  textoVacio: { color: '#8E8E93', textAlign: 'center', marginTop: '20px', fontSize: '15px' },
 };
 
 export default TorneosScreen;
