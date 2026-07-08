@@ -7,58 +7,51 @@ const CrearTorneoScreen = () => {
   const navigate = useNavigate();
   const [cargando, setCargando] = useState(false);
 
-  // Lista de categorías generada (1ra a 8va + Extras)
-  const categoriasDisponibles = [
-    '1ra Caballeros', '2da Caballeros', '3ra Caballeros', '4ta Caballeros', '5ta Caballeros', '6ta Caballeros', '7ma Caballeros', '8va Caballeros',
-    '1ra Damas', '2da Damas', '3ra Damas', '4ta Damas', '5ta Damas', '6ta Damas', '7ma Damas',
-    'Suma 13', 'Mixto'
-  ];
+  // Categorías basadas en tu configuración previa
+  const categoriasDamas = ['1ra Damas', '2da Damas', '3ra Damas', '4ta Damas', '5ta Damas', '6ta Damas', '7ma Damas'];
+  const categoriasCaballeros = ['1ra Caballeros', '2da Caballeros', '3ra Caballeros', '4ta Caballeros', '5ta Caballeros', '6ta Caballeros', '7ma Caballeros'];
+  const opcionesCupos = [12, 15, 18, 21, 24];
 
   const [formData, setFormData] = useState({
-    complejoId: '',
     nombre: '',
-    categorias: [],
     fechaInicio: '',
     fechaFin: '',
-    precioInscripcion: '',
-    cupoMaximo: 12 // Por defecto un múltiplo de 3
+    categorias: [],
+    cupoParejas: 12,
+    precio: '',
+    premios: '',
+    imagenPortada: '', // 👈 NUEVO CAMPO
+    reglas: 'REGLAS DEL TORNEO:\n\n1. Parejas mal categorizadas serán descalificadas...\n'
   });
 
-  // Manejar selección múltiple de categorías
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
   const toggleCategoria = (cat) => {
     setFormData((prev) => {
-      const seleccionadas = prev.categorias;
-      if (seleccionadas.includes(cat)) {
-        return { ...prev, categorias: seleccionadas.filter(c => c !== cat) };
-      } else {
-        return { ...prev, categorias: [...seleccionadas, cat] };
-      }
+      const seleccionadas = prev.categorias.includes(cat)
+        ? prev.categorias.filter((c) => c !== cat)
+        : [...prev.categorias, cat];
+      return { ...prev, categorias: seleccionadas };
     });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validación de cupo divisible por 3
-    if (formData.cupoMaximo % 3 !== 0) {
-      alert("El cupo máximo debe ser un múltiplo de 3 (Ej: 9, 12, 15, 18).");
-      return;
-    }
-
     if (formData.categorias.length === 0) {
-      alert("Debes seleccionar al menos una categoría.");
-      return;
+      return alert('⚠️ Por favor, seleccioná al menos una categoría.');
     }
 
+    setCargando(true);
     try {
-      setCargando(true);
-      // Aquí envías los datos a tu backend
-      // await API.post('/torneos', formData);
-      alert('Torneo creado exitosamente');
-      navigate('/torneos'); 
+      const payload = { ...formData, categoria: formData.categorias.join(' | ') };
+      // await API.post('/torneos/crear', payload);
+      alert('🏆 ¡Torneo creado con éxito!');
+      navigate('/torneos');
     } catch (error) {
-      console.error('Error al crear el torneo:', error);
-      alert('Error al crear el torneo');
+      console.error("Error al crear torneo:", error);
+      alert("Hubo un error al crear el torneo");
     } finally {
       setCargando(false);
     }
@@ -66,130 +59,151 @@ const CrearTorneoScreen = () => {
 
   return (
     <div style={styles.screenContainer}>
-      {/* HEADER */}
+      
+      {/* ─── ENCABEZADO TIPO APP MODERNA ─── */}
       <div style={styles.topBar}>
-        <button onClick={() => navigate(-1)} style={styles.iconButton}>
+        <button onClick={() => navigate(-1)} style={styles.backButton}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M15 18l-6-6 6-6"/>
           </svg>
         </button>
-        <h1 style={styles.headerTitle}>Registrar Torneo</h1>
-        <div style={{width: '24px'}}></div> {/* Spacer para centrar el título */}
+        <h1 style={styles.headerTitle}>Crear Torneo</h1>
+        <div style={{width: '40px'}}></div> {/* Spacer */}
       </div>
 
-      <form onSubmit={handleSubmit} style={styles.formContainer}>
+      <form onSubmit={handleSubmit} style={styles.formScroll}>
         
-        {/* COMPLEJO (Podrías mapear tus complejos reales aquí) */}
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Complejo Organizador</label>
-          <select 
-            style={styles.input} 
-            value={formData.complejoId}
-            onChange={(e) => setFormData({...formData, complejoId: e.target.value})}
-            required
-          >
-            <option value="" disabled>Seleccioná el complejo...</option>
-            <option value="1">Complejo Prueba</option>
-            <option value="2">ADN Pádel</option>
-          </select>
+        {/* TARJETA 1: Información Principal */}
+        <div style={styles.card}>
+          <h2 style={styles.sectionTitle}>Información General</h2>
+          
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Nombre del Torneo</label>
+            <input 
+              required name="nombre" value={formData.nombre} onChange={handleChange} 
+              style={styles.input} placeholder="Ej: Copa de Invierno 2026" 
+            />
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>URL de la Imagen de Portada</label>
+            <input 
+              type="url"
+              name="imagenPortada" 
+              value={formData.imagenPortada} 
+              onChange={handleChange} 
+              style={styles.input} 
+              placeholder="Ej: https://misitio.com/poster-torneo.jpg" 
+            />
+            {/* Vista previa miniatura (opcional, le da un toque premium) */}
+            {formData.imagenPortada && (
+              <div style={{ marginTop: '12px', borderRadius: '12px', overflow: 'hidden', height: '120px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <img src={formData.imagenPortada} alt="Vista previa" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
+            )}
+          </div>
+
+          <div style={styles.row}>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Fecha Inicio</label>
+              <input required type="date" name="fechaInicio" value={formData.fechaInicio} onChange={handleChange} style={styles.input} />
+            </div>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Fecha Fin</label>
+              <input required type="date" name="fechaFin" value={formData.fechaFin} onChange={handleChange} style={styles.input} />
+            </div>
+          </div>
         </div>
 
-        {/* NOMBRE DEL TORNEO */}
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Nombre del Torneo</label>
-          <input 
-            type="text" 
-            style={styles.input} 
-            placeholder="Ej: Copa Invierno 2026"
-            value={formData.nombre}
-            onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-            required
-          />
-        </div>
-
-        {/* CATEGORÍAS (Selección Múltiple tipo Chips) */}
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Categorías (Selección múltiple)</label>
-          <div style={styles.chipsContainer}>
-            {categoriasDisponibles.map(cat => {
-              const seleccionado = formData.categorias.includes(cat);
+        {/* TARJETA 2: SCROLL HORIZONTAL DE CATEGORÍAS (Inspirado en el video) */}
+        <div style={styles.cardTransparent}>
+          <h2 style={styles.sectionTitle}>Categorías Caballeros</h2>
+          <div style={styles.horizontalScroll}>
+            {categoriasCaballeros.map(cat => {
+              const activo = formData.categorias.includes(cat);
               return (
                 <button
-                  type="button"
-                  key={cat}
-                  onClick={() => toggleCategoria(cat)}
-                  style={{
-                    ...styles.chip,
-                    backgroundColor: seleccionado ? 'rgba(57, 255, 20, 0.1)' : 'transparent',
-                    borderColor: seleccionado ? '#39FF14' : 'rgba(255,255,255,0.1)',
-                    color: seleccionado ? '#39FF14' : '#A0A0A5',
-                  }}
+                  key={cat} type="button" onClick={() => toggleCategoria(cat)}
+                  style={activo ? styles.chipActivo : styles.chipInactivo}
                 >
-                  {cat}
+                  {cat.split(' ')[0]}
                 </button>
-              );
+              )
+            })}
+          </div>
+
+          <h2 style={{...styles.sectionTitle, marginTop: '20px'}}>Categorías Damas</h2>
+          <div style={styles.horizontalScroll}>
+            {categoriasDamas.map(cat => {
+              const activo = formData.categorias.includes(cat);
+              return (
+                <button
+                  key={cat} type="button" onClick={() => toggleCategoria(cat)}
+                  style={activo ? styles.chipActivo : styles.chipInactivo}
+                >
+                  {cat.split(' ')[0]}
+                </button>
+              )
             })}
           </div>
         </div>
 
-        {/* FECHAS (Fila de 2 columnas) */}
-        <div style={styles.row}>
-          <div style={{...styles.inputGroup, flex: 1}}>
-            <label style={styles.label}>Fecha Inicio</label>
-            <input 
-              type="date" 
-              style={styles.input} 
-              value={formData.fechaInicio}
-              onChange={(e) => setFormData({...formData, fechaInicio: e.target.value})}
-              required
-            />
+        {/* TARJETA 3: Configuración de Cupos y Precio */}
+        <div style={styles.card}>
+          <h2 style={styles.sectionTitle}>Cupos y Precio</h2>
+          
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Cupo por Categoría (Parejas)</label>
+            <div style={styles.horizontalScroll}>
+              {opcionesCupos.map(cupo => (
+                <button
+                  key={cupo} type="button" onClick={() => setFormData({...formData, cupoParejas: cupo})}
+                  style={formData.cupoParejas === cupo ? styles.chipCupoActivo : styles.chipInactivo}
+                >
+                  {cupo} Parejas
+                </button>
+              ))}
+            </div>
           </div>
-          <div style={{...styles.inputGroup, flex: 1}}>
-            <label style={styles.label}>Fecha Fin</label>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Precio de Inscripción ($)</label>
             <input 
-              type="date" 
-              style={styles.input} 
-              value={formData.fechaFin}
-              onChange={(e) => setFormData({...formData, fechaFin: e.target.value})}
-              required
+              required type="number" min="0" step="500" name="precio" value={formData.precio} onChange={handleChange} 
+              style={styles.input} placeholder="Ej: 15000" 
             />
           </div>
         </div>
 
-        {/* PRECIO Y CUPOS (Fila de 2 columnas) */}
-        <div style={styles.row}>
-          <div style={{...styles.inputGroup, flex: 1}}>
-            <label style={styles.label}>Precio x Pareja ($)</label>
-            <input 
-              type="number" 
-              style={styles.input} 
-              placeholder="Ej: 15000"
-              value={formData.precioInscripcion}
-              onChange={(e) => setFormData({...formData, precioInscripcion: e.target.value})}
-              required
+        {/* TARJETA 4: Detalles Extras (estilo "Amenities" del video) */}
+        <div style={styles.card}>
+          <h2 style={styles.sectionTitle}>Reglas y Premios</h2>
+          
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Premios</label>
+            <textarea 
+              required name="premios" value={formData.premios} onChange={handleChange} 
+              style={{...styles.input, height: '80px', resize: 'vertical'}} 
+              placeholder="Ej: Paletas, indumentaria, trofeos..."
             />
           </div>
-          <div style={{...styles.inputGroup, flex: 1}}>
-            <label style={styles.label}>Cupo (Múltiplo de 3)</label>
-            <input 
-              type="number" 
-              style={styles.input} 
-              step="3"
-              min="3"
-              value={formData.cupoMaximo}
-              onChange={(e) => setFormData({...formData, cupoMaximo: e.target.value})}
-              required
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Reglamento</label>
+            <textarea 
+              required name="reglas" value={formData.reglas} onChange={handleChange} 
+              style={{...styles.input, height: '120px', resize: 'vertical'}} 
             />
           </div>
         </div>
 
-        {/* BOTÓN SUBMIT */}
+        {/* BOTÓN DE ACCIÓN FLOTANTE AL FINAL */}
         <button 
           type="submit" 
-          style={styles.submitButton}
-          disabled={cargando}
+          disabled={cargando} 
+          style={styles.submitAction}
         >
-          {cargando ? 'CREANDO...' : 'GUARDAR TORNEO'}
+          {cargando ? 'PROCESANDO...' : 'PUBLICAR TORNEO'}
         </button>
 
       </form>
@@ -198,97 +212,141 @@ const CrearTorneoScreen = () => {
 };
 
 const styles = {
+  // Transparente para heredar el fondo del Layout que ya tiene el Ambient Glow
   screenContainer: {
-    backgroundColor: '#111111', // Fondo oscuro base
+    backgroundColor: 'transparent',
     width: '100%',
-    minHeight: '100vh',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-    paddingBottom: '40px',
+    display: 'flex',
+    flexDirection: 'column',
   },
+  
   topBar: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '20px',
-    backgroundColor: '#161618',
-    borderBottom: '1px solid rgba(255,255,255,0.05)'
+    padding: '0 20px 20px 20px',
+    position: 'sticky',
+    top: 0,
+    backgroundColor: 'transparent', // Se mezcla con el Layout
+    zIndex: 10,
   },
-  iconButton: {
-    background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex'
+  backButton: {
+    width: '40px', height: '40px', borderRadius: '20px',
+    backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+    backdropFilter: 'blur(10px)'
   },
   headerTitle: {
-    color: '#39FF14', // Verde Neón
-    fontSize: '20px',
-    fontWeight: '700',
-    margin: 0,
-    letterSpacing: '0.5px'
-  },
-  
-  formContainer: {
-    padding: '20px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px'
-  },
-  row: {
-    display: 'flex',
-    gap: '16px',
-    width: '100%'
-  },
-  inputGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px'
-  },
-  label: {
-    color: '#EAEAEA',
-    fontSize: '13px',
-    fontWeight: '600',
-    letterSpacing: '0.5px'
-  },
-  input: {
-    width: '100%',
-    padding: '14px 16px',
-    borderRadius: '12px',
-    backgroundColor: '#1C1C1E',
-    border: '1px solid rgba(255,255,255,0.1)',
-    color: '#FFF',
-    fontSize: '15px',
-    outline: 'none',
-    boxSizing: 'border-box',
-    transition: 'border-color 0.2s',
+    color: '#FFF', fontSize: '18px', fontWeight: '700', margin: 0, letterSpacing: '0.5px'
   },
 
-  // Estilos de los Chips (Selección Múltiple)
-  chipsContainer: {
+  // Espacio para evitar que el BottomNavigation tape el botón de guardar
+  formScroll: {
+    padding: '0 20px 40px 20px',
     display: 'flex',
-    flexWrap: 'wrap',
-    gap: '8px',
-    marginTop: '4px'
+    flexDirection: 'column',
+    gap: '24px',
   },
-  chip: {
-    padding: '8px 12px',
-    borderRadius: '20px',
-    border: '1px solid',
-    fontSize: '13px',
+
+  // Estilo de tarjetas limpias tipo iOS / App de viajes
+  card: {
+    backgroundColor: 'rgba(28, 28, 30, 0.7)',
+    backdropFilter: 'blur(20px)',
+    borderRadius: '24px',
+    padding: '24px',
+    border: '1px solid rgba(255,255,255,0.03)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+  },
+  cardTransparent: { // Usado para que los chips horizontales respiren mejor
+    display: 'flex',
+    flexDirection: 'column',
+  },
+
+  sectionTitle: {
+    color: '#FFF', fontSize: '18px', fontWeight: '800', margin: '0 0 4px 0', letterSpacing: '-0.2px'
+  },
+
+  row: { display: 'flex', gap: '16px', flexWrap: 'wrap' },
+  inputGroup: { display: 'flex', flexDirection: 'column', gap: '8px', flex: 1, minWidth: '45%' },
+  
+  label: { color: '#A0A0A5', fontSize: '13px', fontWeight: '600' },
+  input: {
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    color: '#FFF',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    padding: '16px',
+    borderRadius: '16px',
+    outline: 'none',
+    fontSize: '15px',
+    fontWeight: '500',
+    transition: 'border-color 0.2s ease',
+  },
+
+  // El secreto del diseño móvil: Contenedores con scroll horizontal nativo
+  horizontalScroll: {
+    display: 'flex',
+    overflowX: 'auto',
+    gap: '12px',
+    paddingBottom: '8px', // Espacio para la sombra/scroll
+    scrollbarWidth: 'none', // Oculta barra en Firefox
+    msOverflowStyle: 'none', // Oculta barra en IE/Edge
+  },
+  
+  chipInactivo: {
+    flex: '0 0 auto', // Evita que se encojan
+    padding: '12px 24px',
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    borderRadius: '16px',
+    color: '#A0A0A5',
+    fontSize: '14px',
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.2s ease',
   },
-
-  submitButton: {
-    width: '100%',
-    padding: '16px',
+  chipActivo: {
+    flex: '0 0 auto',
+    padding: '12px 24px',
+    backgroundColor: 'rgba(57, 255, 20, 0.12)', // Verde neón suave
+    border: '1px solid #39FF14',
     borderRadius: '16px',
+    color: '#39FF14',
+    fontSize: '14px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    boxShadow: '0 4px 12px rgba(57, 255, 20, 0.2)'
+  },
+  chipCupoActivo: {
+    flex: '0 0 auto',
+    padding: '12px 24px',
+    backgroundColor: 'rgba(0, 229, 255, 0.12)', // Cian neón suave para diferenciar
+    border: '1px solid #00E5FF',
+    borderRadius: '16px',
+    color: '#00E5FF',
+    fontSize: '14px',
+    fontWeight: '700',
+    cursor: 'pointer',
+    boxShadow: '0 4px 12px rgba(0, 229, 255, 0.2)'
+  },
+
+  submitAction: {
+    width: '100%',
+    padding: '18px',
+    marginTop: '10px',
     backgroundColor: '#39FF14',
-    color: '#111', // Letra oscura para contrastar con el fondo neón
+    color: '#0A0A0B',
     border: 'none',
+    borderRadius: '20px', // Bien redondeado como en la app de viajes
     fontSize: '16px',
     fontWeight: '800',
-    letterSpacing: '1px',
+    letterSpacing: '0.5px',
     cursor: 'pointer',
-    marginTop: '10px',
-    boxShadow: '0 4px 16px rgba(57, 255, 20, 0.3)'
+    boxShadow: '0 8px 24px rgba(57, 255, 20, 0.3)',
+    transition: 'transform 0.1s ease',
   }
 };
 
