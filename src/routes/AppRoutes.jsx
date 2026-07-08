@@ -18,7 +18,7 @@ import MisReservasScreen from '../screens/MisReservasScreen';
 import PerfilScreen from '../screens/PerfilScreen';
 import Layout from '../components/Layout'; 
 import RankingScreen from "../screens/RankingScreen";
-import RankingScreen from "../screens/CrearTorneoScreen";
+import CrearTorneoScreen from "../screens/CrearTorneoScreen";
 import TorneoDetalleScreen from '../screens/TorneoDetalleScreen'; 
 import PerfilPublicoScreen from '../screens/PerfilPublicoScreen';
 
