@@ -11,7 +11,7 @@ import GestionComplejo from '../screens/GestionComplejo';
 import ReservarTurnoScreen from '../screens/ReservarTurnoScreen';
 import ClasesScreen from '../screens/ClasesScreen'; 
 import CrearClaseScreen from '../screens/CrearClaseScreen';
-import  TorneosScreen  from '../screens/TorneosScreen';
+import TorneosScreen from '../screens/TorneosScreen';
 import BuscadorClubesScreen from '../screens/BuscadorClubesScreen'; 
 import TiendaScreen from '../screens/TiendaScreen'; 
 import MisReservasScreen from '../screens/MisReservasScreen';
@@ -69,6 +69,7 @@ const AppRoutes = () => {
           <Route path="/crear-clase" element={<CrearClaseScreen />} />
           <Route path="/ranking" element={<RankingScreen />} />
           <Route path="/perfil" element={<PerfilScreen />} />
+          <Route path="/torneos/crear" element={<CrearTorneoScreen />} />
           <Route path="/torneos/:id" element={<TorneoDetalleScreen />} />
           {/* 🔥 AQUÍ AGREGAMOS LA NUEVA RUTA PARA EL PERFIL PÚBLICO */}
           <Route path="/jugador/:id" element={<PerfilPublicoScreen />} />
