@@ -15,10 +15,12 @@ const TorneosScreen = () => {
   const esOrganizador = usuario?.rol === 'admin_complejo' || usuario?.rol === 'organizador';
 
   // Fetch de torneos con revalidación forzada (staleTime: 0) para ver cambios instantáneos
-  const { data: torneos = [], isLoading, isError, refetch } = useQuery({
+ const { data: torneos = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['torneos'],
     queryFn: async () => {
       const res = await API.get('/torneos');
+      // 🔥 ESTA LINEA TE DIRÁ LA VERDAD EN LA CONSOLA:
+      console.log("👉 Lo que realmente llega del backend:", res.data);
       return res.data;
     },
     staleTime: 0, 
