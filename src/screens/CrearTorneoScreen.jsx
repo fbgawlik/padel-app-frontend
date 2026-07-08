@@ -46,7 +46,7 @@ const CrearTorneoScreen = () => {
     setCargando(true);
     try {
       const payload = { ...formData, categoria: formData.categorias.join(' | ') };
-      // await API.post('/torneos/crear', payload);
+       await API.post('/torneos/crear', payload);
       alert('🏆 ¡Torneo creado con éxito!');
       navigate('/torneos');
     } catch (error) {
