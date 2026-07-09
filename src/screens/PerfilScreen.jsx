@@ -53,9 +53,15 @@ const PerfilScreen = () => {
   //  CÓMO DEBE QUEDAR EN TU PERFILSCREEN:
 const resolverUrlImagen = (ruta) => {
   if (!ruta) return null;
+  
+  // 🔥 Si la ruta viene con localhost harcodeado desde la DB o el estado viejo, lo limpiamos
+  if (ruta.includes('localhost:5000')) {
+    const rutaRelativa = ruta.replace('http://localhost:5000', ''); // Nos quedamos solo con /uploads/...
+    return `${import.meta.env.VITE_API_URL}${rutaRelativa}`;
+  }
+  
   if (ruta.startsWith('http')) return ruta; // Cloudinary seguro (https)
   
-  // Usamos la variable de entorno que ya tiene el dominio correcto en la nube o local
   return `${import.meta.env.VITE_API_URL}${ruta}`; 
 };
 
