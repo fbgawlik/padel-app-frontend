@@ -50,12 +50,14 @@ const PerfilScreen = () => {
     cargarPerfilCompleto();
   }, []);
 
-  // Función de ayuda indispensable para procesar Cloudinary o Localhost viejo
-  const resolverUrlImagen = (ruta) => {
-    if (!ruta) return null;
-    if (ruta.startsWith('http')) return ruta; // Cloudinary seguro (https)
-    return `http://localhost:5000${ruta}`; // Fallback local
-  };
+  //  CÓMO DEBE QUEDAR EN TU PERFILSCREEN:
+const resolverUrlImagen = (ruta) => {
+  if (!ruta) return null;
+  if (ruta.startsWith('http')) return ruta; // Cloudinary seguro (https)
+  
+  // Usamos la variable de entorno que ya tiene el dominio correcto en la nube o local
+  return `${import.meta.env.VITE_API_URL}${ruta}`; 
+};
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
