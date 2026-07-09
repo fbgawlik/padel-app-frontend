@@ -12,10 +12,15 @@ const PerfilScreen = () => {
   const [error, setError] = useState('');
   const [mensajeExito, setMensajeExito] = useState('');
 
-  // Estados para imágenes (Perfil)
+  // Estados para imagen de Perfil
   const [imagenArchivo, setImagenArchivo] = useState(null);
   const [imagenPreview, setImagenPreview] = useState(null);
   const fileInputRef = useRef(null);
+
+  // 🔥 NUEVOS ESTADOS Y REFERENCIAS PARA IMAGEN DE PORTADA
+  const [portadaArchivo, setPortadaArchivo] = useState(null);
+  const [portadaPreview, setPortadaPreview] = useState(null);
+  const portadaInputRef = useRef(null);
 
   // Estados para todos los campos del Schema.prisma
   const [formData, setFormData] = useState({
@@ -32,7 +37,8 @@ const PerfilScreen = () => {
   useEffect(() => {
     const cargarPerfilCompleto = async () => {
       try {
-        const res = await API.get('/auth/perfil');
+        // 🔥 Apuntamos a la nueva ruta limpia del backend para traer el perfil
+        const res = await API.get('/usuarios/perfil');
         setFormData({
           nombre: res.data.nombre || '',
           apellido: res.data.apellido || '',
@@ -50,20 +56,18 @@ const PerfilScreen = () => {
     cargarPerfilCompleto();
   }, []);
 
-  //  CÓMO DEBE QUEDAR EN TU PERFILSCREEN:
-const resolverUrlImagen = (ruta) => {
-  if (!ruta) return null;
-  
-  // 🔥 Si la ruta viene con localhost harcodeado desde la DB o el estado viejo, lo limpiamos
-  if (ruta.includes('localhost:5000')) {
-    const rutaRelativa = ruta.replace('http://localhost:5000', ''); // Nos quedamos solo con /uploads/...
-    return `${import.meta.env.VITE_API_URL}${rutaRelativa}`;
-  }
-  
-  if (ruta.startsWith('http')) return ruta; // Cloudinary seguro (https)
-  
-  return `${import.meta.env.VITE_API_URL}${ruta}`; 
-};
+  const resolverUrlImagen = (ruta) => {
+    if (!ruta) return null;
+    
+    if (ruta.includes('localhost:5000')) {
+      const rutaRelativa = ruta.replace('http://localhost:5000', ''); 
+      return `${import.meta.env.VITE_API_URL}${rutaRelativa}`;
+    }
+    
+    if (ruta.startsWith('http')) return ruta; 
+    
+    return `${import.meta.env.VITE_API_URL}${ruta}`; 
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -74,6 +78,15 @@ const resolverUrlImagen = (ruta) => {
     if (file) {
       setImagenArchivo(file);
       setImagenPreview(URL.createObjectURL(file));
+    }
+  };
+
+  // 🔥 MANEJADOR PARA SELECCIONAR LA PORTADA
+  const handlePortadaChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPortadaArchivo(file);
+      setPortadaPreview(URL.createObjectURL(file));
     }
   };
 
@@ -92,11 +105,16 @@ const resolverUrlImagen = (ruta) => {
       data.append('ladoJuego', formData.ladoJuego);
       data.append('bio', formData.bio);
 
+      // 🔥 Adjuntamos los nombres exactos que espera el upload.fields del Backend
       if (imagenArchivo) {
-        data.append('imagen', imagenArchivo);
+        data.append('imagenPerfil', imagenArchivo);
+      }
+      if (portadaArchivo) {
+        data.append('imagenPortada', portadaArchivo);
       }
 
-      const res = await API.put('/auth/perfil', data, {
+      // 🔥 Petición PUT dirigida al nuevo módulo unificado /usuarios/perfil
+      const res = await API.put('/usuarios/perfil', data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -123,15 +141,32 @@ const resolverUrlImagen = (ruta) => {
     <div style={styles.container}>
       <form onSubmit={handleSubmit} style={styles.tarjeta}>
         
-        {/* BANNER DE PORTADA (imagenPortada del Schema) */}
-        <div style={styles.bannerPortada}>
-          {usuario?.imagenPortada ? (
+        {/* BANNER DE PORTADA INTERACTIVO */}
+        <div 
+          style={styles.bannerPortada} 
+          onClick={() => portadaInputRef.current.click()}
+          title="Hacé clic para cambiar tu foto de portada"
+        >
+          {portadaPreview ? (
+            <img src={portadaPreview} alt="Preview Portada" style={styles.imagenPortadaImg} />
+          ) : usuario?.imagenPortada ? (
             <img src={resolverUrlImagen(usuario.imagenPortada)} alt="Portada" style={styles.imagenPortadaImg} />
           ) : (
             <div style={styles.bannerVacio}></div>
           )}
+          
+          <div style={styles.portadaOverlay}>CAMBIAR PORTADA</div>
+
+          <input 
+            type="file" 
+            ref={portadaInputRef} 
+            style={{ display: 'none' }} 
+            accept="image/*" 
+            onChange={handlePortadaChange} 
+          />
+
           {/* BADGE DE PUNTOS GENERALES */}
-          <div style={styles.badgePuntos}>
+          <div style={styles.badgePuntos} onClick={(e) => e.stopPropagation()}>
             <span style={styles.puntosNumero}>{formData.puntosGenerales}</span>
             <span style={styles.puntosLabel}>PTS</span>
           </div>
@@ -141,7 +176,7 @@ const resolverUrlImagen = (ruta) => {
         <div style={styles.avatarSeccion}>
           <div style={styles.avatarContenedor} onClick={() => fileInputRef.current.click()}>
             {imagenPreview ? (
-              <img src={imagenPreview} alt="Preview" style={styles.imagenImagen} />
+              <img src={imagenPreview} alt="Preview Perfil" style={styles.imagenImagen} />
             ) : usuario?.imagenPerfil ? (
               <img src={resolverUrlImagen(usuario.imagenPerfil)} alt="Perfil" style={styles.imagenImagen} />
             ) : (
@@ -240,10 +275,11 @@ const resolverUrlImagen = (ruta) => {
 const styles = {
   container: { minHeight: '100vh', backgroundColor: '#0C0C0E', padding: '40px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'system-ui, sans-serif' },
   tarjeta: { width: '100%', maxWidth: '700px', backgroundColor: '#141416', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', position: 'relative' },
-  bannerPortada: { width: '100%', height: '160px', backgroundColor: '#1F1F23', position: 'relative', overflow: 'hidden' },
+  bannerPortada: { width: '100%', height: '160px', backgroundColor: '#1F1F23', position: 'relative', overflow: 'hidden', cursor: 'pointer' },
   imagenPortadaImg: { width: '100%', height: '100%', objectFit: 'cover' },
   bannerVacio: { width: '100%', height: '100%', background: 'linear-gradient(135deg, #1f1f23 0%, #2c2c35 100%)' },
-  badgePuntos: { position: 'absolute', top: '20px', right: '20px', backgroundColor: 'rgba(57, 255, 20, 0.15)', border: '1px solid #39FF14', padding: '6px 14px', borderRadius: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 4px 12px rgba(57, 255, 20, 0.2)' },
+  portadaOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', color: '#FFF', fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s', ':hover': { opacity: 1 } },
+  badgePuntos: { position: 'absolute', top: '20px', right: '20px', backgroundColor: 'rgba(57, 255, 20, 0.15)', border: '1px solid #39FF14', padding: '6px 14px', borderRadius: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 4px 12px rgba(57, 255, 20, 0.2)', zIndex: 3 },
   puntosNumero: { color: '#39FF14', fontSize: '16px', fontWeight: '800', lineHeight: '1' },
   puntosLabel: { color: '#FFF', fontSize: '9px', fontWeight: '700', marginTop: '2px', letterSpacing: '0.5px' },
   avatarSeccion: { display: 'flex', justifyContent: 'center', marginTop: '-60px', marginBottom: '15px', position: 'relative', zIndex: '2' },
