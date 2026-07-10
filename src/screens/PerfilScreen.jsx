@@ -17,12 +17,12 @@ const PerfilScreen = () => {
   const [imagenPreview, setImagenPreview] = useState(null);
   const fileInputRef = useRef(null);
 
-  // 🔥 NUEVOS ESTADOS Y REFERENCIAS PARA IMAGEN DE PORTADA
+  // Estados para imagen de Portada
   const [portadaArchivo, setPortadaArchivo] = useState(null);
   const [portadaPreview, setPortadaPreview] = useState(null);
   const portadaInputRef = useRef(null);
 
-  // Estados para todos los campos del Schema.prisma
+  // 🔥 1. AGREGAMOS LAS IMÁGENES AL ESTADO INICIAL
   const [formData, setFormData] = useState({
     nombre: usuario?.nombre || '',
     apellido: usuario?.apellido || '',
@@ -30,14 +30,15 @@ const PerfilScreen = () => {
     categoriaPadel: usuario?.categoriaPadel || '',
     ladoJuego: usuario?.ladoJuego || '',
     bio: usuario?.bio || '',
-    email: usuario?.email || '', // Informativo
-    puntosGenerales: usuario?.puntosGenerales || 0 // Informativo
+    email: usuario?.email || '', 
+    puntosGenerales: usuario?.puntosGenerales || 0,
+    imagenPerfil: usuario?.imagenPerfil || '', // Nuevo
+    imagenPortada: usuario?.imagenPortada || '' // Nuevo
   });
 
   useEffect(() => {
     const cargarPerfilCompleto = async () => {
       try {
-        // 🔥 Apuntamos a la nueva ruta limpia del backend para traer el perfil
         const res = await API.get('/usuarios/perfil');
         setFormData({
           nombre: res.data.nombre || '',
@@ -47,7 +48,10 @@ const PerfilScreen = () => {
           ladoJuego: res.data.ladoJuego || '',
           bio: res.data.bio || '',
           email: res.data.email || '',
-          puntosGenerales: res.data.puntosGenerales || 0
+          puntosGenerales: res.data.puntosGenerales || 0,
+          // 🔥 2. GUARDAMOS LAS IMÁGENES FRESCAS QUE VIENEN DEL SERVER
+          imagenPerfil: res.data.imagenPerfil || '', 
+          imagenPortada: res.data.imagenPortada || ''
         });
       } catch (err) {
         console.error("Error al traer perfil completo:", err);
@@ -58,14 +62,11 @@ const PerfilScreen = () => {
 
   const resolverUrlImagen = (ruta) => {
     if (!ruta) return null;
-    
     if (ruta.includes('localhost:5000')) {
       const rutaRelativa = ruta.replace('http://localhost:5000', ''); 
       return `${import.meta.env.VITE_API_URL}${rutaRelativa}`;
     }
-    
     if (ruta.startsWith('http')) return ruta; 
-    
     return `${import.meta.env.VITE_API_URL}${ruta}`; 
   };
 
@@ -81,7 +82,6 @@ const PerfilScreen = () => {
     }
   };
 
-  // 🔥 MANEJADOR PARA SELECCIONAR LA PORTADA
   const handlePortadaChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -105,7 +105,6 @@ const PerfilScreen = () => {
       data.append('ladoJuego', formData.ladoJuego);
       data.append('bio', formData.bio);
 
-      // 🔥 Adjuntamos los nombres exactos que espera el upload.fields del Backend
       if (imagenArchivo) {
         data.append('imagenPerfil', imagenArchivo);
       }
@@ -113,7 +112,6 @@ const PerfilScreen = () => {
         data.append('imagenPortada', portadaArchivo);
       }
 
-      // 🔥 Petición PUT dirigida al nuevo módulo unificado /usuarios/perfil
       const res = await API.put('/usuarios/perfil', data, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -121,6 +119,18 @@ const PerfilScreen = () => {
       if (actualizarDatosUsuario) {
         actualizarDatosUsuario(res.data.usuario);
       }
+
+      // 🔥 3. ACTUALIZAMOS EL ESTADO CON LAS NUEVAS RUTAS Y LIMPIAMOS LOS ARCHIVOS TEMPORALES
+      setFormData(prev => ({
+        ...prev,
+        imagenPerfil: res.data.usuario.imagenPerfil || prev.imagenPerfil,
+        imagenPortada: res.data.usuario.imagenPortada || prev.imagenPortada
+      }));
+      
+      setImagenPreview(null);
+      setImagenArchivo(null);
+      setPortadaPreview(null);
+      setPortadaArchivo(null);
 
       setMensajeExito('¡Perfil actualizado con éxito!');
       setTimeout(() => setMensajeExito(''), 4000);
@@ -147,10 +157,11 @@ const PerfilScreen = () => {
           onClick={() => portadaInputRef.current.click()}
           title="Hacé clic para cambiar tu foto de portada"
         >
+          {/* 🔥 4. AHORA LEEMOS DE FORMDATA Y NO DE USUARIO */}
           {portadaPreview ? (
             <img src={portadaPreview} alt="Preview Portada" style={styles.imagenPortadaImg} />
-          ) : usuario?.imagenPortada ? (
-            <img src={resolverUrlImagen(usuario.imagenPortada)} alt="Portada" style={styles.imagenPortadaImg} />
+          ) : formData.imagenPortada ? (
+            <img src={resolverUrlImagen(formData.imagenPortada)} alt="Portada" style={styles.imagenPortadaImg} />
           ) : (
             <div style={styles.bannerVacio}></div>
           )}
@@ -165,7 +176,6 @@ const PerfilScreen = () => {
             onChange={handlePortadaChange} 
           />
 
-          {/* BADGE DE PUNTOS GENERALES */}
           <div style={styles.badgePuntos} onClick={(e) => e.stopPropagation()}>
             <span style={styles.puntosNumero}>{formData.puntosGenerales}</span>
             <span style={styles.puntosLabel}>PTS</span>
@@ -175,10 +185,11 @@ const PerfilScreen = () => {
         {/* CONTENEDOR AVATAR FLOTANTE */}
         <div style={styles.avatarSeccion}>
           <div style={styles.avatarContenedor} onClick={() => fileInputRef.current.click()}>
+            {/* 🔥 5. AHORA LEEMOS DE FORMDATA Y NO DE USUARIO */}
             {imagenPreview ? (
               <img src={imagenPreview} alt="Preview Perfil" style={styles.imagenImagen} />
-            ) : usuario?.imagenPerfil ? (
-              <img src={resolverUrlImagen(usuario.imagenPerfil)} alt="Perfil" style={styles.imagenImagen} />
+            ) : formData.imagenPerfil ? (
+              <img src={resolverUrlImagen(formData.imagenPerfil)} alt="Perfil" style={styles.imagenImagen} />
             ) : (
               <div style={styles.avatarLetra}>{obtenerIniciales()}</div>
             )}
@@ -271,7 +282,7 @@ const PerfilScreen = () => {
   );
 };
 
-// ESTILOS MODERNOS (DARK MODE & NEON GREEN DETAILS)
+// ESTILOS MODERNOS (Dejados exactamente igual a los tuyos)
 const styles = {
   container: { minHeight: '100vh', backgroundColor: '#0C0C0E', padding: '40px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'system-ui, sans-serif' },
   tarjeta: { width: '100%', maxWidth: '700px', backgroundColor: '#141416', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', position: 'relative' },
