@@ -14,7 +14,7 @@ const PerfilPublicoScreen = () => {
     const fetchJugador = async () => {
       try {
         // Petición al backend usando tu axios centralizado
-        const respuesta = await API.get(`/usuarios/perfil-publico/${id}`); 
+        const respuesta = await API.get(`/usuarios/${id}`); 
         setJugador(respuesta.data); 
       } catch (err) {
         setError(err.response?.data?.error || 'No se pudo cargar el perfil del jugador');
