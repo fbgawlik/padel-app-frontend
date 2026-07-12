@@ -1,130 +1,382 @@
+// src/screens/RankingScreen.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API from '../services/api'; // 🔥 Usamos tu servicio centralizado
+import API from '../services/api'; // 🔥 Tu servicio centralizado
 
 const RankingScreen = () => {
   const [jugadores, setJugadores] = useState([]);
   const [categoria, setCategoria] = useState('5ta'); 
-  const [rama, setRama] = useState('Caballeros'); // 🔥 Nuevo estado para Damas/Caballeros
+  const [rama, setRama] = useState('Caballeros'); // 🔥 Filtro sincronizado para Damas/Caballeros
   const [cargando, setCargando] = useState(true);
   
   const navigate = useNavigate(); 
-  
-  // Usamos tu variable de entorno para las imágenes
-  const URL_IMAGENES = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
   const categoriasDisponibles = ['1ra', '2da', '3ra', '4ta', '5ta', '6ta', '7ma', '8va'];
-  const ramasDisponibles = ['Caballeros', 'Damas'];
 
   useEffect(() => {
     const cargarRanking = async () => {
       setCargando(true);
       try {
-        // 🔥 Hacemos la petición enviando ambos filtros
+        // 🔥 Petición exacta enviando ambos filtros limpios a tu endpoint
         const respuesta = await API.get(`/ranking?categoria=${categoria}&rama=${rama}`);
-        setJugadores(respuesta.data);
+        setJugadores(respuesta.data || []);
       } catch (error) {
         console.error("Error al obtener la tabla de posiciones:", error);
+        setJugadores([]);
       } finally {
         setCargando(false);
       }
     };
 
     cargarRanking();
-  }, [categoria, rama]); // Se vuelve a ejecutar si cambias la categoría o la rama
+  }, [categoria, rama]); // Se vuelve a ejecutar al cambiar de pestaña o chip
+
+  // 🔥 LÓGICA DE RESOLUCIÓN DE IMÁGENES REPLICADA DE TU PERFILSCREEN
+  const resolverUrlImagen = (ruta) => {
+    if (!ruta) return null;
+    if (ruta.includes('localhost:5000')) {
+      const rutaRelativa = ruta.replace('http://localhost:5000', ''); 
+      return `${import.meta.env.VITE_API_URL}${rutaRelativa}`;
+    }
+    if (ruta.startsWith('http')) return ruta; 
+    return `${import.meta.env.VITE_API_URL}${ruta}`; 
+  };
+
+  // 🔥 OBTENER INICIALES DEL JUGADOR REPLICADO DE TU PERFILSCREEN
+  const obtenerIniciales = (jugador) => {
+    const n = jugador?.nombre?.charAt(0) || '';
+    const a = jugador?.apellido?.charAt(0) || '';
+    return (n + a).toUpperCase() || 'P';
+  };
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-center mb-6">Ranking Oficial</h1>
+    <div style={styles.contenedor}>
+      <div style={styles.tarjetaContenido}>
+        
+        {/* TÍTULO DE LA PANTALLA */}
+        <h2 style={styles.tituloHeader}>Ranking Oficial</h2>
 
-      {/* Selectores de Filtro */}
-      <div className="flex flex-wrap justify-center gap-4 mb-8">
-        <div className="flex items-center">
-          <label className="mr-3 font-semibold">Rama:</label>
-          <select 
-            value={rama} 
-            onChange={(e) => setRama(e.target.value)}
-            className="border border-gray-300 rounded p-2 bg-white outline-none cursor-pointer"
+        {/* CONTENEDOR DE PESTAÑAS (RAMAS) - Estructura visual de la foto de referencia */}
+        <div style={styles.contenedorRamas}>
+          <button 
+            style={rama === 'Damas' ? styles.btnRamaActivo : styles.btnRamaInactivo}
+            onClick={() => setRama('Damas')}
           >
-            {ramasDisponibles.map((r) => (
-              <option key={r} value={r}>{r}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="flex items-center">
-          <label className="mr-3 font-semibold">Categoría:</label>
-          <select 
-            value={categoria} 
-            onChange={(e) => setCategoria(e.target.value)}
-            className="border border-gray-300 rounded p-2 bg-white outline-none cursor-pointer"
+            Damas
+          </button>
+          <button 
+            style={rama === 'Caballeros' ? styles.btnRamaActivo : styles.btnRamaInactivo}
+            onClick={() => setRama('Caballeros')}
           >
-            {categoriasDisponibles.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
+            Caballeros
+          </button>
         </div>
-      </div>
 
-      {/* Pantalla de Carga */}
-      {cargando ? (
-        <div className="flex justify-center items-center py-10">
-           <div className="w-10 h-10 border-4 border-gray-200 border-t-green-500 rounded-full animate-spin"></div>
+        {/* SLIDER HORIZONTAL DE CATEGORÍAS */}
+        <div style={styles.sliderCategorias}>
+          {categoriasDisponibles.map((cat) => {
+            const esActivo = categoria === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => setCategoria(cat)}
+                style={esActivo ? styles.chipCategoriaActivo : styles.chipCategoriaInactivo}
+              >
+                {cat}
+              </button>
+            );
+          })}
         </div>
-      ) : (
-        /* Tabla de Posiciones */
-        <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-100 text-gray-700">
-                <th className="p-4 border-b w-16 text-center">#</th>
-                <th className="p-4 border-b">Jugador</th>
-                <th className="p-4 border-b text-right">Puntos</th>
-              </tr>
-            </thead>
-            <tbody>
-              {jugadores.length === 0 ? (
-                <tr>
-                  <td colSpan="3" className="p-8 text-center text-gray-500 font-medium">
-                    Aún no hay jugadores registrados en esta categoría.
-                  </td>
-                </tr>
-              ) : (
-                jugadores.map((jugador, index) => (
-  <tr 
-    key={jugador.id} 
-    className="hover:bg-gray-50 border-b cursor-pointer transition-colors"
-    onClick={() => navigate(`/jugador/${jugador.id}`)}
-  >
-    <td className="p-4 font-bold text-gray-600 text-center">{index + 1}</td>
-    <td className="p-4 flex items-center">
-      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-bold mr-3 overflow-hidden">
-        {jugador.imagenPerfil ? (
-          <img 
-            src={`${import.meta.env.VITE_API_URL}${jugador.imagenPerfil}`} 
-            alt="Perfil" 
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          jugador.nombre.charAt(0).toUpperCase()
-        )}
+
+        {/* CONTENEDOR DE LA LISTA / CARGA */}
+        <div style={styles.listaClasificacion}>
+          {cargando ? (
+            <div style={styles.contenedorCarga}>
+              <div style={styles.spinner}></div>
+              <p style={{ color: '#8E8E93', marginTop: '12px', fontSize: '14px' }}>Actualizando posiciones...</p>
+            </div>
+          ) : jugadores.length === 0 ? (
+            <div style={styles.mensajeEstado}>
+              Aún no hay jugadores registrados en {categoria} {rama}.
+            </div>
+          ) : (
+            jugadores.map((jugador, index) => {
+              const posicion = index + 1;
+              
+              return (
+                <div 
+                  key={jugador.id} 
+                  style={styles.filaJugador}
+                  onClick={() => navigate(`/jugador/${jugador.id}`)}
+                >
+                  
+                  {/* PUESTO / MEDALLA (Top 3 destacado con colores Oro, Plata, Bronce) */}
+                  <div style={styles.colPosicion}>
+                    {posicion <= 3 ? (
+                      <span style={styles.badgeMedalla(posicion)}>{posicion}</span>
+                    ) : (
+                      <span style={styles.textoPosicion}>{posicion}</span>
+                    )}
+                  </div>
+
+                  {/* FOTO JUGADOR UTILIZANDO TU RESOLVERURLIMAGEN */}
+                  <div style={styles.colFoto}>
+                    <div style={styles.avatarContenedor}>
+                      {jugador.imagenPerfil ? (
+                        <img 
+                          src={resolverUrlImagen(jugador.imagenPerfil)} 
+                          alt="Perfil" 
+                          style={styles.avatar}
+                        />
+                      ) : (
+                        <span style={styles.inicialAvatar}>
+                          {obtenerIniciales(jugador)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* DATOS DEL JUGADOR */}
+                  <div style={styles.colInfo}>
+                    <div style={styles.nombreJugador}>
+                      {jugador.nombre} {jugador.apellido}
+                    </div>
+                    <div style={styles.subtextoCategoria}>
+                      Categoría: {categoria} {rama}
+                    </div>
+                  </div>
+
+                  {/* PUNTOS TOTALES */}
+                  <div style={styles.colPuntos}>
+                    <span style={styles.textoPuntos}>{jugador.puntosGenerales || 0} pts</span>
+                  </div>
+
+                </div>
+              );
+            })
+          )}
+        </div>
+
       </div>
-      <span className="font-semibold text-gray-800">
-        {jugador.nombre} {jugador.apellido}
-      </span>
-    </td>
-    <td className="p-4 font-bold text-green-600 text-right">
-      {jugador.puntosGenerales || 0} pts
-    </td>
-  </tr>
-))
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
     </div>
   );
 };
+
+// --- ARQUITECTURA DE ESTILOS ADN PÁDEL (MODERNO / OSCURO / NEÓN) ---
+const styles = {
+  contenedor: {
+    width: '100%',
+    color: '#FFFFFF',
+    fontFamily: 'system-ui, sans-serif',
+    boxSizing: 'border-box',
+    display: 'flex',
+    justifyContent: 'center',
+    minHeight: '100vh',
+    backgroundColor: '#0C0C0E'
+  },
+  tarjetaContenido: {
+    width: '100%',
+    maxWidth: '440px',
+    padding: '20px 16px',
+    boxSizing: 'border-box',
+    display: 'flex',
+    flexDirection: 'column'
+  },
+  tituloHeader: {
+    textAlign: 'center',
+    fontSize: '22px',
+    fontWeight: '800',
+    letterSpacing: '0.5px',
+    margin: '10px 0 20px 0',
+    color: '#FFFFFF'
+  },
+  contenedorRamas: {
+    display: 'flex',
+    backgroundColor: '#141416',
+    borderRadius: '14px',
+    padding: '4px',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    marginBottom: '16px'
+  },
+  btnRamaActivo: {
+    flex: 1,
+    backgroundColor: '#39FF14', // Verde Neón
+    color: '#000000',
+    border: 'none',
+    borderRadius: '10px',
+    height: '40px',
+    fontSize: '14px',
+    fontWeight: '800',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  },
+  btnRamaInactivo: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    color: '#A0A0A5',
+    border: 'none',
+    borderRadius: '10px',
+    height: '40px',
+    fontSize: '14px',
+    fontWeight: '700',
+    cursor: 'pointer'
+  },
+  sliderCategorias: {
+    display: 'flex',
+    gap: '8px',
+    overflowX: 'auto',
+    paddingBottom: '12px',
+    marginBottom: '14px',
+    scrollbarWidth: 'none', 
+    WebkitOverflowScrolling: 'touch',
+  },
+  chipCategoriaActivo: {
+    backgroundColor: 'rgba(57, 255, 20, 0.15)',
+    color: '#39FF14',
+    border: '1px solid #39FF14',
+    borderRadius: '20px',
+    padding: '8px 16px',
+    fontSize: '13px',
+    fontWeight: '800',
+    whiteSpace: 'nowrap',
+    cursor: 'pointer'
+  },
+  chipCategoriaInactivo: {
+    backgroundColor: '#1A1A1E',
+    color: '#A0A0A5',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '20px',
+    padding: '8px 16px',
+    fontSize: '13px',
+    fontWeight: '600',
+    whiteSpace: 'nowrap',
+    cursor: 'pointer'
+  },
+  listaClasificacion: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    marginTop: '6px'
+  },
+  filaJugador: {
+    backgroundColor: '#141416',
+    border: '1px solid rgba(255, 255, 255, 0.05)',
+    borderRadius: '16px',
+    display: 'flex',
+    alignItems: 'center',
+    padding: '12px 14px',
+    gap: '12px',
+    boxSizing: 'border-box',
+    cursor: 'pointer',
+    transition: 'background-color 0.2s',
+  },
+  colPosicion: {
+    width: '32px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  textoPosicion: {
+    fontSize: '15px',
+    fontWeight: '700',
+    color: '#A0A0A5'
+  },
+  badgeMedalla: (pos) => ({
+    backgroundColor: pos === 1 ? '#D4AF37' : pos === 2 ? '#AAA9AD' : '#CD7F32',
+    color: '#000000',
+    width: '24px',
+    height: '24px',
+    borderRadius: '50%',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    fontSize: '12px',
+    fontWeight: '900',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.4)'
+  }),
+  colFoto: {
+    width: '42px',
+    height: '42px'
+  },
+  avatarContenedor: {
+    width: '100%',
+    height: '100%',
+    borderRadius: '50%',
+    backgroundColor: '#1A1A1E',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    border: '1px solid rgba(255, 255, 255, 0.08)'
+  },
+  avatar: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover'
+  },
+  inicialAvatar: {
+    fontSize: '14px',
+    fontWeight: '700',
+    color: '#A0A0A5'
+  },
+  colInfo: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px'
+  },
+  nombreJugador: {
+    fontSize: '15px',
+    fontWeight: '700',
+    color: '#FFFFFF'
+  },
+  subtextoCategoria: {
+    fontSize: '12px',
+    color: '#A0A0A5',
+    fontWeight: '500'
+  },
+  colPuntos: {
+    textAlign: 'right'
+  },
+  textoPuntos: {
+    fontSize: '15px',
+    fontWeight: '800',
+    color: '#39FF14'
+  },
+  contenedorCarga: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: '60px 0'
+  },
+  spinner: {
+    width: '32px',
+    height: '32px',
+    border: '3px solid rgba(255, 255, 255, 0.08)',
+    borderTop: '3px solid #39FF14',
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite'
+  },
+  mensajeEstado: {
+    textAlign: 'center',
+    padding: '40px 20px',
+    color: '#A0A0A5',
+    fontSize: '14px',
+    lineHeight: '20px'
+  }
+};
+
+// Inyección de animación clave para el spinner nativo
+if (typeof document !== 'undefined') {
+  const estiloAnimacion = document.createElement('style');
+  estiloAnimacion.innerHTML = `
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `;
+  document.head.appendChild(estiloAnimacion);
+}
 
 export default RankingScreen;
