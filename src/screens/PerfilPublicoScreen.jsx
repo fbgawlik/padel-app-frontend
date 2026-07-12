@@ -402,3 +402,4 @@ const styles = {
     marginBottom: '16px'
   }
 };
+export default PerfilPublicoScreen;
