@@ -256,10 +256,12 @@ const styles = {
   },
   nombreJugador: {
     textAlign: 'center',
-    fontSize: '22px',
+    fontSize: '24px',
     fontWeight: '800',
-    margin: '4px 0 20px 0',
-    letterSpacing: '0.2px'
+    color: '#FFFFFF', 
+    margin: '12px 0 20px 0',
+    letterSpacing: '0.2px',
+    textShadow: '0px 2px 4px rgba(0, 0, 0, 0.5)' // Envuelve el texto en una sutil sombra negra
   },
   filaBadges: {
     display: 'grid',
@@ -308,9 +310,9 @@ const styles = {
     maxWidth: '100%'
   },
   subtituloSeccion: {
-    fontSize: '14px',
+    fontSize: '15px',
     fontWeight: '700',
-    color: '#A0A0A5',
+    color: '#FFFFFF',       // 🔥 Cambiamos de gris a BLANCO o un gris muy claro (#E5E5EA) para que se lea perfecto
     margin: '0 0 10px 0'
   },
   bloqueInfoDetalle: {
