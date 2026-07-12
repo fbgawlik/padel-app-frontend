@@ -8,7 +8,7 @@ import { useQuery } from '@tanstack/react-query';
 const BACKEND_URL = 'https://padel-api-backend-production.up.railway.app'; 
 
 const DashboardScreen = () => {
-  const { usuario, logout } = useContext(AuthContext);
+  const { usuario } = useContext(AuthContext);
   const navigate = useNavigate(); 
 
   const { data, isLoading, isError, refetch } = useQuery({
@@ -27,23 +27,52 @@ const DashboardScreen = () => {
     }
   });
 
+  // 🛠️ FUNCIÓN PARA VERIFICAR SI UN EVENTO YA PASÓ
+  const esFechaFutura = (fechaEvento, horaEvento) => {
+    try {
+      const ahora = new Date();
+      // Asumimos formato YYYY-MM-DD o ISO string.
+      const fechaLimpia = fechaEvento.split('T')[0];
+      const horaLimpia = horaEvento ? horaEvento.slice(0, 5) : "00:00";
+      
+      const momentoEvento = new Date(`${fechaLimpia}T${horaLimpia}:00`);
+      return momentoEvento > ahora;
+    } catch (e) {
+      return true; // En caso de error de formateo, no lo ocultamos por seguridad
+    }
+  };
+
+  // 🛠️ RESOLVER IMÁGENES (Cloudinary vs Localhost/Absolutas)
+  const resolverUrlImagen = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return `${BACKEND_URL}${url}`;
+  };
+
   const complejos = data?.complejos || [];
-  const partidosAbiertos = data?.partidosAbiertos || [];
-  const torneosActivos = data?.torneos || [];
+  
+  // 🔥 FILTRADO EN TIEMPO REAL: Solo partidos y torneos futuros o vigentes
+  const partidosAbiertos = (data?.partidosAbiertos || []).filter(p => 
+    esFechaFutura(p.fecha, p.horaInicio || p.hora)
+  );
+
+  const torneosActivos = (data?.torneos || []).filter(t => 
+    esFechaFutura(t.fechaInicio, "00:00")
+  );
+
   const loading = isLoading;
   const error = isError ? "No se pudieron cargar algunos datos del panel." : "";
 
   const handleUnirsePartido = async (partidoId) => {
     try {
       const res = await API.post(`/turnos/${partidoId}/inscripciones`);
-      alert(res.data.message); // Próximamente lo cambiaremos por un Toast flotante
+      alert(res.data.message); 
       refetch(); 
     } catch (err) {
       alert(err.response?.data?.error || "Error al unirse al partido.");
     }
   };
 
-  // Categorías rápidas (reemplazan al viejo menú lateral)
   const categorias = [
     { nombre: 'Clases', icono: '🎓', ruta: '/clases' },
     { nombre: 'Torneos', icono: '🏆', ruta: '/torneos' },
@@ -54,7 +83,7 @@ const DashboardScreen = () => {
   return (
     <div style={styles.contenedorPadre}>
       
-      {/* CABECERA: Saludo minimalista */}
+      {/* CABECERA */}
       <div style={styles.headerPremium}>
         <div>
           <p style={styles.subtituloPremium}>Bienvenido de vuelta,</p>
@@ -63,19 +92,26 @@ const DashboardScreen = () => {
           </h1>
         </div>
         
-        {/* Avatar o botón de cierre rápido si es admin */}
         {usuario?.rol === 'admin_complejo' ? (
           <button onClick={() => navigate('/gestion-complejo')} style={styles.botonAdmin}>
             ⚙️ Mi Club
           </button>
         ) : (
           <div style={styles.avatarMiniatura}>
-            {usuario?.nombre ? usuario.nombre.charAt(0).toUpperCase() : 'U'}
+            {usuario?.imagenPerfil ? (
+              <img 
+                src={resolverUrlImagen(usuario.imagenPerfil)} 
+                alt="Perfil" 
+                style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+              />
+            ) : (
+              usuario?.nombre ? usuario.nombre.charAt(0).toUpperCase() : 'U'
+            )}
           </div>
         )}
       </div>
 
-      {/* PÍLDORAS DESLIZABLES (Categorías) */}
+      {/* CATEGORÍAS */}
       <div style={styles.scrollHorizontalContenedor}>
         {categorias.map((cat, index) => (
           <button key={index} style={styles.pildoraCategoria} onClick={() => navigate(cat.ruta)}>
@@ -97,7 +133,7 @@ const DashboardScreen = () => {
 
       {!loading && (
         <>
-          {/* SECCIÓN: PARTIDOS ABIERTOS (Deslizable horizontalmente) */}
+          {/* SECCIÓN: PARTIDOS ABIERTOS */}
           <div style={styles.seccionContenedor}>
             <div style={styles.seccionHeader}>
               <h2 style={styles.seccionTitulo}>Partidos Abiertos</h2>
@@ -110,18 +146,30 @@ const DashboardScreen = () => {
                   const jugadoresAnotados = partido.inscripcionesPartido?.length || 0;
                   const lugaresLibres = 4 - jugadoresAnotados; 
                   const estaLleno = lugaresLibres <= 0;
+                  
+                  // Traemos la imagen del creador (usuario que reservó/abrió el partido)
+                  const creadorFoto = partido.usuarioCreador?.imagenPerfil || partido.usuario?.imagenPerfil;
 
                   return (
                     <div key={partido.id} style={styles.tarjetaHorizontal}>
                       <div style={styles.tarjetaHorizontalHeader}>
                         <span style={styles.badgeClub}>{partido.cancha?.complejo?.nombre || 'Complejo'}</span>
                         <span style={{ color: '#8E8E93', fontSize: '12px', fontWeight: '500' }}>
-                          {partido.fechaFormateada || partido.fecha}
+                          {partido.fechaFormateada || partido.fecha?.split('T')[0]}
                         </span>
                       </div>
                       
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '12px 0' }}>
-                        <div style={styles.iconoLlamativo}>🎾</div>
+                        {/* 📸 FOTO DINÁMICA DEL CREADOR DEL PARTIDO */}
+                        {creadorFoto ? (
+                          <img 
+                            src={resolverUrlImagen(creadorFoto)} 
+                            alt="Creador" 
+                            style={styles.imagenCreadorPartido}
+                          />
+                        ) : (
+                          <div style={styles.iconoLlamativo}>🎾</div>
+                        )}
                         <div>
                           <h3 style={{ margin: 0, color: '#fff', fontSize: '16px' }}>{partido.horaInicio?.slice(0,5) || partido.hora} hs</h3>
                           <p style={{ margin: 0, color: estaLleno ? '#ff4d4d' : '#39FF14', fontSize: '13px', fontWeight: '600' }}>
@@ -144,7 +192,7 @@ const DashboardScreen = () => {
                   );
                 })
               ) : (
-                <p style={styles.textoVacio}>No hay partidos abiertos hoy.</p>
+                <p style={styles.textoVacio}>No hay partidos disponibles de momento.</p>
               )}
             </div>
           </div>
@@ -157,20 +205,34 @@ const DashboardScreen = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {torneosActivos.length > 0 ? (
-                torneosActivos.slice(0, 3).map((torneo) => (
-                  <div key={torneo.id} style={styles.tarjetaLista} onClick={() => navigate('/torneos')}>
-                    <div style={styles.tarjetaListaIcono}>🏆</div>
-                    <div style={{ flex: 1 }}>
-                      <h4 style={{ margin: '0 0 4px 0', color: '#fff', fontSize: '15px' }}>{torneo.nombre}</h4>
-                      <p style={{ margin: 0, color: '#8E8E93', fontSize: '12px' }}>Inicia: {torneo.fechaInicio}</p>
+                torneosActivos.slice(0, 3).map((torneo) => {
+                  const portadaTorneo = torneo.imagenPortada || torneo.imagen;
+
+                  return (
+                    <div key={torneo.id} style={styles.tarjetaLista} onClick={() => navigate('/torneos')}>
+                      {/* 📸 IMAGEN DE PORTADA DEL TORNEO */}
+                      {portadaTorneo ? (
+                        <img 
+                          src={resolverUrlImagen(portadaTorneo)} 
+                          alt={torneo.nombre} 
+                          style={styles.imagenPortadaTorneo}
+                        />
+                      ) : (
+                        <div style={styles.tarjetaListaIcono}>🏆</div>
+                      )}
+                      
+                      <div style={{ flex: 1 }}>
+                        <h4 style={{ margin: '0 0 4px 0', color: '#fff', fontSize: '15px' }}>{torneo.nombre}</h4>
+                        <p style={{ margin: 0, color: '#8E8E93', fontSize: '12px' }}>Inicia: {torneo.fechaInicio?.split('T')[0]}</p>
+                      </div>
+                      <div style={{ color: '#39FF14', fontWeight: '600', fontSize: '14px' }}>
+                        ${torneo.precioInscripcion}
+                      </div>
                     </div>
-                    <div style={{ color: '#39FF14', fontWeight: '600', fontSize: '14px' }}>
-                      ${torneo.precioInscripcion}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               ) : (
-                <p style={styles.textoVacio}>No hay torneos próximos.</p>
+                <p style={styles.textoVacio}>No hay torneos próximos disponibles.</p>
               )}
             </div>
           </div>
@@ -216,7 +278,8 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: '700',
-    fontSize: '18px'
+    fontSize: '18px',
+    overflow: 'hidden'
   },
   botonAdmin: {
     backgroundColor: 'rgba(57, 255, 20, 0.1)',
@@ -225,10 +288,9 @@ const styles = {
     padding: '8px 12px',
     borderRadius: '12px',
     fontWeight: '600',
-    fontSize: '12px'
+    fontSize: '12px',
+    cursor: 'pointer'
   },
-  
-  // Píldoras Deslizables (Scroll horizontal)
   scrollHorizontalContenedor: {
     display: 'flex',
     overflowX: 'auto',
@@ -236,7 +298,7 @@ const styles = {
     paddingBottom: '12px',
     marginBottom: '24px',
     msOverflowStyle: 'none',
-    scrollbarWidth: 'none', // Oculta barra en Firefox
+    scrollbarWidth: 'none', 
   },
   pildoraCategoria: {
     display: 'flex',
@@ -251,7 +313,6 @@ const styles = {
     whiteSpace: 'nowrap',
     cursor: 'pointer',
   },
-
   seccionContenedor: { marginBottom: '32px' },
   seccionHeader: { 
     display: 'flex', 
@@ -271,8 +332,6 @@ const styles = {
     fontWeight: '600',
     cursor: 'pointer'
   },
-
-  // Tarjetas iOS (Partidos Abiertos)
   tarjetaHorizontal: {
     minWidth: '260px',
     maxWidth: '260px',
@@ -306,6 +365,13 @@ const styles = {
     justifyContent: 'center',
     fontSize: '24px'
   },
+  imagenCreadorPartido: {
+    width: '48px',
+    height: '48px',
+    borderRadius: '16px',
+    objectFit: 'cover',
+    border: '1px solid rgba(255, 255, 255, 0.1)'
+  },
   botonAccionPrimario: {
     width: '100%',
     padding: '12px',
@@ -313,10 +379,9 @@ const styles = {
     border: 'none',
     fontWeight: '700',
     fontSize: '14px',
-    marginTop: '8px'
+    marginTop: '8px',
+    cursor: 'pointer'
   },
-
-  // Tarjetas en Lista (Torneos)
   tarjetaLista: {
     display: 'flex',
     alignItems: 'center',
@@ -325,6 +390,7 @@ const styles = {
     padding: '16px',
     borderRadius: '20px',
     border: '1px solid rgba(255,255,255,0.03)',
+    cursor: 'pointer'
   },
   tarjetaListaIcono: {
     fontSize: '24px',
@@ -336,8 +402,14 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center'
   },
-
-  textoVacio: { color: '#8E8E93', fontSize: '14px' },
+  imagenPortadaTorneo: {
+    width: '48px',
+    height: '48px',
+    borderRadius: '16px',
+    objectFit: 'cover',
+    border: '1px solid rgba(255, 255, 255, 0.05)'
+  },
+  textoVacio: { color: '#8E8E93', fontSize: '14px', margin: '8px 0' },
   loadingContainer: { display: 'flex', justifyContent: 'center', padding: '40px' },
   spinner: { width: '32px', height: '32px', border: '3px solid rgba(57, 255, 20, 0.2)', borderTop: '3px solid #39FF14', borderRadius: '50%', animation: 'spin 1s linear infinite' },
   alerta: { backgroundColor: 'rgba(255,51,51,0.1)', color: '#ff4d4d', padding: '16px', borderRadius: '12px', fontWeight: '600' },
