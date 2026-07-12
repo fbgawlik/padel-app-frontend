@@ -1,35 +1,29 @@
 // src/screens/RankingScreen.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API from '../services/api'; // 🔥 Tu servicio centralizado
+import API from '../services/api'; 
 
 const RankingScreen = () => {
-  // Coincidiendo exactamente con los valores de tu BD ("2da Categoría", "5ta Categoría", etc.)
-  const [categoria, setCategoria] = useState('5ta Categoría'); 
+  // Manejamos estados limpios para simplificar el renderizado y la lógica
+  const [categoria, setCategoria] = useState('5ta'); 
   const [rama, setRama] = useState('Caballeros'); 
   const [jugadores, setJugadores] = useState([]);
   const [cargando, setCargando] = useState(true);
   
   const navigate = useNavigate(); 
 
-  // Mapeo exacto de las categorías guardadas en tu Base de Datos
-  const categoriasDisponibles = [
-    '1ra Categoría', 
-    '2da Categoría', 
-    '3ra Categoría', 
-    '4ta Categoría', 
-    '5ta Categoría', 
-    '6ta Categoría', 
-    '7ma Categoría', 
-    '8va Categoría'
-  ];
+  // Categorías base estandarizadas
+  const categoriasDisponibles = ['1ra', '2da', '3ra', '4ta', '5ta', '6ta', '7ma', '8va'];
 
   useEffect(() => {
     const cargarRanking = async () => {
       setCargando(true);
       try {
-        // Se envían los términos idénticos a los almacenados en la base de datos
-        const respuesta = await API.get(`/ranking?categoria=${encodeURIComponent(categoria)}&rama=${encodeURIComponent(rama)}`);
+        // 🔥 REPARACIÓN AQUÍ: Reconstruimos el string "5ta Caballeros" que se genera en RegisterScreen
+        const categoriaFormateada = `${categoria} ${rama}`;
+        
+        // Enviamos la query con el formato exacto que espera recibir el Backend
+        const respuesta = await API.get(`/ranking?categoria=${encodeURIComponent(categoriaFormateada)}`);
         setJugadores(respuesta.data || []);
       } catch (error) {
         console.error("Error al obtener la tabla de posiciones:", error);
@@ -40,9 +34,9 @@ const RankingScreen = () => {
     };
 
     cargarRanking();
-  }, [categoria, rama]);
+  }, [categoria, rama]); // Se vuelve a disparar al cambiar pestaña o categoría
 
-  // Lógica de resolución de imágenes de PerfilScreen
+  // Lógica de resolución de imágenes
   const resolverUrlImagen = (ruta) => {
     if (!ruta) return null;
     if (ruta.includes('localhost:5000')) {
@@ -53,7 +47,7 @@ const RankingScreen = () => {
     return `${import.meta.env.VITE_API_URL}${ruta}`; 
   };
 
-  // Obtener iniciales de PerfilScreen
+  // Obtener iniciales de respaldo
   const obtenerIniciales = (jugador) => {
     const n = jugador?.nombre?.charAt(0) || '';
     const a = jugador?.apellido?.charAt(0) || '';
@@ -87,16 +81,13 @@ const RankingScreen = () => {
         <div style={styles.sliderCategorias}>
           {categoriasDisponibles.map((cat) => {
             const esActivo = categoria === cat;
-            // Visualmente mostramos solo "1ra", "2da", etc., quitando la palabra " Categoría"
-            const nombreVisual = cat.replace(' Categoría', ''); 
-            
             return (
               <button
                 key={cat}
                 onClick={() => setCategoria(cat)}
                 style={esActivo ? styles.chipCategoriaActivo : styles.chipCategoriaInactivo}
               >
-                {nombreVisual}
+                {cat}
               </button>
             );
           })}
@@ -111,7 +102,7 @@ const RankingScreen = () => {
             </div>
           ) : jugadores.length === 0 ? (
             <div style={styles.mensajeEstado}>
-              Aún no hay jugadores registrados en {categoria.replace(' Categoría', '')} {rama}.
+              Aún no hay jugadores registrados en {categoria} {rama}.
             </div>
           ) : (
             jugadores.map((jugador, index) => {
@@ -156,7 +147,7 @@ const RankingScreen = () => {
                       {jugador.nombre} {jugador.apellido}
                     </div>
                     <div style={styles.subtextoCategoria}>
-                      {categoria.replace(' Categoría', '')} {rama}
+                      {categoria} {rama}
                     </div>
                   </div>
 

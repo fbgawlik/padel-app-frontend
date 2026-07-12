@@ -22,7 +22,7 @@ const PerfilScreen = () => {
   const [portadaPreview, setPortadaPreview] = useState(null);
   const portadaInputRef = useRef(null);
 
-  // 🔥 1. AGREGAMOS LAS IMÁGENES AL ESTADO INICIAL
+  // AGREGAMOS LAS IMÁGENES AL ESTADO INICIAL
   const [formData, setFormData] = useState({
     nombre: usuario?.nombre || '',
     apellido: usuario?.apellido || '',
@@ -32,8 +32,8 @@ const PerfilScreen = () => {
     bio: usuario?.bio || '',
     email: usuario?.email || '', 
     puntosGenerales: usuario?.puntosGenerales || 0,
-    imagenPerfil: usuario?.imagenPerfil || '', // Nuevo
-    imagenPortada: usuario?.imagenPortada || '' // Nuevo
+    imagenPerfil: usuario?.imagenPerfil || '', 
+    imagenPortada: usuario?.imagenPortada || '' 
   });
 
   useEffect(() => {
@@ -49,7 +49,7 @@ const PerfilScreen = () => {
           bio: res.data.bio || '',
           email: res.data.email || '',
           puntosGenerales: res.data.puntosGenerales || 0,
-          // 🔥 2. GUARDAMOS LAS IMÁGENES FRESCAS QUE VIENEN DEL SERVER
+          // GUARDAMOS LAS IMÁGENES FRESCAS QUE VIENEN DEL SERVER
           imagenPerfil: res.data.imagenPerfil || '', 
           imagenPortada: res.data.imagenPortada || ''
         });
@@ -120,7 +120,7 @@ const PerfilScreen = () => {
         actualizarDatosUsuario(res.data.usuario);
       }
 
-      // 🔥 3. ACTUALIZAMOS EL ESTADO CON LAS NUEVAS RUTAS Y LIMPIAMOS LOS ARCHIVOS TEMPORALES
+      // ACTUALIZAMOS EL ESTADO CON LAS NUEVAS RUTAS Y LIMPIAMOS LOS ARCHIVOS TEMPORALES
       setFormData(prev => ({
         ...prev,
         imagenPerfil: res.data.usuario.imagenPerfil || prev.imagenPerfil,
@@ -157,7 +157,6 @@ const PerfilScreen = () => {
           onClick={() => portadaInputRef.current.click()}
           title="Hacé clic para cambiar tu foto de portada"
         >
-          {/* 🔥 4. AHORA LEEMOS DE FORMDATA Y NO DE USUARIO */}
           {portadaPreview ? (
             <img src={portadaPreview} alt="Preview Portada" style={styles.imagenPortadaImg} />
           ) : formData.imagenPortada ? (
@@ -185,7 +184,6 @@ const PerfilScreen = () => {
         {/* CONTENEDOR AVATAR FLOTANTE */}
         <div style={styles.avatarSeccion}>
           <div style={styles.avatarContenedor} onClick={() => fileInputRef.current.click()}>
-            {/* 🔥 5. AHORA LEEMOS DE FORMDATA Y NO DE USUARIO */}
             {imagenPreview ? (
               <img src={imagenPreview} alt="Preview Perfil" style={styles.imagenImagen} />
             ) : formData.imagenPerfil ? (
@@ -233,16 +231,35 @@ const PerfilScreen = () => {
 
           <div style={styles.grupo}>
             <label style={styles.label}>Categoría de Pádel</label>
-            <select name="categoriaPadel" value={formData.categoriaPadel} onChange={handleChange} style={styles.select}>
+            {/* 🔥 REPARACIÓN AQUÍ: Mapeamos los valores exactos compuestos para evitar romper el Ranking */}
+            <select name="categoriaPadel" value={formData.categoriaPadel} onChange={handleChange} style={styles.select} required>
               <option value="">Selecciona tu categoría</option>
-              <option value="1ra">1ra Categoría</option>
-              <option value="2da">2da Categoría</option>
-              <option value="3ra">3ra Categoría</option>
-              <option value="4ta">4ta Categoría</option>
-              <option value="5ta">5ta Categoría</option>
-              <option value="6ta">6ta Categoría</option>
-              <option value="7ma">7ma Categoría</option>
-              <option value="Suma">Suma</option>
+              
+              <optgroup label="Caballeros" style={styles.optgroup}>
+                <option value="1ra Caballeros">1ra Caballeros</option>
+                <option value="2da Caballeros">2da Caballeros</option>
+                <option value="3ra Caballeros">3ra Caballeros</option>
+                <option value="4ta Caballeros">4ta Caballeros</option>
+                <option value="5ta Caballeros">5ta Caballeros</option>
+                <option value="6ta Caballeros">6ta Caballeros</option>
+                <option value="7ma Caballeros">7ma Caballeros</option>
+                <option value="8va Caballeros">8va Caballeros</option>
+              </optgroup>
+
+              <optgroup label="Damas" style={styles.optgroup}>
+                <option value="1ra Damas">1ra Damas</option>
+                <option value="2da Damas">2da Damas</option>
+                <option value="3ra Damas">3ra Damas</option>
+                <option value="4ta Damas">4ta Damas</option>
+                <option value="5ta Damas">5ta Damas</option>
+                <option value="6ta Damas">6ta Damas</option>
+                <option value="7ma Damas">7ma Damas</option>
+                <option value="8va Damas">8va Damas</option>
+              </optgroup>
+
+              <optgroup label="Especiales" style={styles.optgroup}>
+                <option value="Suma">Suma</option>
+              </optgroup>
             </select>
           </div>
 
@@ -282,7 +299,7 @@ const PerfilScreen = () => {
   );
 };
 
-// ESTILOS MODERNOS (Dejados exactamente igual a los tuyos)
+// ESTILOS MODERNOS (Conservados y optimizados)
 const styles = {
   container: { minHeight: '100vh', backgroundColor: '#0C0C0E', padding: '40px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'system-ui, sans-serif' },
   tarjeta: { width: '100%', maxWidth: '700px', backgroundColor: '#141416', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', position: 'relative' },
@@ -306,6 +323,7 @@ const styles = {
   input: { backgroundColor: '#1A1A1E', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '14px', color: '#FFF', fontSize: '14px', outline: 'none', transition: 'border-color 0.2s' },
   inputDisabled: { opacity: 0.5, cursor: 'not-allowed', backgroundColor: '#121214' },
   select: { backgroundColor: '#1A1A1E', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '14px', color: '#FFF', fontSize: '14px', outline: 'none', cursor: 'pointer' },
+  optgroup: { backgroundColor: '#141416', color: '#39FF14', fontWeight: '700' },
   textarea: { backgroundColor: '#1A1A1E', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '14px', color: '#FFF', fontSize: '14px', outline: 'none', minHeight: '90px', resize: 'vertical', fontFamily: 'inherit' },
   contenedorBotones: { padding: '20px 30px 40px 30px', display: 'flex', flexDirection: 'column', gap: '12px' },
   botonGuardar: { backgroundColor: '#39FF14', color: '#000', border: 'none', padding: '16px', borderRadius: '14px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 15px rgba(57, 255, 20, 0.3)', transition: 'transform 0.2s' },
