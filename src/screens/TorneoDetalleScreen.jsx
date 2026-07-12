@@ -176,7 +176,7 @@ const TorneoDetalleScreen = () => {
                     
                     <div style={styles.detailsColumn}>
                       <div style={styles.badgesRow}>
-                        <span style={styles.badgeEstado(partido.estado)}>{• ${partido.estado.toUpperCase()}}</span>
+                        <span style={styles.badgeEstado(partido.estado)}>•{partido.estado.toUpperCase()}</span>
                         <span style={styles.badgeCategoria}>{partido.categoria || torneo.categoria}</span>
                         {partido.zona?.nombre && <span style={styles.badgeZona}>{partido.zona.nombre}</span>}
                       </div>
