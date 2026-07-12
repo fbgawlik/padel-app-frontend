@@ -8,7 +8,7 @@ const GestionComplejo = () => {
   const [complejo, setComplejo] = useState(null); 
   const [canchas, setCanchas] = useState([]);
   const [productos, setProductos] = useState([]);
-  const [turnosHoy, setTurnosHoy] = useState([]); // 🔥 Datos reales de la base de datos
+  const [turnosHoy, setTurnosHoy] = useState([]); // 🔥 Datos reales de la base de datos[cite: 14]
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -21,11 +21,11 @@ const GestionComplejo = () => {
   const [formCancha, setFormCancha] = useState({ nombre: '', tipoPiso: 'Césped Sintético', tipoPared: 'Blindex', techada: true });
   const [formProducto, setFormProducto] = useState({ nombre: '', precio: '', stock: '0', esAlquiler: false });
 
-  // Pestañas e interactividad de métricas
+  // Pestañas e interactividad de métricas[cite: 14]
   const [subTabActiva, setSubTabActiva] = useState('canchas');
   const [metricaExpandida, setMetricaExpandida] = useState(null);
 
-  // Obtener fecha actual en formato YYYY-MM-DD local de Argentina
+  // Obtener fecha actual en formato YYYY-MM-DD local de Argentina[cite: 14]
   const obtenerFechaLocalArgentina = () => {
     const d = new Date();
     const tz = d.toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit" });
@@ -42,18 +42,18 @@ const GestionComplejo = () => {
     }
   };
 
-  // 🔥 NUEVO: Cargar los turnos reales del día de hoy desde el backend
+  // 🔥 Cargar los turnos reales del día desde el backend[cite: 14]
   const cargarTurnosDelDia = async (canchasIds) => {
     if (canchasIds.length === 0) return;
     try {
       const fechaHoy = obtenerFechaLocalArgentina();
-      // Iteramos tus canchas registradas para traer sus grillas horarias de hoy
       const promesas = canchasIds.map(canchaId => 
         API.get(`/?canchaId=${canchaId}&fecha=${fechaHoy}`)
       );
       const respuestas = await Promise.all(promesas);
-      // Unificamos todos los turnos en un solo array plano
       const todosLosTurnos = respuestas.flatMap(res => res.data);
+      
+      console.log("Turnos sincronizados en el panel:", todosLosTurnos);
       setTurnosHoy(todosLosTurnos);
     } catch (err) {
       console.error("Error al cargar los turnos del día:", err);
@@ -66,7 +66,6 @@ const GestionComplejo = () => {
       
       try {
         setLoading(true);
-        // Usamos la ruta nativa para traer los complejos
         const res = await API.get('/complejos'); 
         const miClub = res.data.find(c => c.administradorId === usuario.id);
         
@@ -78,10 +77,8 @@ const GestionComplejo = () => {
           const filtradas = resCanchas.data.filter(c => c.complejoId === miClub.id);
           setCanchas(filtradas);
 
-          // Cargar productos de la cantina
           await cargarProductosTienda(miClub.id);
           
-          // Cargar turnos en tiempo real basándonos en sus canchas
           const ids = filtradas.map(c => c.id);
           await cargarTurnosDelDia(ids);
         } else {
@@ -96,21 +93,24 @@ const GestionComplejo = () => {
     cargarDatosClub();
   }, [usuario]);
 
-  // Métricas Calculadas en Tiempo Real (Cero Datos Harcodeados)
-  const turnosReservadosHoy = turnosHoy.filter(t => t.estado === 'reservado' || t.usuarioId !== null);
+  // 🔥 Filtro flexible y optimizado para capturar cualquier turno ocupado o confirmado[cite: 14]
+  const turnosReservadosHoy = turnosHoy.filter(t => 
+    t.estado === 'reservado' || 
+    t.estado === 'confirmado' || 
+    t.usuarioId !== null || 
+    t.usuario !== null || 
+    t.clienteNombre
+  );
   
-  // Ocupación actual: Compara la hora del turno con la hora del sistema
+  // Ocupación actual: Compara la hora del turno con la hora del sistema[cite: 14]
   const obtenerCanchasOcupadasAhora = () => {
     const ahora = new Date();
     const horaActualStr = ahora.toLocaleTimeString("es-AR", { hour: '2-digit', minute: '2-digit', hour12: false });
     
-    // Filtramos qué turnos reservados corresponden al bloque de hora actual
     const turnosActivos = turnosReservadosHoy.filter(t => {
-      // Si tu backend maneja horaInicio y horaFin (ej: "18:00" y "19:30")
       if (t.horaInicio && t.horaFin) {
         return horaActualStr >= t.horaInicio && horaActualStr <= t.horaFin;
       }
-      // Si maneja solo propiedad 'hora' fija (ej: "18:00"), asumimos un bloque estimado de 1 hora y media
       if (t.hora) {
         const [h, m] = t.hora.split(':').map(Number);
         const inicioMinutos = h * 60 + m;
@@ -121,7 +121,6 @@ const GestionComplejo = () => {
       return false;
     });
 
-    // Retorna la cantidad de canchas únicas que están ocupadas en este instante
     const canchasOcupadasIds = [...new Set(turnosActivos.map(t => t.canchaId))];
     return canchasOcupadasIds.length;
   };
@@ -183,7 +182,6 @@ const GestionComplejo = () => {
       setCanchas(nuevasCanchas);
       setFormCancha({ nombre: '', tipoPiso: 'Césped Sintético', tipoPared: 'Blindex', techada: true });
       
-      // Re-actualizar grilla del día para contemplar la nueva cancha
       cargarTurnosDelDia(nuevasCanchas.map(c => c.id));
     } catch (err) {
       alert(err.response?.data?.error || "Error al guardar cancha.");
@@ -272,7 +270,7 @@ const GestionComplejo = () => {
 
         {error && <div style={styles.alertaError}>{error}</div>}
 
-        {/* 📊 TARJETAS DE MÉTRICAS CONEXIÓN REAL BASE DE DATOS */}
+        {/* 📊 TARJETAS DE MÉTRICAS */}
         <div style={styles.grillaMetricas}>
           
           <div 
@@ -318,7 +316,7 @@ const GestionComplejo = () => {
           </div>
         </div>
 
-        {/* 📅 DESGLOSE DE CRONOGRAMA REAL (HOY) */}
+        {/* 📅 DESGLOSE DE CRONOGRAMA REAL CON ACCIÓN DE WHATSAPP */}
         {metricaExpandida === 'reservas' && (
           <div style={styles.contenedorDesgloseMetrica}>
             <div style={styles.headerDesglose}>
@@ -333,24 +331,44 @@ const GestionComplejo = () => {
                 const turnosCancha = turnosReservadosHoy.filter(t => t.canchaId === cancha.id);
                 if (turnosCancha.length === 0) return null;
                 return (
-                  <div key={cancha.id} style={{ marginBottom: '12px' }}>
+                  <div key={cancha.id} style={{ marginBottom: '16px' }}>
                     <div style={styles.subtituloCanchaDesglose}>🎾 {cancha.nombre}</div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {turnosCancha.map(turno => (
-                        <div key={turno.id} style={styles.itemReservaDesglose}>
-                          <span style={styles.horaReserva}>{turno.hora || turno.horaInicio} hs</span>
-                          <span style={styles.clienteReserva}>
-                            👤 {turno.usuario?.nombreCompleto || turno.clienteNombre || 'Usuario App'}
-                          </span>
-                          <span style={{
-                            ...styles.badgeEstadoReserva,
-                            color: turno.modalidad === 'turno_abierto' ? '#00ccff' : '#39FF14',
-                            backgroundColor: turno.modalidad === 'turno_abierto' ? 'rgba(0, 204, 255, 0.1)' : 'rgba(57, 255, 20, 0.1)'
-                          }}>
-                            {turno.modalidad === 'turno_abierto' ? 'Abierto' : 'Privado'}
-                          </span>
-                        </div>
-                      ))}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {turnosCancha.map(turno => {
+                        const nombreCliente = turno.usuario?.nombreCompleto || turno.usuario?.nombre || turno.clienteNombre || 'Usuario App';
+                        const telefonoCliente = turno.usuario?.telefono || turno.clienteTelefono || null;
+
+                        return (
+                          <div key={turno.id} style={styles.itemReservaDesglose}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={styles.horaReserva}>{turno.hora || turno.horaInicio} hs</span>
+                                <span style={{
+                                  ...styles.badgeEstadoReserva,
+                                  color: turno.modalidad === 'turno_abierto' ? '#00ccff' : '#39FF14',
+                                  backgroundColor: turno.modalidad === 'turno_abierto' ? 'rgba(0, 204, 255, 0.1)' : 'rgba(57, 255, 20, 0.1)'
+                                }}>
+                                  {turno.modalidad === 'turno_abierto' ? 'Abierto' : 'Privado'}
+                                </span>
+                              </div>
+                              <span style={styles.clienteReserva}>
+                                👤 {nombreCliente}
+                              </span>
+                            </div>
+
+                            {telefonoCliente && (
+                              <a 
+                                href={`https://wa.me/${telefonoCliente.replace(/\D/g, '')}`} 
+                                target="_blank" 
+                                rel="noreferrer"
+                                style={styles.botonWhatsappContacto}
+                              >
+                                💬 Contactar
+                              </a>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );
@@ -409,7 +427,7 @@ const GestionComplejo = () => {
           <button style={subTabActiva === 'perfil' ? styles.tabActivo : styles.tabInactivo} onClick={() => setSubTabActiva('perfil')}>📝 Datos Club</button>
         </div>
 
-        {/* CONTENIDOS DE LAS PESTAÑAS (ALTAS REALES) */}
+        {/* CONTENIDOS DE LAS PESTAÑAS */}
         <div style={styles.bloqueContenidoDinamico}>
           
           {subTabActiva === 'canchas' && (
@@ -536,21 +554,11 @@ const GestionComplejo = () => {
   );
 };
 
-// ESTILOS UNIFICADOS PREMIUM
+// ESTILOS UNIFICADOS PREMIUM[cite: 14]
 const styles = {
-  contenedorBase: {
-    width: '100%',
-    color: '#FFFFFF',
-    fontFamily: 'system-ui, -apple-system, sans-serif',
-    boxSizing: 'border-box',
-    display: 'flex',
-    justifyContent: 'center',
-    minHeight: '100vh',
-    backgroundColor: '#0C0C0E',
-    padding: '16px'
-  },
+  contenedorBase: { width: '100%', color: '#FFFFFF', fontFamily: 'system-ui, -apple-system, sans-serif', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#0C0C0E', padding: '16px' },
   panelAnchoMaximo: { width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column' },
-  headerClubContainer: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
+  headerClubContainer: { display: 'flex', justifyIntersection: 'space-between', alignItems: 'center', marginBottom: '20px' },
   headerClubLeft: { display: 'flex', alignItems: 'center', gap: '12px', flex: 1 },
   avatarMiniClub: { width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#141416', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '20px', border: '1px solid rgba(255,255,255,0.06)' },
   tituloClubName: { fontSize: '18px', fontWeight: '800', margin: 0, color: '#FFFFFF' },
@@ -601,7 +609,8 @@ const styles = {
   contenedorLoading: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#0C0C0E' },
   spinner: { width: '36px', height: '36px', border: '3px solid rgba(255, 255, 255, 0.05)', borderTop: '3px solid #39FF14', borderRadius: '50%' },
   tarjetaCentralForm: { width: '100%', maxWidth: '400px', backgroundColor: '#141416', borderRadius: '24px', padding: '24px', border: '1px solid rgba(255,255,255,0.04)', alignSelf: 'center' },
-  alertaError: { backgroundColor: 'rgba(255,69,58,0.1)', color: '#FF453A', padding: '12px', borderRadius: '10px', fontSize: '12px', marginBottom: '14px', textAlign: 'center' }
+  alertaError: { backgroundColor: 'rgba(255,69,58,0.1)', color: '#FF453A', padding: '12px', borderRadius: '10px', fontSize: '12px', marginBottom: '14px', textAlign: 'center' },
+  botonWhatsappContacto: { textDecoration: 'none', backgroundColor: '#25D366', color: '#FFFFFF', padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', marginLeft: '8px', display: 'inline-block' }
 };
 
 export default GestionComplejo;
