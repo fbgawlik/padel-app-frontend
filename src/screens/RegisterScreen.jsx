@@ -163,11 +163,15 @@ const RegisterScreen = () => {
               <option value="5ta Caballeros">5ta Caballeros</option>
               <option value="6ta Caballeros">6ta Caballeros</option>
               <option value="7ma Caballeros">7ma Caballeros</option>
+              <option value="8va Caballeros">8va Caballeros</option>
               <option value="1ra Damas">1ra Damas</option>
+              <option value="2da Damas">2da Damas</option>
               <option value="3ra Damas">3ra Damas</option>
               <option value="4ta Damas">4ta Damas</option>
               <option value="5ta Damas">5ta Damas</option>
               <option value="6ta Damas">6ta Damas</option>
+              <option value="7ma Damas">7ma Damas</option>
+              <option value="8va Damas">8va Damas</option>
             </select>
           </div>
 
