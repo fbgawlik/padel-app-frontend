@@ -197,7 +197,8 @@ const RegisterScreen = () => {
             </div>
             {dropdownAbierto.categoriaPadel && (
               <div style={styles.opcionesContenedorMax}>
-                {['1ra Caballeros', '2da Caballeros', '3ra Caballeros', '4ta Caballeros', '5ta Caballeros', '6ta Caballeros', '7ma Caballeros', '1ra Damas', '3ra Damas', '4ta Damas', '5ta Damas', '6ta Damas'].map((cat) => (
+                {['1ra Caballeros', '2da Caballeros', '3ra Caballeros', '4ta Caballeros', '5ta Caballeros', '6ta Caballeros', '7ma Caballeros'
+                , '8va Caballeros', '1ra Damas','2da Damas', '3ra Damas', '4ta Damas', '5ta Damas', '6ta Damas', '7ma Damas', '8va Damas'].map((cat) => (
                   <div key={cat} style={styles.opcion} onClick={() => seleccionarOpcion('categoriaPadel', cat)}>
                     {cat}
                   </div>
