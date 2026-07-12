@@ -1,5 +1,5 @@
 // src/screens/RegisterScreen.jsx
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import API from '../services/api';
 
@@ -12,14 +12,55 @@ const RegisterScreen = () => {
     password: '',
     telefono: '',
     categoriaPadel: '',
-    genero: '',     // 🟢 Agregado para consistencia con Prisma
-    ladoJuego: ''   // 🟢 Agregado para consistencia con Prisma
+    genero: '',     
+    ladoJuego: ''   
   });
   const [errorLocal, setErrorLocal] = useState('');
   const [cargando, setCargando] = useState(false);
 
+  // Estados para controlar los selectores customizados abiertos
+  const [dropdownAbierto, setDropdownAbierto] = useState({
+    genero: false,
+    categoriaPadel: false,
+    ladoJuego: false
+  });
+
+  // Referencias para cerrar al hacer clic afuera
+  const generoRef = useRef(null);
+  const categoriaRef = useRef(null);
+  const ladoRef = useRef(null);
+
+  useEffect(() => {
+    const clickAfuera = (e) => {
+      if (generoRef.current && !generoRef.current.contains(e.target)) {
+        setDropdownAbierto(prev => ({ ...prev, genero: false }));
+      }
+      if (categoriaRef.current && !categoriaRef.current.contains(e.target)) {
+        setDropdownAbierto(prev => ({ ...prev, categoriaPadel: false }));
+      }
+      if (ladoRef.current && !ladoRef.current.contains(e.target)) {
+        setDropdownAbierto(prev => ({ ...prev, ladoJuego: false }));
+      }
+    };
+    document.addEventListener('mousedown', clickAfuera);
+    return () => document.removeEventListener('mousedown', clickAfuera);
+  }, []);
+
   const manejarCambio = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const seleccionarOpcion = (campo, valor) => {
+    setFormData({ ...formData, [campo]: valor });
+    setDropdownAbierto(prev => ({ ...prev, [campo]: false }));
+  };
+
+  const alternarDropdown = (campo) => {
+    setDropdownAbierto(prev => ({
+      genero: campo === 'genero' ? !prev.genero : false,
+      categoriaPadel: campo === 'categoriaPadel' ? !prev.categoriaPadel : false,
+      ladoJuego: campo === 'ladoJuego' ? !prev.ladoJuego : false,
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -51,7 +92,6 @@ const RegisterScreen = () => {
     <div style={styles.contenedor}>
       <div style={styles.tarjetaRegister}>
         
-        {/* Identidad Visual Premium Unificada */}
         <div style={styles.contenedorLogo}>
           <h1 style={styles.logoTexto}>ADN PÁDEL</h1>
           <h2 style={styles.subtituloLogo}>REGISTRO DE JUGADOR</h2>
@@ -61,7 +101,6 @@ const RegisterScreen = () => {
 
         <form onSubmit={handleSubmit} style={styles.formulario}>
           
-          {/* Fila Doble: Nombre y Apellido */}
           <div style={styles.filaDoble}>
             <div style={styles.grupoInput}>
               <label style={styles.etiqueta}>Nombre *</label>
@@ -128,68 +167,62 @@ const RegisterScreen = () => {
             />
           </div>
 
-          {/* GÉNERO */}
-          <div style={styles.grupoInput}>
+          {/* CUSTOM DROPDOWN: GÉNERO */}
+          <div style={styles.grupoInput} ref={generoRef}>
             <label style={styles.etiqueta}>Género</label>
-            <select
-              name="genero"
-              value={formData.genero}
-              onChange={manejarCambio}
-              style={styles.select}
-              disabled={cargando}
+            <div 
+              style={styles.customSelectTrigger} 
+              onClick={() => !cargando && alternarDropdown('genero')}
             >
-              <option value="">Selecciona tu género...</option>
-              <option value="Masculino">Masculino</option>
-              <option value="Femenino">Femenino</option>
-              <option value="Otro">Otro</option>
-            </select>
+              <span>{formData.genero || 'Selecciona tu género...'}</span>
+              <span style={styles.flecha}>{dropdownAbierto.genero ? '▲' : '▼'}</span>
+            </div>
+            {dropdownAbierto.genero && (
+              <div style={styles.opcionesContenedor}>
+                <div style={styles.opcion} onClick={() => seleccionarOpcion('genero', 'Caballeros')}>Caballeros</div>
+                <div style={styles.opcion} onClick={() => seleccionarOpcion('genero', 'Damas')}>Damas</div>
+              </div>
+            )}
           </div>
 
-          {/* CATEGORÍA DE PÁDEL: Mapeada idéntica a los rankings y torneos de la BD */}
-          <div style={styles.grupoInput}>
+          {/* CUSTOM DROPDOWN: CATEGORÍA DE PÁDEL */}
+          <div style={styles.grupoInput} ref={categoriaRef}>
             <label style={styles.etiqueta}>Categoría de Pádel</label>
-            <select
-              name="categoriaPadel"
-              value={formData.categoriaPadel}
-              onChange={manejarCambio}
-              style={styles.select}
-              disabled={cargando}
+            <div 
+              style={styles.customSelectTrigger} 
+              onClick={() => !cargando && alternarDropdown('categoriaPadel')}
             >
-              <option value="">Selecciona tu nivel...</option>
-              <option value="1ra Caballeros">1ra Caballeros</option>
-              <option value="2da Caballeros">2da Caballeros</option>
-              <option value="3ra Caballeros">3ra Caballeros</option>
-              <option value="4ta Caballeros">4ta Caballeros</option>
-              <option value="5ta Caballeros">5ta Caballeros</option>
-              <option value="6ta Caballeros">6ta Caballeros</option>
-              <option value="7ma Caballeros">7ma Caballeros</option>
-              <option value="8va Caballeros">8va Caballeros</option>
-              <option value="1ra Damas">1ra Damas</option>
-              <option value="2da Damas">2da Damas</option>
-              <option value="3ra Damas">3ra Damas</option>
-              <option value="4ta Damas">4ta Damas</option>
-              <option value="5ta Damas">5ta Damas</option>
-              <option value="6ta Damas">6ta Damas</option>
-              <option value="7ma Damas">7ma Damas</option>
-              <option value="8va Damas">8va Damas</option>
-            </select>
+              <span>{formData.categoriaPadel || 'Selecciona tu nivel...'}</span>
+              <span style={styles.flecha}>{dropdownAbierto.categoriaPadel ? '▲' : '▼'}</span>
+            </div>
+            {dropdownAbierto.categoriaPadel && (
+              <div style={styles.opcionesContenedorMax}>
+                {['1ra Caballeros', '2da Caballeros', '3ra Caballeros', '4ta Caballeros', '5ta Caballeros', '6ta Caballeros', '7ma Caballeros', '1ra Damas', '3ra Damas', '4ta Damas', '5ta Damas', '6ta Damas'].map((cat) => (
+                  <div key={cat} style={styles.opcion} onClick={() => seleccionarOpcion('categoriaPadel', cat)}>
+                    {cat}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          {/* LADO DE JUEGO */}
-          <div style={styles.grupoInput}>
+          {/* CUSTOM DROPDOWN: LADO DE JUEGO */}
+          <div style={styles.grupoInput} ref={ladoRef}>
             <label style={styles.etiqueta}>Lado de Juego</label>
-            <select
-              name="ladoJuego"
-              value={formData.ladoJuego}
-              onChange={manejarCambio}
-              style={styles.select}
-              disabled={cargando}
+            <div 
+              style={styles.customSelectTrigger} 
+              onClick={() => !cargando && alternarDropdown('ladoJuego')}
             >
-              <option value="">Selecciona tu lado...</option>
-              <option value="Drive">Drive</option>
-              <option value="Revés">Revés</option>
-              <option value="Ambos">Ambos</option>
-            </select>
+              <span>{formData.ladoJuego || 'Selecciona tu lado...'}</span>
+              <span style={styles.flecha}>{dropdownAbierto.ladoJuego ? '▲' : '▼'}</span>
+            </div>
+            {dropdownAbierto.ladoJuego && (
+              <div style={styles.opcionesContenedor}>
+                <div style={styles.opcion} onClick={() => seleccionarOpcion('ladoJuego', 'Drive')}>Drive</div>
+                <div style={styles.opcion} onClick={() => seleccionarOpcion('ladoJuego', 'Revés')}>Revés</div>
+                <div style={styles.opcion} onClick={() => seleccionarOpcion('ladoJuego', 'Ambos')}>Ambos</div>
+              </div>
+            )}
           </div>
 
           <button type="submit" style={styles.botonRegistrar} disabled={cargando}>
@@ -197,7 +230,6 @@ const RegisterScreen = () => {
           </button>
         </form>
 
-        {/* Retorno al Login */}
         <div style={styles.contenedorLoginRedireccion}>
           <span style={styles.textoSecundario}>¿Ya tienes una cuenta? </span>
           <Link to="/login" style={styles.enlaceLogin}>
@@ -210,7 +242,6 @@ const RegisterScreen = () => {
   );
 };
 
-// Estilos de ADN Pádel Premium (Alineados a la captura)
 const styles = {
   contenedor: { 
     width: '100%', 
@@ -222,7 +253,7 @@ const styles = {
     padding: '20px 0'
   },
   tarjetaRegister: {
-    backgroundColor: '#0A0A0B', // Mismo fondo oscuro profundo de la app
+    backgroundColor: '#0A0A0B', 
     width: '100%',
     maxWidth: '420px',
     padding: '24px',
@@ -240,7 +271,7 @@ const styles = {
     margin: '0 0 4px 0',
   },
   subtituloLogo: {
-    color: '#39FF14', // Verde neón exacto
+    color: '#39FF14', 
     fontSize: '12px',
     fontWeight: '800',
     letterSpacing: '2px',
@@ -259,13 +290,14 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     flex: 1,
+    position: 'relative' // Vital para posicionar las listas flotantes
   },
   etiqueta: {
     color: '#8E8E93',
     fontSize: '13px',
     fontWeight: '700',
     marginBottom: '8px',
-    textAlign: 'center' // Centrado como en la captura
+    textAlign: 'center'
   },
   input: {
     backgroundColor: '#161618',
@@ -278,9 +310,9 @@ const styles = {
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box',
-    textAlign: 'center', // Texto centrado
+    textAlign: 'center',
   },
-  select: {
+  customSelectTrigger: {
     backgroundColor: '#161618',
     border: '1px solid rgba(255, 255, 255, 0.08)',
     borderRadius: '12px',
@@ -288,12 +320,54 @@ const styles = {
     padding: '0 16px',
     color: '#ffffff',
     fontSize: '14px',
-    outline: 'none',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     cursor: 'pointer',
-    width: '100%',
+    userSelect: 'none',
     boxSizing: 'border-box',
+    width: '100%',
+  },
+  flecha: {
+    fontSize: '10px',
+    color: '#8E8E93'
+  },
+  opcionesContenedor: {
+    position: 'absolute',
+    top: '74px',
+    left: 0,
+    right: 0,
+    backgroundColor: '#1C1C1E',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    borderRadius: '12px',
+    zIndex: 100,
+    overflow: 'hidden',
+    boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
+  },
+  opcionesContenedorMax: {
+    position: 'absolute',
+    top: '74px',
+    left: 0,
+    right: 0,
+    backgroundColor: '#1C1C1E',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    borderRadius: '12px',
+    zIndex: 100,
+    maxHeight: '200px', // Limita la altura de categorías largas
+    overflowY: 'auto',   // Scroll impecable in-app
+    boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
+  },
+  opcion: {
+    padding: '14px',
+    fontSize: '14px',
     textAlign: 'center',
-    textAlignLast: 'center', // Fuerza el centrado de la opción elegida
+    cursor: 'pointer',
+    borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
+    color: '#FFFFFF',
+    transition: 'background-color 0.2s',
+    ':hover': {
+      backgroundColor: '#2C2C2E'
+    }
   },
   botonRegistrar: {
     backgroundColor: '#39FF14',
