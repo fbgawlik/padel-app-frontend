@@ -4,21 +4,32 @@ import { useNavigate } from 'react-router-dom';
 import API from '../services/api'; // 🔥 Tu servicio centralizado
 
 const RankingScreen = () => {
+  // Coincidiendo exactamente con los valores de tu BD ("2da Categoría", "5ta Categoría", etc.)
+  const [categoria, setCategoria] = useState('5ta Categoría'); 
+  const [rama, setRama] = useState('Caballeros'); 
   const [jugadores, setJugadores] = useState([]);
-  const [categoria, setCategoria] = useState('5ta'); 
-  const [rama, setRama] = useState('Caballeros'); // 🔥 Filtro sincronizado para Damas/Caballeros
   const [cargando, setCargando] = useState(true);
   
   const navigate = useNavigate(); 
 
-  const categoriasDisponibles = ['1ra', '2da', '3ra', '4ta', '5ta', '6ta', '7ma', '8va'];
+  // Mapeo exacto de las categorías guardadas en tu Base de Datos
+  const categoriasDisponibles = [
+    '1ra Categoría', 
+    '2da Categoría', 
+    '3ra Categoría', 
+    '4ta Categoría', 
+    '5ta Categoría', 
+    '6ta Categoría', 
+    '7ma Categoría', 
+    '8va Categoría'
+  ];
 
   useEffect(() => {
     const cargarRanking = async () => {
       setCargando(true);
       try {
-        // 🔥 Petición exacta enviando ambos filtros limpios a tu endpoint
-        const respuesta = await API.get(`/ranking?categoria=${categoria}&rama=${rama}`);
+        // Se envían los términos idénticos a los almacenados en la base de datos
+        const respuesta = await API.get(`/ranking?categoria=${encodeURIComponent(categoria)}&rama=${encodeURIComponent(rama)}`);
         setJugadores(respuesta.data || []);
       } catch (error) {
         console.error("Error al obtener la tabla de posiciones:", error);
@@ -29,9 +40,9 @@ const RankingScreen = () => {
     };
 
     cargarRanking();
-  }, [categoria, rama]); // Se vuelve a ejecutar al cambiar de pestaña o chip
+  }, [categoria, rama]);
 
-  // 🔥 LÓGICA DE RESOLUCIÓN DE IMÁGENES REPLICADA DE TU PERFILSCREEN
+  // Lógica de resolución de imágenes de PerfilScreen
   const resolverUrlImagen = (ruta) => {
     if (!ruta) return null;
     if (ruta.includes('localhost:5000')) {
@@ -42,7 +53,7 @@ const RankingScreen = () => {
     return `${import.meta.env.VITE_API_URL}${ruta}`; 
   };
 
-  // 🔥 OBTENER INICIALES DEL JUGADOR REPLICADO DE TU PERFILSCREEN
+  // Obtener iniciales de PerfilScreen
   const obtenerIniciales = (jugador) => {
     const n = jugador?.nombre?.charAt(0) || '';
     const a = jugador?.apellido?.charAt(0) || '';
@@ -56,7 +67,7 @@ const RankingScreen = () => {
         {/* TÍTULO DE LA PANTALLA */}
         <h2 style={styles.tituloHeader}>Ranking Oficial</h2>
 
-        {/* CONTENEDOR DE PESTAÑAS (RAMAS) - Estructura visual de la foto de referencia */}
+        {/* CONTENEDOR DE PESTAÑAS (RAMAS) */}
         <div style={styles.contenedorRamas}>
           <button 
             style={rama === 'Damas' ? styles.btnRamaActivo : styles.btnRamaInactivo}
@@ -76,13 +87,16 @@ const RankingScreen = () => {
         <div style={styles.sliderCategorias}>
           {categoriasDisponibles.map((cat) => {
             const esActivo = categoria === cat;
+            // Visualmente mostramos solo "1ra", "2da", etc., quitando la palabra " Categoría"
+            const nombreVisual = cat.replace(' Categoría', ''); 
+            
             return (
               <button
                 key={cat}
                 onClick={() => setCategoria(cat)}
                 style={esActivo ? styles.chipCategoriaActivo : styles.chipCategoriaInactivo}
               >
-                {cat}
+                {nombreVisual}
               </button>
             );
           })}
@@ -97,7 +111,7 @@ const RankingScreen = () => {
             </div>
           ) : jugadores.length === 0 ? (
             <div style={styles.mensajeEstado}>
-              Aún no hay jugadores registrados en {categoria} {rama}.
+              Aún no hay jugadores registrados en {categoria.replace(' Categoría', '')} {rama}.
             </div>
           ) : (
             jugadores.map((jugador, index) => {
@@ -110,7 +124,7 @@ const RankingScreen = () => {
                   onClick={() => navigate(`/jugador/${jugador.id}`)}
                 >
                   
-                  {/* PUESTO / MEDALLA (Top 3 destacado con colores Oro, Plata, Bronce) */}
+                  {/* PUESTO / MEDALLA */}
                   <div style={styles.colPosicion}>
                     {posicion <= 3 ? (
                       <span style={styles.badgeMedalla(posicion)}>{posicion}</span>
@@ -119,7 +133,7 @@ const RankingScreen = () => {
                     )}
                   </div>
 
-                  {/* FOTO JUGADOR UTILIZANDO TU RESOLVERURLIMAGEN */}
+                  {/* FOTO JUGADOR */}
                   <div style={styles.colFoto}>
                     <div style={styles.avatarContenedor}>
                       {jugador.imagenPerfil ? (
@@ -142,7 +156,7 @@ const RankingScreen = () => {
                       {jugador.nombre} {jugador.apellido}
                     </div>
                     <div style={styles.subtextoCategoria}>
-                      Categoría: {categoria} {rama}
+                      {categoria.replace(' Categoría', '')} {rama}
                     </div>
                   </div>
 
@@ -162,7 +176,7 @@ const RankingScreen = () => {
   );
 };
 
-// --- ARQUITECTURA DE ESTILOS ADN PÁDEL (MODERNO / OSCURO / NEÓN) ---
+// --- ARQUITECTURA DE ESTILOS ADN PÁDEL ---
 const styles = {
   contenedor: {
     width: '100%',
@@ -200,7 +214,7 @@ const styles = {
   },
   btnRamaActivo: {
     flex: 1,
-    backgroundColor: '#39FF14', // Verde Neón
+    backgroundColor: '#39FF14',
     color: '#000000',
     border: 'none',
     borderRadius: '10px',
@@ -267,8 +281,7 @@ const styles = {
     padding: '12px 14px',
     gap: '12px',
     boxSizing: 'border-box',
-    cursor: 'pointer',
-    transition: 'background-color 0.2s',
+    cursor: 'pointer'
   },
   colPosicion: {
     width: '32px',
@@ -367,7 +380,6 @@ const styles = {
   }
 };
 
-// Inyección de animación clave para el spinner nativo
 if (typeof document !== 'undefined') {
   const estiloAnimacion = document.createElement('style');
   estiloAnimacion.innerHTML = `
