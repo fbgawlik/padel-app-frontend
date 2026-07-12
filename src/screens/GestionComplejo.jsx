@@ -23,6 +23,17 @@ const GestionComplejo = () => {
   // Pestaña activa para la subgestión dentro del panel
   const [subTabActiva, setSubTabActiva] = useState('canchas');
 
+  // ✨ NUEVO: Estado para saber qué métrica clickeó el usuario (ej: 'reservas', 'ocupacion', etc.)
+  const [metricaExpandida, setMetricaExpandida] = useState(null);
+
+  // ✨ NUEVO: Mock de datos de reservas de ejemplo vinculadas a las canchas para el desglose interactivo
+  const [reservasHoy, setReservasHoy] = useState([
+    { id: 1, canchaNombre: 'Cancha 1', hora: '18:00', cliente: 'Lucas Perez', estado: 'Confirmado' },
+    { id: 2, canchaNombre: 'Cancha 1', hora: '20:00', cliente: 'Martín Gómez', estado: 'Confirmado' },
+    { id: 3, canchaNombre: 'Cancha 2', hora: '19:00', cliente: 'Juan Rodriguez', estado: 'Pendiente' },
+    { id: 4, canchaNombre: 'Cancha 2', hora: '21:00', cliente: 'Gonzalo Fernández', estado: 'Confirmado' },
+  ]);
+
   const cargarProductosTienda = async (clubId) => {
     try {
       const res = await API.get(`/productos?complejoId=${clubId}`);
@@ -203,9 +214,16 @@ const GestionComplejo = () => {
 
         {error && <div style={styles.alertaError}>{error}</div>}
 
-        {/* 📊 TARJETAS DE MÉTRICAS RÁPIDAS (Inspirado fielmente en la imagen) */}
+        {/* 📊 TARJETAS DE MÉTRICAS RÁPIDAS (Interactivas y enlazadas al estado) */}
         <div style={styles.grillaMetricas}>
-          <div style={styles.tarjetaMetrica}>
+          
+          <div 
+            style={{
+              ...styles.tarjetaMetrica,
+              ...(metricaExpandida === 'reservas' ? styles.tarjetaMetricaActiva : {})
+            }}
+            onClick={() => setMetricaExpandida(metricaExpandida === 'reservas' ? null : 'reservas')}
+          >
             <span style={styles.metricaLabel}>Reservas Hoy</span>
             <div style={styles.metricaFilaValor}>
               <span style={styles.metricaNumero}>24</span>
@@ -213,7 +231,13 @@ const GestionComplejo = () => {
             </div>
           </div>
 
-          <div style={styles.tarjetaMetrica}>
+          <div 
+            style={{
+              ...styles.tarjetaMetrica,
+              ...(metricaExpandida === 'ocupacion' ? styles.tarjetaMetricaActiva : {})
+            }}
+            onClick={() => setMetricaExpandida(metricaExpandida === 'ocupacion' ? null : 'ocupacion')}
+          >
             <span style={styles.metricaLabel}>Canchas Ocupadas</span>
             <div style={styles.metricaFilaValor}>
               <span style={styles.metricaNumero}>{canchas.length > 0 ? `${Math.ceil(canchas.length / 2)}/${canchas.length}` : '0/0'}</span>
@@ -235,6 +259,73 @@ const GestionComplejo = () => {
             </div>
           </div>
         </div>
+
+        {/* ✨ NUEVO: DESGLOSE INLINE DINÁMICO DE MÉTRICAS */}
+        {metricaExpandida === 'reservas' && (
+          <div style={styles.contenedorDesgloseMetrica}>
+            <div style={styles.headerDesglose}>
+              <h3 style={styles.tituloDesglose}>📅 Cronograma de Reservas (Hoy)</h3>
+              <button onClick={() => setMetricaExpandida(null)} style={styles.btnCerrarDesglose}>✕</button>
+            </div>
+            
+            {canchas.length === 0 ? (
+              // Fallback por si todavía no hay canchas guardadas en base de datos
+              <div>
+                <div style={styles.subtituloCanchaDesglose}>🎾 Cancha de Ejemplo</div>
+                <div style={styles.itemReservaDesglose}>
+                  <span style={styles.horaReserva}>19:00 hs</span>
+                  <span style={styles.clienteReserva}>Lucas Pérez</span>
+                  <span style={{...styles.badgeEstadoReserva, color: '#39FF14', backgroundColor: 'rgba(57, 255, 20, 0.1)'}}>Confirmado</span>
+                </div>
+              </div>
+            ) : (
+              canchas.map(cancha => (
+                <div key={cancha.id} style={{ marginBottom: '14px' }}>
+                  <div style={styles.subtituloCanchaDesglose}>🎾 {cancha.nombre}</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {/* Filtramos el mock o datos de reserva vinculándolos por consistencia visual */}
+                    {reservasHoy.filter(r => r.canchaNombre === 'Cancha 1' || r.canchaNombre === cancha.nombre).slice(0, 2).map((r, index) => (
+                      <div key={index} style={styles.itemReservaDesglose}>
+                        <span style={styles.horaReserva}>{index === 0 ? '18:00' : '20:30'} hs</span>
+                        <span style={styles.clienteReserva}>{index === 0 ? 'Matias Almada' : 'Facundo Gomez'}</span>
+                        <span style={{
+                          ...styles.badgeEstadoReserva,
+                          color: index === 0 ? '#39FF14' : '#FFD60A',
+                          backgroundColor: index === 0 ? 'rgba(57, 255, 20, 0.1)' : 'rgba(255, 214, 10, 0.1)'
+                        }}>{index === 0 ? 'Confirmado' : 'Pendiente'}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {metricaExpandida === 'ocupacion' && (
+          <div style={styles.contenedorDesgloseMetrica}>
+            <div style={styles.headerDesglose}>
+              <h3 style={styles.tituloDesglose}>📊 Estado de Ocupación en Tiempo Real</h3>
+              <button onClick={() => setMetricaExpandida(null)} style={styles.btnCerrarDesglose}>✕</button>
+            </div>
+            {canchas.length === 0 ? (
+              <p style={styles.textoVacioDesglose}>No hay canchas dadas de alta para evaluar ocupación.</p>
+            ) : (
+              canchas.map((c, idx) => (
+                <div key={c.id} style={{...styles.itemReservaDesglose, marginTop: idx > 0 ? '6px' : '0px'}}>
+                  <span style={styles.clienteReserva}>{idx % 2 === 0 ? '🟢' : '⚪'} {c.nombre} ({c.tipoPiso})</span>
+                  <span style={{
+                    ...styles.badgeEstadoReserva, 
+                    color: idx % 2 === 0 ? '#FF453A' : '#39FF14', 
+                    backgroundColor: idx % 2 === 0 ? 'rgba(255,69,58,0.1)' : 'rgba(57,255,20,0.1)'
+                  }}>
+                    {idx % 2 === 0 ? 'OCUPADA' : 'LIBRE'}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        )}
 
         {/* SELECTOR DE SUBGESTIONES (TABS) */}
         <div style={styles.barraTabsNavegacion}>
@@ -388,7 +479,7 @@ const GestionComplejo = () => {
   );
 };
 
-// ESTILOS DASHBOARD PRO DARK PREMIUM
+// ESTILOS DASHBOARD PRO DARK PREMIUM UNIFICADOS Y AMPLIADOS
 const styles = {
   contenedorBase: {
     width: '100%',
@@ -409,7 +500,7 @@ const styles = {
   },
   headerClubContainer: {
     display: 'flex',
-    justifyContent: 'between',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: '20px'
   },
@@ -466,7 +557,13 @@ const styles = {
     padding: '12px 14px',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease'
+  },
+  tarjetaMetricaActiva: {
+    border: '1px solid #39FF14',
+    backgroundColor: '#19191C'
   },
   metricaLabel: {
     fontSize: '11px',
@@ -494,6 +591,75 @@ const styles = {
     borderRadius: '6px',
     fontWeight: '700'
   },
+  
+  // ESTILOS DE DESGLOSE PREMIUM INLINE POP-IN
+  contenedorDesgloseMetrica: {
+    backgroundColor: '#141416',
+    border: '1px solid rgba(255,255,255,0.07)',
+    borderRadius: '16px',
+    padding: '16px',
+    marginBottom: '16px'
+  },
+  headerDesglose: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '14px',
+    borderBottom: '1px solid rgba(255,255,255,0.05)',
+    paddingBottom: '8px'
+  },
+  tituloDesglose: {
+    fontSize: '13px',
+    fontWeight: '700',
+    color: '#39FF14',
+    margin: 0
+  },
+  btnCerrarDesglose: {
+    background: 'none',
+    border: 'none',
+    color: '#8E8E93',
+    fontSize: '14px',
+    cursor: 'pointer'
+  },
+  subtituloCanchaDesglose: {
+    fontSize: '12px',
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: '6px',
+    paddingLeft: '2px'
+  },
+  itemReservaDesglose: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#1C1C1E',
+    padding: '10px 12px',
+    borderRadius: '10px',
+    fontSize: '12px'
+  },
+  horaReserva: {
+    fontWeight: '700',
+    color: '#39FF14',
+    width: '55px'
+  },
+  clienteReserva: {
+    color: '#FFFFFF',
+    flex: 1,
+    fontWeight: '500'
+  },
+  badgeEstadoReserva: {
+    fontSize: '10px',
+    fontWeight: '700',
+    padding: '3px 8px',
+    borderRadius: '6px'
+  },
+  textoVacioDesglose: {
+    fontSize: '11px',
+    color: '#636366',
+    fontStyle: 'italic',
+    margin: '2px 0 6px 0'
+  },
+
   barraTabsNavegacion: {
     display: 'flex',
     backgroundColor: '#141416',
@@ -684,8 +850,7 @@ const styles = {
     height: '36px',
     border: '3px solid rgba(255, 255, 255, 0.05)',
     borderTop: '3px solid #39FF14',
-    borderRadius: '50%',
-    animation: 'spin 1s linear infinite'
+    borderRadius: '50%'
   },
   tarjetaCentralForm: {
     width: '100%',
