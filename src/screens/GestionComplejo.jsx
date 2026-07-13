@@ -43,22 +43,23 @@ const GestionComplejo = () => {
   };
 
   // 🔥 Cargar los turnos reales del día desde el backend[cite: 14]
-  const cargarTurnosDelDia = async (canchasIds) => {
-    if (canchasIds.length === 0) return;
-    try {
-      const fechaHoy = obtenerFechaLocalArgentina();
-      const promesas = canchasIds.map(canchaId => 
-        API.get(`/?canchaId=${canchaId}&fecha=${fechaHoy}`)
-      );
-      const respuestas = await Promise.all(promesas);
-      const todosLosTurnos = respuestas.flatMap(res => res.data);
-      
-      console.log("Turnos sincronizados en el panel:", todosLosTurnos);
-      setTurnosHoy(todosLosTurnos);
-    } catch (err) {
-      console.error("Error al cargar los turnos del día:", err);
-    }
-  };
+const cargarTurnosDelDia = async (canchasIds) => {
+  if (canchasIds.length === 0) return;
+  try {
+    const fechaHoy = obtenerFechaLocalArgentina();
+    const promesas = canchasIds.map(canchaId => 
+      // Cambiá '/turnos' por '/reservas' si ese es el nombre en tu backend
+      API.get(`/turnos?canchaId=${canchaId}&fecha=${fechaHoy}`) 
+    );
+    const respuestas = await Promise.all(promesas);
+    const todosLosTurnos = respuestas.flatMap(res => res.data);
+    
+    console.log("Turnos sincronizados en el panel:", todosLosTurnos);
+    setTurnosHoy(todosLosTurnos);
+  } catch (err) {
+    console.error("Error al cargar los turnos del día:", err);
+  }
+};
 
   useEffect(() => {
     const cargarDatosClub = async () => {
