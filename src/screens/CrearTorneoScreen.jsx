@@ -87,7 +87,7 @@ const CrearTorneoScreen = () => {
       };
 
       // Petición real al servidor backend
-      await API.post('/torneos', datosParaEnviar);
+      await API.post('/torneos/crear', datosParaEnviar);
 
       // 🔥 LE DECIMOS A REACT QUERY QUE LA CACHÉ DE 'torneos' EXPIRÓ (Fuerza recarga total)
       queryClient.invalidateQueries({ queryKey: ['torneos'] });
