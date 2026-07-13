@@ -21,7 +21,7 @@ import RankingScreen from "../screens/RankingScreen";
 import CrearTorneoScreen from "../screens/CrearTorneoScreen";
 import TorneoDetalleScreen from '../screens/TorneoDetalleScreen'; 
 import PerfilPublicoScreen from '../screens/PerfilPublicoScreen';
-import TorneoInscripcionScreen from './screens/TorneoInscripcionScreen';
+import TorneoInscripcionScreen from '../screens/TorneoInscripcionScreen';
 
 const RutaPrivada = ({ children }) => {
   const { usuario, loading } = useContext(AuthContext);
