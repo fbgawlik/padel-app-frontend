@@ -8,7 +8,7 @@ const GestionComplejo = () => {
   const [complejo, setComplejo] = useState(null); 
   const [canchas, setCanchas] = useState([]);
   const [productos, setProductos] = useState([]);
-  const [turnosHoy, setTurnosHoy] = useState([]); // 🔥 Datos reales de la base de datos[cite: 14]
+  const [turnosHoy, setTurnosHoy] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -21,11 +21,11 @@ const GestionComplejo = () => {
   const [formCancha, setFormCancha] = useState({ nombre: '', tipoPiso: 'Césped Sintético', tipoPared: 'Blindex', techada: true });
   const [formProducto, setFormProducto] = useState({ nombre: '', precio: '', stock: '0', esAlquiler: false });
 
-  // Pestañas e interactividad de métricas[cite: 14]
+  // Pestañas e interactividad de métricas
   const [subTabActiva, setSubTabActiva] = useState('canchas');
   const [metricaExpandida, setMetricaExpandida] = useState(null);
 
-  // Obtener fecha actual en formato YYYY-MM-DD local de Argentina[cite: 14]
+  // Obtener fecha actual en formato YYYY-MM-DD local de Argentina
   const obtenerFechaLocalArgentina = () => {
     const d = new Date();
     const tz = d.toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", year: "numeric", month: "2-digit", day: "2-digit" });
@@ -42,24 +42,23 @@ const GestionComplejo = () => {
     }
   };
 
-  // 🔥 Cargar los turnos reales del día desde el backend[cite: 14]
-const cargarTurnosDelDia = async (canchasIds) => {
-  if (canchasIds.length === 0) return;
-  try {
-    const fechaHoy = obtenerFechaLocalArgentina();
-    const promesas = canchasIds.map(canchaId => 
-      // Cambiá '/turnos' por '/reservas' si ese es el nombre en tu backend
-      API.get(`/turnos?canchaId=${canchaId}&fecha=${fechaHoy}`) 
-    );
-    const respuestas = await Promise.all(promesas);
-    const todosLosTurnos = respuestas.flatMap(res => res.data);
-    
-    console.log("Turnos sincronizados en el panel:", todosLosTurnos);
-    setTurnosHoy(todosLosTurnos);
-  } catch (err) {
-    console.error("Error al cargar los turnos del día:", err);
-  }
-};
+  // 🔥 Corregido: Endpoint real asignado a '/turnos'
+  const cargarTurnosDelDia = async (canchasIds) => {
+    if (canchasIds.length === 0) return;
+    try {
+      const fechaHoy = obtenerFechaLocalArgentina();
+      const promesas = canchasIds.map(canchaId => 
+        API.get('/turnos', { params: { canchaId, fecha: fechaHoy } })
+      );
+      const respuestas = await Promise.all(promesas);
+      const todosLosTurnos = respuestas.flatMap(res => res.data);
+      
+      console.log("Turnos sincronizados en el panel:", todosLosTurnos);
+      setTurnosHoy(todosLosTurnos);
+    } catch (err) {
+      console.error("Error al cargar los turnos del día:", err);
+    }
+  };
 
   useEffect(() => {
     const cargarDatosClub = async () => {
@@ -67,6 +66,7 @@ const cargarTurnosDelDia = async (canchasIds) => {
       
       try {
         setLoading(true);
+        // Traemos el complejo del administrador logueado
         const res = await API.get('/complejos'); 
         const miClub = res.data.find(c => c.administradorId === usuario.id);
         
@@ -74,13 +74,14 @@ const cargarTurnosDelDia = async (canchasIds) => {
           setComplejo(miClub);
           setFormComplejo({ nombre: miClub.nombre, direccion: miClub.direccion, telefono: miClub.telefono || '' });
           
+          // Traemos las canchas y filtramos por el id del complejo obtenido
           const resCanchas = await API.get('/canchas');
-          const filtradas = resCanchas.data.filter(c => c.complejoId === miClub.id);
+          const filtradas = resCanchas.data.filter(c => c.complejoId === miClub.id || c.complejo === miClub.id);
           setCanchas(filtradas);
 
           await cargarProductosTienda(miClub.id);
           
-          const ids = filtradas.map(c => c.id);
+          const ids = filtradas.map(c => c.id || c._id);
           await cargarTurnosDelDia(ids);
         } else {
           setNecesitaCrear(true);
@@ -94,16 +95,15 @@ const cargarTurnosDelDia = async (canchasIds) => {
     cargarDatosClub();
   }, [usuario]);
 
-  // 🔥 Filtro flexible y optimizado para capturar cualquier turno ocupado o confirmado[cite: 14]
+  // Filtro flexible para capturar turnos reservados o con usuarios asignados
   const turnosReservadosHoy = turnosHoy.filter(t => 
-    t.estado === 'reservado' || 
-    t.estado === 'confirmado' || 
+    t.estado !== 'disponible' || 
     t.usuarioId !== null || 
     t.usuario !== null || 
     t.clienteNombre
   );
   
-  // Ocupación actual: Compara la hora del turno con la hora del sistema[cite: 14]
+  // Ocupación en tiempo real comparando con la hora del sistema
   const obtenerCanchasOcupadasAhora = () => {
     const ahora = new Date();
     const horaActualStr = ahora.toLocaleTimeString("es-AR", { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -111,13 +111,6 @@ const cargarTurnosDelDia = async (canchasIds) => {
     const turnosActivos = turnosReservadosHoy.filter(t => {
       if (t.horaInicio && t.horaFin) {
         return horaActualStr >= t.horaInicio && horaActualStr <= t.horaFin;
-      }
-      if (t.hora) {
-        const [h, m] = t.hora.split(':').map(Number);
-        const inicioMinutos = h * 60 + m;
-        const [ha, ma] = horaActualStr.split(':').map(Number);
-        const actualMinutos = ha * 60 + ma;
-        return actualMinutos >= inicioMinutos && actualMinutos < (inicioMinutos + 90);
       }
       return false;
     });
@@ -142,8 +135,9 @@ const cargarTurnosDelDia = async (canchasIds) => {
       });
 
       alert("¡Complejo registrado con éxito!");
-      setComplejo(res.data.complejo);
-      setFormComplejo({ nombre: res.data.complejo.nombre, direccion: res.data.complejo.direccion, telefono: res.data.complejo.telefono || '' });
+      const clubCreado = res.data.complejo || res.data;
+      setComplejo(clubCreado);
+      setFormComplejo({ nombre: clubCreado.nombre, direccion: clubCreado.direccion, telefono: clubCreado.telefono || '' });
       setNecesitaCrear(false); 
     } catch (err) {
       alert(err.response?.data?.error || "Error al crear el complejo.");
@@ -161,12 +155,12 @@ const cargarTurnosDelDia = async (canchasIds) => {
         formData.append('imagen', archivoImagenEdit);
       }
 
-      const res = await API.put(`/complejos/${complejo.id}`, formData, {
+      const res = await API.put(`/complejos/${complejo.id || complejo._id}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
       alert("¡Datos del complejo actualizados!");
-      setComplejo(res.data.complejo);
+      setComplejo(res.data.complejo || res.data);
       setArchivoImagenEdit(null);
     } catch (err) {
       alert(err.response?.data?.error || "Error al actualizar los datos.");
@@ -176,14 +170,15 @@ const cargarTurnosDelDia = async (canchasIds) => {
   const gestionarCrearCancha = async (e) => {
     e.preventDefault();
     try {
-      const res = await API.post('/canchas', { ...formCancha, complejoId: complejo.id });
+      const idComplejo = complejo.id || complejo._id;
+      const res = await API.post('/canchas', { ...formCancha, complejoId: idComplejo });
       alert("Cancha añadida exitosamente.");
       const nuevaCancha = res.data.cancha || res.data;
       const nuevasCanchas = [...canchas, nuevaCancha];
       setCanchas(nuevasCanchas);
       setFormCancha({ nombre: '', tipoPiso: 'Césped Sintético', tipoPared: 'Blindex', techada: true });
       
-      cargarTurnosDelDia(nuevasCanchas.map(c => c.id));
+      cargarTurnosDelDia(nuevasCanchas.map(c => c.id || c._id));
     } catch (err) {
       alert(err.response?.data?.error || "Error al guardar cancha.");
     }
@@ -194,7 +189,8 @@ const cargarTurnosDelDia = async (canchasIds) => {
     if (!formProducto.nombre || !formProducto.precio) return alert("Ingresá nombre y precio.");
 
     try {
-      const res = await API.post('/productos', { ...formProducto, complejoId: complejo.id });
+      const idComplejo = complejo.id || complejo._id;
+      const res = await API.post('/productos', { ...formProducto, complejoId: idComplejo });
       setProductos([...productos, res.data.producto || res.data]);
       setFormProducto({ nombre: '', precio: '', stock: '0', esAlquiler: false });
     } catch (err) {
@@ -206,7 +202,7 @@ const cargarTurnosDelDia = async (canchasIds) => {
     if (!window.confirm("¿Seguro que querés eliminar esto?")) return;
     try {
       await API.delete(`/productos/${productoId}`);
-      setProductos(productos.filter(p => p.id !== productoId));
+      setProductos(productos.filter(p => (p.id || p._id) !== productoId));
     } catch (err) {
       alert(err.response?.data?.error || "Error al eliminar producto.");
     }
@@ -317,7 +313,7 @@ const cargarTurnosDelDia = async (canchasIds) => {
           </div>
         </div>
 
-        {/* 📅 DESGLOSE DE CRONOGRAMA REAL CON ACCIÓN DE WHATSAPP */}
+        {/* 📅 DESGLOSE DE CRONOGRAMA */}
         {metricaExpandida === 'reservas' && (
           <div style={styles.contenedorDesgloseMetrica}>
             <div style={styles.headerDesglose}>
@@ -329,27 +325,29 @@ const cargarTurnosDelDia = async (canchasIds) => {
               <p style={styles.textoVacioDesglose}>No hay ninguna reserva registrada para el día de hoy.</p>
             ) : (
               canchas.map(cancha => {
-                const turnosCancha = turnosReservadosHoy.filter(t => t.canchaId === cancha.id);
+                const canchaId = cancha.id || cancha._id;
+                const turnosCancha = turnosReservadosHoy.filter(t => t.canchaId === canchaId);
                 if (turnosCancha.length === 0) return null;
                 return (
-                  <div key={cancha.id} style={{ marginBottom: '16px' }}>
+                  <div key={canchaId} style={{ marginBottom: '16px' }}>
                     <div style={styles.subtituloCanchaDesglose}>🎾 {cancha.nombre}</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {turnosCancha.map(turno => {
                         const nombreCliente = turno.usuario?.nombreCompleto || turno.usuario?.nombre || turno.clienteNombre || 'Usuario App';
                         const telefonoCliente = turno.usuario?.telefono || turno.clienteTelefono || null;
+                        const esAbierto = turno.tipoTurno === 'partido_abierto';
 
                         return (
-                          <div key={turno.id} style={styles.itemReservaDesglose}>
+                          <div key={turno.id || turno._id} style={styles.itemReservaDesglose}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={styles.horaReserva}>{turno.hora || turno.horaInicio} hs</span>
+                                <span style={styles.horaReserva}>{turno.horaInicio} - {turno.horaFin} hs</span>
                                 <span style={{
                                   ...styles.badgeEstadoReserva,
-                                  color: turno.modalidad === 'turno_abierto' ? '#00ccff' : '#39FF14',
-                                  backgroundColor: turno.modalidad === 'turno_abierto' ? 'rgba(0, 204, 255, 0.1)' : 'rgba(57, 255, 20, 0.1)'
+                                  color: esAbierto ? '#00ccff' : '#39FF14',
+                                  backgroundColor: esAbierto ? 'rgba(0, 204, 255, 0.1)' : 'rgba(57, 255, 20, 0.1)'
                                 }}>
-                                  {turno.modalidad === 'turno_abierto' ? 'Abierto' : 'Privado'}
+                                  {esAbierto ? 'Abierto' : 'Normal'}
                                 </span>
                               </div>
                               <span style={styles.clienteReserva}>
@@ -389,23 +387,16 @@ const cargarTurnosDelDia = async (canchasIds) => {
               <p style={styles.textoVacioDesglose}>Debes registrar canchas primero.</p>
             ) : (
               canchas.map(c => {
+                const canchaId = c.id || c._id;
                 const ahora = new Date();
                 const horaActualStr = ahora.toLocaleTimeString("es-AR", { hour: '2-digit', minute: '2-digit', hour12: false });
                 const estaOcupada = turnosReservadosHoy.some(t => {
-                  if (t.canchaId !== c.id) return false;
-                  if (t.horaInicio && t.horaFin) return horaActualStr >= t.horaInicio && horaActualStr <= t.horaFin;
-                  if (t.hora) {
-                    const [h, m] = t.hora.split(':').map(Number);
-                    const inicio = h * 60 + m;
-                    const [ha, ma] = horaActualStr.split(':').map(Number);
-                    const actual = ha * 60 + ma;
-                    return actual >= inicio && actual < (inicio + 90);
-                  }
-                  return false;
+                  if (t.canchaId !== canchaId) return false;
+                  return horaActualStr >= t.horaInicio && horaActualStr <= t.horaFin;
                 });
 
                 return (
-                  <div key={c.id} style={{ ...styles.itemReservaDesglose, marginBottom: '6px' }}>
+                  <div key={canchaId} style={{ ...styles.itemReservaDesglose, marginBottom: '6px' }}>
                     <span style={styles.clienteReserva}>{estaOcupada ? '🔴' : '🟢'} {c.nombre} <small style={{color: '#8E8E93'}}>({c.tipoPiso})</small></span>
                     <span style={{
                       ...styles.badgeEstadoReserva, 
@@ -466,7 +457,7 @@ const cargarTurnosDelDia = async (canchasIds) => {
                     <p style={styles.textoListaVacia}>No hay canchas registradas en la base de datos.</p>
                   ) : (
                     canchas.map(c => (
-                      <div key={c.id} style={styles.itemFilaClub}>
+                      <div key={c.id || c._id} style={styles.itemFilaClub}>
                         <div>
                           <div style={styles.nombreItemLista}>{c.nombre}</div>
                           <div style={styles.detalleItemLista}>{c.tipoPiso} • {c.tipoPared} • {c.techada ? '🧱 Techada' : '☀️ Descubierta'}</div>
@@ -490,7 +481,7 @@ const cargarTurnosDelDia = async (canchasIds) => {
                     onChange={(e) => setFormProducto({ ...formProducto, nombre: e.target.value })} style={styles.input} required
                   />
                   <div style={styles.filaInputsMitad}>
-                    <input type="number" placeholder="Precio ($)" value={formProducto.precio} onChange={(e) => setFormProducto({ ...formProducto, precio: e.target.value })} style={styles.input} required min="0" />
+                    <input type="number" placeholder="Precio ($)" value={formProducto.precio} onChange={(e) => setFormProducto({ ...formProducto, price: e.target.value, precio: e.target.value })} style={styles.input} required min="0" />
                     <input type="number" placeholder="Stock" value={formProducto.stock} onChange={(e) => setFormProducto({ ...formProducto, stock: e.target.value })} style={styles.input} min="0" />
                   </div>
                   <label style={styles.checkboxLabelContainer}>
@@ -507,22 +498,25 @@ const cargarTurnosDelDia = async (canchasIds) => {
                   {productos.length === 0 ? (
                     <p style={styles.textoListaVacia}>No hay artículos cargados en la base de datos.</p>
                   ) : (
-                    productos.map(p => (
-                      <div key={p.id} style={styles.itemFilaClub}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={styles.nombreItemLista}>{p.nombre}</span>
-                            <span style={{
-                              ...styles.badgeTipoProducto,
-                              backgroundColor: p.esAlquiler ? 'rgba(0, 204, 255, 0.1)' : 'rgba(57, 255, 20, 0.1)',
-                              color: p.esAlquiler ? '#00ccff' : '#39FF14'
-                            }}>{p.esAlquiler ? 'Alquiler' : 'Venta'}</span>
+                    productos.map(p => {
+                      const prodId = p.id || p._id;
+                      return (
+                        <div key={prodId} style={styles.itemFilaClub}>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={styles.nombreItemLista}>{p.nombre}</span>
+                              <span style={{
+                                ...styles.badgeTipoProducto,
+                                backgroundColor: p.esAlquiler ? 'rgba(0, 204, 255, 0.1)' : 'rgba(57, 255, 20, 0.1)',
+                                color: p.esAlquiler ? '#00ccff' : '#39FF14'
+                              }}>{p.esAlquiler ? 'Alquiler' : 'Venta'}</span>
+                            </div>
+                            <div style={styles.detalleItemLista}>Precio: ${p.precio} | Stock: <span style={{ color: Number(p.stock) <= 2 ? '#FF453A' : '#E5E5EA' }}>{p.stock} u.</span></div>
                           </div>
-                          <div style={styles.detalleItemLista}>Precio: ${p.precio} | Stock: <span style={{ color: Number(p.stock) <= 2 ? '#FF453A' : '#E5E5EA' }}>{p.stock} u.</span></div>
+                          <button onClick={() => gestionarEliminarProducto(prodId)} style={styles.btnEliminarIcono}>🗑️</button>
                         </div>
-                        <button onClick={() => gestionarEliminarProducto(p.id)} style={styles.btnEliminarIcono}>🗑️</button>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </div>
@@ -555,11 +549,11 @@ const cargarTurnosDelDia = async (canchasIds) => {
   );
 };
 
-// ESTILOS UNIFICADOS PREMIUM[cite: 14]
+// ESTILOS UNIFICADOS PREMIUM
 const styles = {
   contenedorBase: { width: '100%', color: '#FFFFFF', fontFamily: 'system-ui, -apple-system, sans-serif', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#0C0C0E', padding: '16px' },
   panelAnchoMaximo: { width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column' },
-  headerClubContainer: { display: 'flex', justifyIntersection: 'space-between', alignItems: 'center', marginBottom: '20px' },
+  headerClubContainer: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
   headerClubLeft: { display: 'flex', alignItems: 'center', gap: '12px', flex: 1 },
   avatarMiniClub: { width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#141416', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '20px', border: '1px solid rgba(255,255,255,0.06)' },
   tituloClubName: { fontSize: '18px', fontWeight: '800', margin: 0, color: '#FFFFFF' },
@@ -577,8 +571,8 @@ const styles = {
   tituloDesglose: { fontSize: '13px', fontWeight: '700', color: '#39FF14', margin: 0 },
   btnCerrarDesglose: { background: 'none', border: 'none', color: '#8E8E93', fontSize: '14px', cursor: 'pointer' },
   subtituloCanchaDesglose: { fontSize: '12px', fontWeight: '700', color: '#FFFFFF', marginBottom: '6px', paddingLeft: '2px' },
-  itemReservaDesglose: { display: 'flex', alignItems: 'center', justifyIntersection: 'space-between', backgroundColor: '#1C1C1E', padding: '10px 12px', borderRadius: '10px', fontSize: '12px' },
-  horaReserva: { fontWeight: '700', color: '#39FF14', width: '65px' },
+  itemReservaDesglose: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1C1C1E', padding: '10px 12px', borderRadius: '10px', fontSize: '12px' },
+  horaReserva: { fontWeight: '700', color: '#39FF14', width: '100px' },
   clienteReserva: { color: '#FFFFFF', flex: 1, fontWeight: '500' },
   badgeEstadoReserva: { fontSize: '10px', fontWeight: '700', padding: '3px 8px', borderRadius: '6px' },
   textoVacioDesglose: { fontSize: '11px', color: '#8E8E93', fontStyle: 'italic', textAlign: 'center', margin: '8px 0' },
