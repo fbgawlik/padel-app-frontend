@@ -22,7 +22,7 @@ const TorneoDetalleScreen = () => {
     staleTime: 1000 * 60 * 5,
   });
 
-  // 2. FUNCIÓN SENIOR: Generar días dinámicos entre fechaInicio y fechaFin
+  // 2. Generar días dinámicos entre fechaInicio y fechaFin
   const generarFechasTorneo = (inicio, fin) => {
     if (!inicio || !fin) return [];
     
@@ -83,7 +83,7 @@ const TorneoDetalleScreen = () => {
 
   // Evaluar si las inscripciones están abiertas (Fecha de inicio es posterior a hoy)
   const hoyStr = new Date().toISOString().split('T')[0];
-  const inscripcionesAbiertas = torneo.fechaInicio > hoyStr;
+  const inscripcionesAbiertas = torneo.fechaInicio > hoyStr && torneo.estado !== 'finalizado';
 
   return (
     <div style={styles.screenContainer}>
@@ -100,7 +100,7 @@ const TorneoDetalleScreen = () => {
               </svg>
             </button>
             <div style={styles.logoContainer}>
-              <img src="/logo-adn-padel.png" alt="ADN Padel" style={styles.logoIcon} />
+              <img src="/logo-adn-padel.png" alt="ADN Padel" style={styles.logoIcon} onError={(e) => { e.target.style.display = 'none'; }} />
               <span style={styles.logoText}>ADN PADEL</span>
             </div>
           </div>
@@ -176,7 +176,9 @@ const TorneoDetalleScreen = () => {
                     
                     <div style={styles.detailsColumn}>
                       <div style={styles.badgesRow}>
-                       <span style={styles.badgeEstado(partido.estado)}>{`• ${partido.estado.toUpperCase()}`}</span>
+                        <span style={styles.badgeEstado(partido.estado || 'programado')}>
+                          {`• ${(partido.estado || 'programado').toUpperCase()}`}
+                        </span>
                         <span style={styles.badgeCategoria}>{partido.categoria || torneo.categoria}</span>
                         {partido.zona?.nombre && <span style={styles.badgeZona}>{partido.zona.nombre}</span>}
                       </div>
@@ -252,10 +254,10 @@ const TorneoDetalleScreen = () => {
 
             <div style={styles.galeriaGrid}>
               <div style={styles.imageCard}>
-                <img src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=500" alt="Padel" style={styles.img} />
+                <img src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=500" alt="Padel 1" style={styles.img} />
               </div>
               <div style={styles.imageCard}>
-                <img src="https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=500" alt="Padel" style={styles.img} />
+                <img src="https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=500" alt="Padel 2" style={styles.img} />
               </div>
             </div>
           </div>
@@ -313,7 +315,7 @@ const styles = {
   topBar: { display: 'flex', alignItems: 'center', padding: '16px 20px', gap: '12px' },
   backButton: {
     background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', 
-    cursor: 'pointer', padding: '8px', display: 'flex', borderRadius: '12px'
+    cursor: 'pointer', padding: '8px', display: 'flex', borderRadius: '12px', outline: 'none'
   },
   logoContainer: { display: 'flex', alignItems: 'center', gap: '8px' },
   logoIcon: { width: '22px', height: '22px', borderRadius: '4px' }, 
@@ -328,7 +330,7 @@ const styles = {
     letterSpacing: '0.5px', transition: 'all 0.2s'
   },
   tabItemActivo: { color: '#39FF14', borderBottom: '3px solid #39FF14' },
-  mainContent: { padding: '24px 20px 140px 20px' }, // Incrementado padding bottom para no tapar con el botón
+  mainContent: { padding: '24px 20px 160px 20px' }, // Ampliado ligeramente para evitar solapamientos con botones fijos
   tabSection: { display: 'flex', flexDirection: 'column' },
   dateSelectorRow: { display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '14px' },
   datePill: {
@@ -359,7 +361,7 @@ const styles = {
   badgeEstado: (estado) => ({
     backgroundColor: estado === 'finalizado' ? 'rgba(255,255,255,0.05)' : 'rgba(0,122,255,0.1)',
     color: estado === 'finalizado' ? '#8E8E93' : '#007AFF',
-    padding: '4px 8px', borderRadius: '6px', fontSize: '9px', fontWeight: '800'
+    padding: '4px 8px', borderRadius: '6px', fontSize: '9px', fontWeight: '800', display: 'inline-block'
   }),
   badgeCategoria: { backgroundColor: 'rgba(255,255,255,0.06)', color: '#FFF', padding: '4px 8px', borderRadius: '6px', fontSize: '9px', fontWeight: '700' },
   badgeZona: { backgroundColor: 'rgba(57, 255, 20, 0.1)', color: '#39FF14', padding: '4px 8px', borderRadius: '6px', fontSize: '9px', fontWeight: '700' },
@@ -373,21 +375,21 @@ const styles = {
   locationText: { fontSize: '11px', color: '#8E8E93', fontWeight: '500' },
   galeriaHeader: { marginBottom: '16px' },
   galeriaFiltros: { display: 'flex', gap: '8px' },
-  galeriaPill: { padding: '8px 16px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: 'transparent', fontSize: '13px', fontWeight: '600', color: '#8E8E93', cursor: 'pointer' },
+  galeriaPill: { padding: '8px 16px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: 'transparent', fontSize: '13px', fontWeight: '600', color: '#8E8E93', cursor: 'pointer', outline: 'none' },
   galeriaPillActivo: { backgroundColor: 'rgba(57, 255, 20, 0.1)', borderColor: '#39FF14', color: '#39FF14' },
   galeriaGrid: { display: 'flex', flexDirection: 'column', gap: '16px' },
   imageCard: { width: '100%', height: '200px', borderRadius: '20px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' },
   img: { width: '100%', height: '100%', objectFit: 'cover' },
   centerContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', flexDirection: 'column' },
-  spinner: { width: '32px', height: '32px', border: '3px solid rgba(57, 255, 20, 0.1)', borderTopColor: '#39FF14', borderRadius: '50%', animation: 'spin 1s linear infinite' },
+  spinner: { width: '32px', height: '32px', border: '3px solid rgba(57, 255, 20, 0.1)', borderTopColor: '#39FF14', borderRadius: '50%' },
   alerta: { padding: '20px', backgroundColor: 'rgba(255, 77, 77, 0.05)', borderRadius: '16px', border: '1px solid rgba(255, 77, 77, 0.2)', textAlign: 'center' },
-  btnVolver: { marginTop: '12px', padding: '8px 16px', backgroundColor: 'rgba(255,255,255,0.05)', color: '#FFF', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', cursor: 'pointer' },
+  btnVolver: { marginTop: '12px', padding: '8px 16px', backgroundColor: 'rgba(255,255,255,0.05)', color: '#FFF', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', cursor: 'pointer', outline: 'none' },
   noMatches: { textAlign: 'center', padding: '40px 20px', color: '#8E8E93', fontSize: '13px' },
 
   // 🔥 ESTILOS CONTAINER FIJO INFERIOR
   fixedActionContainer: {
     position: 'fixed',
-    bottom: '96px', // Queda perfecto por encima de tu cápsula de navegación (BottomNavigation)
+    bottom: '96px', // Altura recomendada para no superponerse con un BottomNavigation estándar
     left: '50%',
     transform: 'translateX(-50%)',
     width: '100%',
@@ -411,7 +413,8 @@ const styles = {
     justifyContent: 'space-between',
     padding: '0 24px',
     boxShadow: '0 8px 24px rgba(57, 255, 20, 0.3)',
-    transition: 'transform 0.2s ease'
+    transition: 'transform 0.2s ease',
+    outline: 'none'
   },
   precioBadge: {
     backgroundColor: 'rgba(10, 10, 11, 0.12)',
