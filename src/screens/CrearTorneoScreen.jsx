@@ -11,9 +11,9 @@ const CrearTorneoScreen = () => {
   const [listaComplejos, setListaComplejos] = useState([]); // Guardará los complejos de la DB
 
   // Categorías basadas en tu configuración previa
-  const categoriasDamas = ['1ra Damas', '2da Damas', '3ra Damas', '4ta Damas', '5ta Damas', '6ta Damas', '7ma Damas'];
-  const categoriasCaballeros = ['1ra Caballeros', '2da Caballeros', '3ra Caballeros', '4ta Caballeros', '5ta Caballeros', '6ta Caballeros', '7ma Caballeros'];
-  const opcionesCupos = [12, 15, 18, 21, 24];
+  const categoriasDamas = ['1ra Damas', '2da Damas', '3ra Damas', '4ta Damas', '5ta Damas', '6ta Damas', '7ma Damas', '8va Damas'];
+  const categoriasCaballeros = ['1ra Caballeros', '2da Caballeros', '3ra Caballeros', '4ta Caballeros', '5ta Caballeros', '6ta Caballeros', '7ma Caballeros', '8va Caballeros'];
+  const opcionesCupos = [12, 15, 18, 21, 24, 27, 30];
 
   const [formData, setFormData] = useState({
     complejoId: '', // 👈 Ahora se llena dinámicamente
