@@ -21,7 +21,7 @@ import RankingScreen from "../screens/RankingScreen";
 import CrearTorneoScreen from "../screens/CrearTorneoScreen";
 import TorneoDetalleScreen from '../screens/TorneoDetalleScreen'; 
 import PerfilPublicoScreen from '../screens/PerfilPublicoScreen';
-
+import TorneoInscripcionScreen from './screens/TorneoInscripcionScreen';
 
 const RutaPrivada = ({ children }) => {
   const { usuario, loading } = useContext(AuthContext);
@@ -72,7 +72,7 @@ const AppRoutes = () => {
           <Route path="/perfil" element={<PerfilScreen />} />
           <Route path="/torneos/crear" element={<CrearTorneoScreen />} />
           <Route path="/torneos/:id" element={<TorneoDetalleScreen />} />
-          {/* 🔥 AQUÍ AGREGAMOS LA NUEVA RUTA PARA EL PERFIL PÚBLICO */}
+          <Route path="/torneos/:id/inscribirse" element={<TorneoInscripcionScreen />} />
           <Route path="/jugador/:id" element={<PerfilPublicoScreen />} />
         </Route>
 
