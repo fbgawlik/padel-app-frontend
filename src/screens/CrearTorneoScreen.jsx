@@ -2,21 +2,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
-import { useQueryClient } from '@tanstack/react-query'; // 🔥 Para actualizar la lista al instante
+import { useQueryClient } from '@tanstack/react-query'; 
 
 const CrearTorneoScreen = () => {
   const navigate = useNavigate();
-  const queryClient = useQueryClient(); // Instanciamos el cliente de React Query
+  const queryClient = useQueryClient(); 
   const [cargando, setCargando] = useState(false);
-  const [listaComplejos, setListaComplejos] = useState([]); // Guardará los complejos de la DB
+  const [listaComplejos, setListaComplejos] = useState([]); 
 
-  // Categorías basadas en tu configuración previa
   const categoriasDamas = ['1ra Damas', '2da Damas', '3ra Damas', '4ta Damas', '5ta Damas', '6ta Damas', '7ma Damas', '8va Damas'];
   const categoriasCaballeros = ['1ra Caballeros', '2da Caballeros', '3ra Caballeros', '4ta Caballeros', '5ta Caballeros', '6ta Caballeros', '7ma Caballeros', '8va Caballeros'];
   const opcionesCupos = [12, 15, 18, 21, 24, 27, 30];
 
   const [formData, setFormData] = useState({
-    complejoId: '', // 👈 Ahora se llena dinámicamente
+    complejoId: '', 
     nombre: '',
     fechaInicio: '',
     fechaFin: '',
@@ -24,18 +23,16 @@ const CrearTorneoScreen = () => {
     cupoParejas: 12,
     precio: '',
     premios: '',
-    imagenPortada: '', 
+    imagenArchivo: null, // 🔥 AHORA GUARDAMOS EL ARCHIVO FÍSICO AQUÍ
     reglas: 'REGLAS DEL TORNEO:\n\n1. Parejas mal categorizadas serán descalificadas sin derecho a reclamo.\n2. Tolerancia máxima de espera: 15 minutos.\n3. Formato de juego: Fase de zonas y llaves eliminatorias.'
   });
 
-  // 🚀 EFECTO: Carga los complejos reales desde el backend al abrir la pantalla
   useEffect(() => {
     const obtenerComplejos = async () => {
       try {
         const res = await API.get('/complejos');
         if (res.data && res.data.length > 0) {
           setListaComplejos(res.data);
-          // Preseleccionamos el primer complejo de la lista por defecto
           setFormData(prev => ({ ...prev, complejoId: res.data[0].id }));
         }
       } catch (error) {
@@ -49,7 +46,13 @@ const CrearTorneoScreen = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Manejar selección múltiple de categorías
+  // 🔥 NUEVA FUNCIÓN PARA MANEJAR LA CARGA DE LA IMAGEN
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFormData({ ...formData, imagenArchivo: e.target.files[0] });
+    }
+  };
+
   const toggleCategoria = (cat) => {
     setFormData((prev) => {
       const seleccionadas = prev.categorias;
@@ -72,24 +75,26 @@ const CrearTorneoScreen = () => {
     try {
       setCargando(true);
 
-      // Mapeo final adaptado rigurosamente al modelo de Prisma en Railway
-      const datosParaEnviar = {
-        nombre: formData.nombre,
-        fechaInicio: formData.fechaInicio,
-        fechaFin: formData.fechaFin,
-        categoria: formData.categorias.join(' | '), // Convierte el array ['1ra', '2da'] en "1ra | 2da"
-        precioInscripcion: parseFloat(formData.precio) || 0,
-        cupoMaximo: parseInt(formData.cupoParejas) || 12,
-        imagenPortada: formData.imagenPortada || 'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?q=80&w=600',
-        premios: formData.premios,
-        reglas: formData.reglas,
-        complejoId: formData.complejoId // 🚀 ID del complejo real seleccionado
-      };
+      // 🔥 MAGIA AQUÍ: Usamos FormData para poder enviar archivos e información mezclada
+      const datosParaEnviar = new FormData();
+      datosParaEnviar.append('nombre', formData.nombre);
+      datosParaEnviar.append('fechaInicio', formData.fechaInicio);
+      datosParaEnviar.append('fechaFin', formData.fechaFin);
+      datosParaEnviar.append('categoria', formData.categorias.join(' | ')); 
+      datosParaEnviar.append('precioInscripcion', formData.precio || 0);
+      datosParaEnviar.append('cupoMaximo', formData.cupoParejas || 12);
+      datosParaEnviar.append('premios', formData.premios);
+      datosParaEnviar.append('reglas', formData.reglas);
+      datosParaEnviar.append('complejoId', formData.complejoId);
 
-      // Petición real al servidor backend
+      // Si el usuario seleccionó una imagen, la adjuntamos
+      if (formData.imagenArchivo) {
+        datosParaEnviar.append('imagenPortada', formData.imagenArchivo);
+      }
+
+      // Petición real al servidor backend. Axios detecta el FormData y ajusta los headers automáticamente
       await API.post('/torneos/crear', datosParaEnviar);
 
-      // 🔥 LE DECIMOS A REACT QUERY QUE LA CACHÉ DE 'torneos' EXPIRÓ (Fuerza recarga total)
       queryClient.invalidateQueries({ queryKey: ['torneos'] });
 
       alert('¡Torneo registrado y publicado con éxito! 🎉');
@@ -114,7 +119,7 @@ const CrearTorneoScreen = () => {
 
       <form onSubmit={handleSubmit} style={styles.formContainer}>
         
-        {/* 🏨 NUEVO CAMPO: SELECCIÓN DE COMPLEJO */}
+        {/* COMPLEJO / CLUB */}
         <div style={styles.inputGroup}>
           <label style={styles.label}>Complejo / Club Anfitrión</label>
           <select
@@ -125,7 +130,7 @@ const CrearTorneoScreen = () => {
             required
           >
             {listaComplejos.length === 0 ? (
-              <option value="">Cargando complejos disponibles...</option>
+              <option value="">Cargando complejos...</option>
             ) : (
               listaComplejos.map((comp) => (
                 <option key={comp.id} value={comp.id} style={styles.optionStyle}>
@@ -150,7 +155,7 @@ const CrearTorneoScreen = () => {
           />
         </div>
 
-        {/* FECHAS EN FILA */}
+        {/* FECHAS */}
         <div style={styles.row}>
           <div style={{ ...styles.inputGroup, flex: 1 }}>
             <label style={styles.label}>Fecha Inicio</label>
@@ -216,7 +221,7 @@ const CrearTorneoScreen = () => {
           </div>
         </div>
 
-        {/* CUPO MÁXIMO DE PAREJAS */}
+        {/* CUPO MÁXIMO */}
         <div style={styles.inputGroup}>
           <label style={styles.label}>Cupo Máximo (Parejas)</label>
           <div style={styles.scrollChips}>
@@ -236,7 +241,7 @@ const CrearTorneoScreen = () => {
           </div>
         </div>
 
-        {/* PRECIO DE INSCRIPCIÓN */}
+        {/* PRECIO */}
         <div style={styles.inputGroup}>
           <label style={styles.label}>Precio de Inscripción (Por Pareja)</label>
           <input
@@ -250,15 +255,14 @@ const CrearTorneoScreen = () => {
           />
         </div>
 
-        {/* IMAGEN DE PORTADA */}
+        {/* 🔥 IMAGEN DE PORTADA (ACTUALIZADO A FILE) */}
         <div style={styles.inputGroup}>
-          <label style={styles.label}>URL Imagen de Portada (Opcional)</label>
+          <label style={styles.label}>Flyer / Imagen de Portada (Opcional)</label>
           <input
-            type="url"
+            type="file"
             name="imagenPortada"
-            placeholder="https://ejemplo.com/foto.jpg"
-            value={formData.imagenPortada}
-            onChange={handleChange}
+            accept="image/*"
+            onChange={handleFileChange}
             style={styles.input}
           />
         </div>
@@ -276,7 +280,7 @@ const CrearTorneoScreen = () => {
           />
         </div>
 
-        {/* REGLAS DEL TORNEO */}
+        {/* REGLAS */}
         <div style={styles.inputGroup}>
           <label style={styles.label}>Reglas e Información adicional</label>
           <textarea
@@ -366,8 +370,8 @@ const styles = {
     padding: '14px 16px',
     borderRadius: '12px',
     backgroundColor: '#1C1C1E',
-    border: '1px solid rgba(57, 255, 20, 0.3)', // Borde sutil verde neón para destacar
-    color: '#39FF14', // Texto verde neón estilizado
+    border: '1px solid rgba(57, 255, 20, 0.3)',
+    color: '#39FF14',
     fontSize: '15px',
     fontWeight: '600',
     outline: 'none',
