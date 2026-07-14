@@ -24,7 +24,7 @@ const TorneoInscripcionScreen = () => {
   const { data: usuarioLogueado } = useQuery({
     queryKey: ['perfilUsuario'],
     queryFn: async () => {
-      const res = await API.get('/users/perfil');
+      const res = await API.get('/usuarios/perfil');
       return res.data;
     }
   });

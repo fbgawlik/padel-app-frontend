@@ -11,15 +11,28 @@ const TorneosScreen = () => {
   const [busqueda, setBusqueda] = useState('');
   const [mostrarBuscador, setMostrarBuscador] = useState(false);
 
+  // 1. 🔥 FUNCIÓN PARA RESOLVER LA URL DE LA IMAGEN CORRECTAMENTE
+  const resolverUrlImagen = (ruta) => {
+    if (!ruta) return null;
+    // Si contiene la URL local del puerto 5000, la reescribimos con la URL de producción del backend
+    if (ruta.includes('localhost:5000')) {
+      const rutaRelativa = ruta.replace('http://localhost:5000', ''); 
+      return `${import.meta.env.VITE_API_URL}${rutaRelativa}`;
+    }
+    // Si ya es una URL completa (Cloudinary, S3, etc.) que empieza con http, la usamos directa
+    if (ruta.startsWith('http')) return ruta; 
+    // Si es una ruta relativa (/uploads/...), le anteponemos la URL base de producción de tu API
+    return `${import.meta.env.VITE_API_URL}${ruta}`; 
+  };
+
   // Validación de permisos para mostrar el botón flotante "+"
   const esOrganizador = usuario?.rol === 'admin_complejo' || usuario?.rol === 'organizador';
 
   // Fetch de torneos con revalidación forzada (staleTime: 0) para ver cambios instantáneos
- const { data: torneos = [], isLoading, isError, refetch } = useQuery({
+  const { data: torneos = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['torneos'],
     queryFn: async () => {
       const res = await API.get('/torneos');
-      // 🔥 ESTA LINEA TE DIRÁ LA VERDAD EN LA CONSOLA:
       console.log("👉 Lo que realmente llega del backend:", res.data);
       return res.data;
     },
@@ -82,7 +95,6 @@ const TorneosScreen = () => {
       <div style={styles.listContainer}>
         {torneosFiltrados.length > 0 ? (
           torneosFiltrados.map((torneo) => {
-            // Evaluamos el estado según las fechas (Simulado)
             const hoy = new Date().toISOString().split('T')[0];
             let estado = { texto: 'Inscripciones Abiertas', color: '#39FF14' };
             if (torneo.fechaInicio <= hoy && torneo.fechaFin >= hoy) {
@@ -91,8 +103,10 @@ const TorneosScreen = () => {
               estado = { texto: 'Finalizado', color: '#8E8E93' };
             }
 
-            // Imagen de portada elegida, fallback al complejo, fallback a diseño abstracto
-            const bannerImagen = torneo.imagenPortada || torneo.complejo?.imagenUrl;
+            // Seleccionamos la imagen disponible
+            const imagenCruda = torneo.imagenPortada || torneo.complejo?.imagenUrl;
+            // 🔥 LE PASAMOS LA IMAGEN CRUDA A NUESTRO RESOLVEDOR DE URLS
+            const bannerImagen = resolverUrlImagen(imagenCruda);
 
             return (
               <div key={torneo.id} style={styles.card}>
@@ -104,6 +118,12 @@ const TorneosScreen = () => {
                       src={bannerImagen} 
                       alt={torneo.nombre} 
                       style={styles.cardImage} 
+                      onError={(e) => {
+                        // Fallback por seguridad si la imagen da error al cargar en vivo
+                        e.target.onerror = null; 
+                        e.target.style.display = 'none';
+                        e.target.parentNode.innerHTML = `<div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%); display: flex; align-items: center; justify-content: center; color: #39FF14; font-weight: 700; font-size: 16px;">🏆 ${torneo.nombre}</div>`;
+                      }}
                     />
                   ) : (
                     <div style={styles.cardImagePlaceholder}>
@@ -121,7 +141,6 @@ const TorneosScreen = () => {
                 <div style={styles.cardBody}>
                   <h3 style={styles.cardTitle}>{torneo.nombre}</h3>
                   
-                  {/* Grid de detalles estilo Airbnb */}
                   <div style={styles.gridDetails}>
                     <div style={styles.gridItem}>
                       <span style={styles.gridLabel}>Categorías</span>
@@ -139,7 +158,6 @@ const TorneosScreen = () => {
                     </div>
                   </div>
 
-                  {/* Footer de la tarjeta con Fechas e Icono */}
                   <div style={styles.cardFooter}>
                     <div style={styles.dateContainer}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{marginRight: '6px'}}>
@@ -148,7 +166,6 @@ const TorneosScreen = () => {
                       <span>{torneo.fechaInicio} al {torneo.fechaFin}</span>
                     </div>
 
-                    {/* Botón de navegación hacia el Detalle del Torneo */}
                     <button 
                       onClick={() => navigate(`/torneos/${torneo.id}`)} 
                       style={styles.btnVerDetalles}
@@ -185,6 +202,7 @@ const TorneosScreen = () => {
   );
 };
 
+// ... (Los estilos permanecen idénticos abajo)
 const styles = {
   screenContainer: {
     padding: '24px 20px 100px 20px',
@@ -217,8 +235,6 @@ const styles = {
   listContainer: {
     display: 'flex', flexDirection: 'column', gap: '24px'
   },
-  
-  // CARD PREMIUM ESTILO MODERNO
   card: {
     backgroundColor: 'rgba(22, 22, 24, 0.7)',
     backdropFilter: 'blur(20px)',
@@ -281,8 +297,6 @@ const styles = {
     border: '1px solid rgba(255,255,255,0.1)', color: '#FFF', fontSize: '13px',
     fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s'
   },
-
-  // ESTADOS AUXILIARES
   centerContainer: {
     display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', flexDirection: 'column'
   },
@@ -301,8 +315,6 @@ const styles = {
   noResults: {
     textAlign: 'center', padding: '40px 20px'
   },
-
-  // BOTÓN ACCIÓN FLOTANTE (FAB)
   fabButton: {
     position: 'fixed', bottom: '104px', right: '24px',
     width: '56px', height: '56px', borderRadius: '28px',
