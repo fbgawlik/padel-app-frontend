@@ -10,9 +10,19 @@ const CrearTorneoScreen = () => {
   const [cargando, setCargando] = useState(false);
   const [listaComplejos, setListaComplejos] = useState([]); 
 
+  // 🔔 ESTADO DE LAS NOTIFICACIONES PERSONALIZADAS (Estilo Toast)
+  const [toast, setToast] = useState({ visible: false, mensaje: '', tipo: 'success' });
+
+  const mostrarAlerta = (mensaje, tipo = 'success') => {
+    setToast({ visible: true, mensaje, tipo });
+    setTimeout(() => {
+      setToast({ visible: false, mensaje: '', tipo: 'success' });
+    }, 4000);
+  };
+
   const categoriasDamas = ['1ra Damas', '2da Damas', '3ra Damas', '4ta Damas', '5ta Damas', '6ta Damas', '7ma Damas', '8va Damas'];
   const categoriasCaballeros = ['1ra Caballeros', '2da Caballeros', '3ra Caballeros', '4ta Caballeros', '5ta Caballeros', '6ta Caballeros', '7ma Caballeros', '8va Caballeros'];
-  const opcionesCupos = [12, 15, 18, 21, 24, 27, 30];
+  const opcionesCupos = [12, 16, 20, 24, 28, 32]; // 16 es el valor default de tu Prisma
 
   const [formData, setFormData] = useState({
     complejoId: '', 
@@ -20,13 +30,14 @@ const CrearTorneoScreen = () => {
     fechaInicio: '',
     fechaFin: '',
     categorias: [],
-    cupoParejas: 12,
+    cupoParejas: 16, // Default por schema de Prisma
     precio: '',
     premios: '',
-    imagenArchivo: null, // 🔥 AHORA GUARDAMOS EL ARCHIVO FÍSICO AQUÍ
-    reglas: 'REGLAS DEL TORNEO:\n\n1. Parejas mal categorizadas serán descalificadas sin derecho a reclamo.\n2. Tolerancia máxima de espera: 15 minutos.\n3. Formato de juego: Fase de zonas y llaves eliminatorias.'
+    imagenArchivo: null, 
+    imagenPreview: null 
   });
 
+  // Obtener la lista de clubes del backend
   useEffect(() => {
     const obtenerComplejos = async () => {
       try {
@@ -36,7 +47,8 @@ const CrearTorneoScreen = () => {
           setFormData(prev => ({ ...prev, complejoId: res.data[0].id }));
         }
       } catch (error) {
-        console.error('Error al traer los complejos del backend:', error);
+        console.error('Error al traer los complejos:', error);
+        mostrarAlerta('No se pudieron cargar los complejos deportivos.', 'error');
       }
     };
     obtenerComplejos();
@@ -46,10 +58,15 @@ const CrearTorneoScreen = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 🔥 NUEVA FUNCIÓN PARA MANEJAR LA CARGA DE LA IMAGEN
+  // Manejar preview e imagen física
   const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData({ ...formData, imagenArchivo: e.target.files[0] });
+    const file = e.target.files[0];
+    if (file) {
+      setFormData({ 
+        ...formData, 
+        imagenArchivo: file,
+        imagenPreview: URL.createObjectURL(file)
+      });
     }
   };
 
@@ -68,40 +85,60 @@ const CrearTorneoScreen = () => {
     e.preventDefault();
 
     if (!formData.complejoId) {
-      alert('Por favor, selecciona un complejo para este torneo.');
+      mostrarAlerta('Por favor, selecciona un complejo para el torneo.', 'error');
+      return;
+    }
+
+    if (formData.categorias.length === 0) {
+      mostrarAlerta('Debes seleccionar al menos una categoría.', 'error');
       return;
     }
 
     try {
       setCargando(true);
 
-      // 🔥 MAGIA AQUÍ: Usamos FormData para poder enviar archivos e información mezclada
       const datosParaEnviar = new FormData();
-      datosParaEnviar.append('nombre', formData.nombre);
+      datosParaEnviar.append('nombre', formData.nombre.trim());
       datosParaEnviar.append('fechaInicio', formData.fechaInicio);
       datosParaEnviar.append('fechaFin', formData.fechaFin);
-      datosParaEnviar.append('categoria', formData.categorias.join(' | ')); 
-      datosParaEnviar.append('precioInscripcion', formData.precio || 0);
-      datosParaEnviar.append('cupoMaximo', formData.cupoParejas || 12);
-      datosParaEnviar.append('premios', formData.premios);
-      datosParaEnviar.append('reglas', formData.reglas);
+      
+      // 1. Guardamos las categorías separadas por " | " según la especificación del Prisma schema
+      const stringCategorias = formData.categorias.join(' | ');
+      datosParaEnviar.append('categoria', stringCategorias); 
+
+      // 2. PARSEOS NUMÉRICOS OBLIGATORIOS (Para evitar errores 500 de Prisma)
+      const precioFloat = parseFloat(formData.precio);
+      const cupoInt = parseInt(formData.cupoParejas, 10);
+
+      datosParaEnviar.append('precioInscripcion', isNaN(precioFloat) ? 0 : precioFloat);
+      datosParaEnviar.append('cupoParejas', isNaN(cupoInt) ? 16 : cupoInt);
+      
+      datosParaEnviar.append('premios', formData.premios.trim());
       datosParaEnviar.append('complejoId', formData.complejoId);
 
-      // Si el usuario seleccionó una imagen, la adjuntamos
       if (formData.imagenArchivo) {
         datosParaEnviar.append('imagenPortada', formData.imagenArchivo);
       }
 
-      // Petición real al servidor backend. Axios detecta el FormData y ajusta los headers automáticamente
-      await API.post('/torneos/crear', datosParaEnviar);
+      // Solicitud al Backend
+      await API.post('/torneos/crear', datosParaEnviar, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
 
       queryClient.invalidateQueries({ queryKey: ['torneos'] });
 
-      alert('¡Torneo registrado y publicado con éxito! 🎉');
-      navigate('/torneos');
+      mostrarAlerta('¡Torneo registrado y publicado con éxito! 🎉', 'success');
+      
+      setTimeout(() => {
+        navigate('/torneos');
+      }, 2000);
+
     } catch (error) {
       console.error('Error completo recibido del backend:', error.response?.data || error.message);
-      alert('Hubo un error al intentar crear el torneo. Revisa la consola.');
+      const backendMsg = error.response?.data?.error || 'Hubo un error al intentar crear el torneo.';
+      mostrarAlerta(backendMsg, 'error');
     } finally {
       setCargando(false);
     }
@@ -109,7 +146,20 @@ const CrearTorneoScreen = () => {
 
   return (
     <div style={styles.container}>
-      {/* HEADER MINIMALISTA */}
+      
+      {/* 🔔 BANNER DE NOTIFICACIÓN PERSONALIZADO */}
+      {toast.visible && (
+        <div style={{
+          ...styles.toast,
+          backgroundColor: toast.tipo === 'success' ? '#1c3d23' : '#3d1c1c',
+          borderColor: toast.tipo === 'success' ? '#39FF14' : '#ff4d4d',
+        }}>
+          <div style={{...styles.toastDot, backgroundColor: toast.tipo === 'success' ? '#39FF14' : '#ff4d4d'}} />
+          <span style={{...styles.toastText, color: toast.tipo === 'success' ? '#39FF14' : '#ff4d4d'}}>{toast.mensaje}</span>
+        </div>
+      )}
+
+      {/* HEADER */}
       <header style={styles.header}>
         <button onClick={() => navigate('/torneos')} style={styles.btnVolver}>
           ← Volver a Torneos
@@ -223,7 +273,7 @@ const CrearTorneoScreen = () => {
 
         {/* CUPO MÁXIMO */}
         <div style={styles.inputGroup}>
-          <label style={styles.label}>Cupo Máximo (Parejas)</label>
+          <label style={styles.label}>Cupo Máximo por Categoría</label>
           <div style={styles.scrollChips}>
             {opcionesCupos.map((cupo) => {
               const activo = formData.cupoParejas === cupo;
@@ -255,16 +305,38 @@ const CrearTorneoScreen = () => {
           />
         </div>
 
-        {/* 🔥 IMAGEN DE PORTADA (ACTUALIZADO A FILE) */}
+        {/* IMAGEN DE PORTADA CON PREVIEW */}
         <div style={styles.inputGroup}>
-          <label style={styles.label}>Flyer / Imagen de Portada (Opcional)</label>
-          <input
-            type="file"
-            name="imagenPortada"
-            accept="image/*"
-            onChange={handleFileChange}
-            style={styles.input}
-          />
+          <label style={styles.label}>Flyer / Imagen de Portada</label>
+          <div style={styles.uploadContainer}>
+            {formData.imagenPreview ? (
+              <div style={styles.previewContainer}>
+                <img src={formData.imagenPreview} alt="Flyer Preview" style={styles.previewImage} />
+                <button 
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, imagenArchivo: null, imagenPreview: null }))}
+                  style={styles.removeImageButton}
+                >
+                  Cambiar imagen
+                </button>
+              </div>
+            ) : (
+              <label style={styles.dropzone}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2" style={{ marginBottom: '8px' }}>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span style={{ fontSize: '13px', color: '#8E8E93', fontWeight: '600' }}>Subir Flyer del Torneo</span>
+                <input 
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  style={{ display: 'none' }}
+                />
+              </label>
+            )}
+          </div>
         </div>
 
         {/* PREMIOS */}
@@ -280,28 +352,16 @@ const CrearTorneoScreen = () => {
           />
         </div>
 
-        {/* REGLAS */}
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Reglas e Información adicional</label>
-          <textarea
-            name="reglas"
-            value={formData.reglas}
-            onChange={handleChange}
-            style={{ ...styles.input, height: '140px', resize: 'vertical', fontFamily: 'sans-serif' }}
-            required
-          />
-        </div>
-
         {/* BOTÓN ACCIÓN */}
-        <button type="submit" disabled={cargando} style={styles.btnSubmit}>
-          {cargando ? 'Publicando torneo...' : 'Publicar Torneo de Pádel'}
+        <button type="submit" disabled={cargando} style={cargando ? styles.btnSubmitDisabled : styles.btnSubmit}>
+          {cargando ? 'Publicando torneo...' : 'Publicar Torneo de Pádel 🏆'}
         </button>
       </form>
     </div>
   );
 };
 
-// ─── ESTILOS PREMIUM (MODERN NEON CYBERPUNK) ───
+// ─── ESTILOS PREMIUM ───
 const styles = {
   container: {
     minHeight: '100vh',
@@ -310,7 +370,7 @@ const styles = {
     paddingBottom: '120px', 
   },
   header: {
-    padding: '20px',
+    padding: '24px 20px',
     borderBottom: '1px solid rgba(255,255,255,0.05)',
     display: 'flex',
     flexDirection: 'column',
@@ -336,7 +396,7 @@ const styles = {
     padding: '20px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px'
+    gap: '24px'
   },
   row: {
     display: 'flex',
@@ -351,7 +411,8 @@ const styles = {
   label: {
     color: '#EAEAEA',
     fontSize: '13px',
-    fontWeight: '600',
+    fontWeight: '700',
+    textTransform: 'uppercase',
     letterSpacing: '0.5px'
   },
   input: {
@@ -426,6 +487,44 @@ const styles = {
     cursor: 'pointer',
     boxShadow: '0 4px 12px rgba(0, 229, 255, 0.2)'
   },
+  uploadContainer: {
+    width: '100%'
+  },
+  dropzone: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '130px',
+    border: '1px dashed rgba(57, 255, 20, 0.3)',
+    borderRadius: '16px',
+    backgroundColor: 'rgba(57, 255, 20, 0.01)',
+    cursor: 'pointer'
+  },
+  previewContainer: {
+    position: 'relative',
+    width: '100%',
+    borderRadius: '16px',
+    overflow: 'hidden'
+  },
+  previewImage: {
+    width: '100%',
+    height: '180px',
+    objectFit: 'cover'
+  },
+  removeImageButton: {
+    position: 'absolute',
+    bottom: '12px',
+    right: '12px',
+    padding: '8px 14px',
+    backgroundColor: 'rgba(0,0,0,0.85)',
+    border: 'none',
+    borderRadius: '8px',
+    color: '#ff4d4d',
+    fontSize: '12px',
+    fontWeight: '700',
+    cursor: 'pointer'
+  },
   btnSubmit: {
     width: '100%',
     padding: '16px',
@@ -438,7 +537,48 @@ const styles = {
     cursor: 'pointer',
     marginTop: '10px',
     boxShadow: '0px 8px 24px rgba(57, 255, 20, 0.3)',
-    transition: 'transform 0.1s ease'
+    transition: 'all 0.1s ease'
+  },
+  btnSubmitDisabled: {
+    width: '100%',
+    padding: '16px',
+    borderRadius: '14px',
+    backgroundColor: '#1C1C1E',
+    border: 'none',
+    color: '#555',
+    fontSize: '16px',
+    fontWeight: '800',
+    cursor: 'not-allowed',
+    marginTop: '10px',
+  },
+  // ESTILOS DEL TOAST NOTIFICATION
+  toast: {
+    position: 'fixed',
+    top: '24px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 9999,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '14px 20px',
+    borderRadius: '16px',
+    border: '1px solid',
+    boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
+    width: '90%',
+    maxWidth: '400px',
+    transition: 'all 0.3s ease'
+  },
+  toastDot: {
+    width: '8px',
+    height: '8px',
+    borderRadius: '50%'
+  },
+  toastText: {
+    fontSize: '14px',
+    fontWeight: '700',
+    letterSpacing: '0.3px',
+    lineHeight: '1.4'
   }
 };
 
