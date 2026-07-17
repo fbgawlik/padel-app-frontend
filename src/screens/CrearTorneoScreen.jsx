@@ -33,6 +33,7 @@ const CrearTorneoScreen = () => {
     cupoParejas: 16, // Default por schema de Prisma
     precio: '',
     premios: '',
+    reglas: 'REGLAS DEL TORNEO:\n\n1. Todas las parejas que no pertenezcan a la categoría correspondiente serán descalificadas sin devolución de la inscripción.\n2. Tolerancia máxima de espera: 15 minutos respecto al horario programado.\n3. El sistema de juego será en formato de zonas y luego llaves eliminatorias.',
     imagenArchivo: null, 
     imagenPreview: null 
   });
@@ -55,7 +56,8 @@ const CrearTorneoScreen = () => {
   }, []);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   // Manejar preview e imagen física
@@ -94,6 +96,16 @@ const CrearTorneoScreen = () => {
       return;
     }
 
+    if (!formData.nombre.trim()) {
+      mostrarAlerta('El torneo debe tener un nombre válido.', 'error');
+      return;
+    }
+
+    if (formData.fechaInicio && formData.fechaFin && formData.fechaFin < formData.fechaInicio) {
+      mostrarAlerta('La fecha de fin debe ser igual o posterior a la fecha de inicio.', 'error');
+      return;
+    }
+
     try {
       setCargando(true);
 
@@ -114,6 +126,7 @@ const CrearTorneoScreen = () => {
       datosParaEnviar.append('cupoParejas', isNaN(cupoInt) ? 16 : cupoInt);
       
       datosParaEnviar.append('premios', formData.premios.trim());
+      datosParaEnviar.append('reglas', formData.reglas.trim());
       datosParaEnviar.append('complejoId', formData.complejoId);
 
       if (formData.imagenArchivo) {
@@ -348,6 +361,19 @@ const CrearTorneoScreen = () => {
             value={formData.premios}
             onChange={handleChange}
             style={{ ...styles.input, height: '80px', resize: 'none' }}
+            required
+          />
+        </div>
+
+        {/* REGLAS */}
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Reglas y condiciones</label>
+          <textarea
+            name="reglas"
+            placeholder="Describe las reglas, horarios, penalties y condiciones del torneo"
+            value={formData.reglas}
+            onChange={handleChange}
+            style={{ ...styles.input, height: '120px', resize: 'vertical' }}
             required
           />
         </div>
