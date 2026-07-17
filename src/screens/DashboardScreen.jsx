@@ -148,7 +148,8 @@ const DashboardScreen = () => {
                   const estaLleno = lugaresLibres <= 0;
                   
                   // Traemos la imagen del creador (usuario que reservó/abrió el partido)
-                  const creadorFoto = partido.usuarioCreador?.imagenPerfil || partido.usuario?.imagenPerfil;
+                  const creadorFoto = partido.jugador?.imagenPerfil || partido.usuarioCreador?.imagenPerfil || partido.usuario?.imagenPerfil;
+                  const creadorNombre = partido.jugador ? `${partido.jugador.nombre} ${partido.jugador.apellido}` : null;
 
                   return (
                     <div key={partido.id} style={styles.tarjetaHorizontal}>
@@ -172,7 +173,12 @@ const DashboardScreen = () => {
                         )}
                         <div>
                           <h3 style={{ margin: 0, color: '#fff', fontSize: '16px' }}>{partido.horaInicio?.slice(0,5) || partido.hora} hs</h3>
-                          <p style={{ margin: 0, color: estaLleno ? '#ff4d4d' : '#39FF14', fontSize: '13px', fontWeight: '600' }}>
+                          {creadorNombre && (
+                            <p style={{ margin: '4px 0 0 0', color: '#8E8E93', fontSize: '12px' }}>
+                              Organizado por {creadorNombre}
+                            </p>
+                          )}
+                          <p style={{ margin: '6px 0 0 0', color: estaLleno ? '#ff4d4d' : '#39FF14', fontSize: '13px', fontWeight: '600' }}>
                             {estaLleno ? 'Partido Lleno' : `Faltan ${lugaresLibres} jugador${lugaresLibres > 1 ? 'es' : ''}`}
                           </p>
                         </div>
