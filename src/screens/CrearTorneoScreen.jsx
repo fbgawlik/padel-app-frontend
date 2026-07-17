@@ -134,11 +134,7 @@ const CrearTorneoScreen = () => {
       }
 
       // Solicitud al Backend
-      await API.post('/torneos/crear', datosParaEnviar, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      await API.post('/torneos/crear', datosParaEnviar);
 
       queryClient.invalidateQueries({ queryKey: ['torneos'] });
 
