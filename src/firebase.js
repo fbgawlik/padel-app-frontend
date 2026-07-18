@@ -12,26 +12,27 @@ const firebaseConfig = {
   measurementId: "G-1D2YDF7WMW"
 };
 
-// Inicializamos la App
 const app = initializeApp(firebaseConfig);
 export const messaging = getMessaging(app);
 
 export const solicitarPermisoNotificaciones = async () => {
   try {
-    // 1. Pedimos permiso al usuario
     const permiso = await Notification.requestPermission();
     
     if (permiso === "granted") {
       console.log("¡Permiso concedido para notificaciones!");
 
-      // 2. Registramos el Service Worker usando un archivo que crearemos en src
       const registration = await navigator.serviceWorker.register(
-        new URL('./sw.js', import.meta.url),
+        new URL('./components/sw.js', import.meta.url), // Tu ruta corregida
         { type: 'module' }
       );
 
-      // 3. Le pedimos el Token a Firebase usando ese registro
-      const token = await getToken(messaging, { serviceWorkerRegistration: registration });
+      // 👇 AQUÍ PASAMOS LA CLAVE QUE ACABAS DE GENERAR 👇
+      const token = await getToken(messaging, { 
+        serviceWorkerRegistration: registration,
+        vapidKey: "BNGGi8Ko99YSFDHm8WLY_UgAG0xIY2RjxhUbZ4kFYynFCpLIU01-vIS6gXajctwDEVyT9-fgf4ESOTc_srHPbKo" 
+      });
+      
       return token;
       
     } else {
