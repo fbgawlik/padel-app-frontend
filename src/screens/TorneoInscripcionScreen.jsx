@@ -72,8 +72,15 @@ const TorneoInscripcionScreen = () => {
     queryKey: ['buscarCompanero', busquedaCompanero],
     queryFn: async () => {
       if (busquedaCompanero.trim().length < 3) return [];
-      const res = await API.get(`/torneos/buscar-companero?busqueda=${encodeURIComponent(busquedaCompanero)}`);
-      return res.data;
+      try {
+        const res = await API.get(`/torneos/buscar-companero?busqueda=${encodeURIComponent(busquedaCompanero)}`);
+        return Array.isArray(res.data) ? res.data : [res.data];
+      } catch (error) {
+        if (error.response?.status === 404) {
+          return [];
+        }
+        throw error;
+      }
     },
     enabled: busquedaCompanero.trim().length >= 3,
   });
