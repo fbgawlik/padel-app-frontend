@@ -14,7 +14,26 @@ export default defineConfig({
         theme_color: '#000000',
         background_color: '#000000',
         display: 'standalone',
-        orientation: 'portrait'
+        orientation: 'portrait',
+        // 👇 Aquí agregamos las rutas a tus imágenes en la carpeta public 👇
+        icons: [
+          {
+            src: '/logo-192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/logo-512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: '/logo-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ]
       }
     })
   ]
