@@ -45,8 +45,14 @@ const DashboardScreen = () => {
   // 🛠️ RESOLVER IMÁGENES (Cloudinary vs Localhost/Absolutas)
   const resolverUrlImagen = (url) => {
     if (!url) return null;
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
-    return `${BACKEND_URL}${url}`;
+    const ruta = url.trim();
+    if (ruta.startsWith('http://') || ruta.startsWith('https://')) return ruta;
+    if (ruta.startsWith('//')) return `https:${ruta}`;
+    if (ruta.includes('localhost:5000')) {
+      return ruta.replace('http://localhost:5000', BACKEND_URL);
+    }
+    if (ruta.startsWith('/')) return `${BACKEND_URL}${ruta}`;
+    return `${BACKEND_URL}/${ruta}`;
   };
 
   const complejos = data?.complejos || [];
