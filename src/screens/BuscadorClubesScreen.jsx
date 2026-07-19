@@ -3,13 +3,24 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 
-const BACKEND_URL = 'https://padel-api-backend-production.up.railway.app';
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'https://padel-api-backend-production.up.railway.app';
 
 const BuscadorClubesScreen = () => {
   const navigate = useNavigate();
   const [listaComplejos, setListaComplejos] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [loading, setLoading] = useState(true);
+
+  const resolverUrlImagen = (ruta) => {
+    if (!ruta) return null;
+    const valor = ruta.trim();
+    if (valor.startsWith('http')) return valor;
+    if (valor.includes('localhost:5000')) {
+      return valor.replace('http://localhost:5000', BACKEND_URL);
+    }
+    if (valor.startsWith('/')) return `${BACKEND_URL}${valor}`;
+    return `${BACKEND_URL}/${valor}`;
+  };
 
   useEffect(() => {
     const fetchComplejos = async () => {
@@ -65,9 +76,7 @@ const BuscadorClubesScreen = () => {
           </div>
         ) : (
           complejosFiltrados.map((club) => {
-            const urlFoto = club.imagenUrl 
-              ? (club.imagenUrl.startsWith('http') ? club.imagenUrl : `${BACKEND_URL}${club.imagenUrl}`)
-              : null;
+            const urlFoto = resolverUrlImagen(club.imagenUrl);
 
             return (
               <div key={club.id} style={styles.tarjetaClubNativa} onClick={() => navigate(`/reservar/${club.id}`)}>
