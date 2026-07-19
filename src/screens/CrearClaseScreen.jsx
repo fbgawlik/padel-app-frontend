@@ -2,9 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 
 const CrearClaseScreen = () => {
   const navigate = useNavigate();
+  const { mostrarNotificacion } = useNotification();
   const [canchas, setCanchas] = useState([]);
   const [loading, setLoading] = useState(false);
   
@@ -46,7 +48,7 @@ const CrearClaseScreen = () => {
     
     // Validación extra: nos aseguramos de que haya elegido una cancha antes de disparar la ruta
     if (!nuevaClase.canchaId) {
-      alert("Por favor, seleccioná una cancha para la clase.");
+      mostrarNotificacion("Por favor, seleccioná una cancha para la clase.", 'error');
       return;
     }
 
@@ -55,10 +57,10 @@ const CrearClaseScreen = () => {
       // ✅ CAMBIO REST: Ahora apuntamos a la ruta jerárquica /clases/cancha/:id
       await API.post(`/clases/cancha/${nuevaClase.canchaId}`, nuevaClase);
       
-      alert('¡Clase creada exitosamente!');
+      mostrarNotificacion('¡Clase creada exitosamente!', 'success');
       navigate('/clases'); // Redirigimos al catálogo
     } catch (err) {
-      alert(err.response?.data?.error || 'Error al crear la clase.');
+      mostrarNotificacion(err.response?.data?.error || 'Error al crear la clase.', 'error');
     } finally {
       setLoading(false);
     }

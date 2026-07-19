@@ -3,10 +3,12 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import { AuthContext } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 const ClasesScreen = () => {
   const navigate = useNavigate();
   const { usuario } = useContext(AuthContext); 
+  const { mostrarNotificacion } = useNotification();
   const [clases, setClases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -34,11 +36,11 @@ const ClasesScreen = () => {
   const gestionarInscripcion = async (claseId, nombreAlumno = "") => {
     try {
       const res = await API.post(`/clases/${claseId}/inscripciones`, { nombreAlumno });
-      alert(res.data.message || '¡Inscripción confirmada!');
+      mostrarNotificacion(res.data.message || '¡Inscripción confirmada!', 'success');
       setInscripcionesTerceros(prev => ({ ...prev, [claseId]: '' }));
       cargarClases();
     } catch (err) {
-      alert(err.response?.data?.error || 'Error al procesar tu inscripción.');
+      mostrarNotificacion(err.response?.data?.error || 'Error al procesar tu inscripción.', 'error');
     }
   };
 

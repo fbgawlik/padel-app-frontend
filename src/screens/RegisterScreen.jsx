@@ -2,9 +2,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import API from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 
 const RegisterScreen = () => {
   const navigate = useNavigate();
+  const { mostrarNotificacion } = useNotification();
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
@@ -77,7 +79,7 @@ const RegisterScreen = () => {
 
     try {
       await API.post('/auth/register', formData);
-      alert('¡Usuario registrado con éxito! Ya podés iniciar sesión.');
+      mostrarNotificacion('¡Usuario registrado con éxito! Ya podés iniciar sesión.', 'success');
       navigate('/login'); 
     } catch (error) {
       console.error("Error al registrar:", error);

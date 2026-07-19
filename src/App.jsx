@@ -1,9 +1,9 @@
 // src/App.jsx
-import React, { useEffect } from 'react'; // 1. Agregamos useEffect aquí
+import React, { useEffect } from 'react';
 import { AuthProvider } from './context/AuthContext'; 
+import { NotificationProvider } from './context/NotificationContext'; // 1. <-- Importamos el nuevo Provider
 import AppRoutes from './routes/AppRoutes'; 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-// 2. Importamos tu función de Firebase
 import { solicitarPermisoNotificaciones } from './firebase'; 
 
 const queryClient = new QueryClient({
@@ -16,7 +16,6 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // 3. Añadimos el disparador de permisos aquí afuera de las rutas
   useEffect(() => {
     const activarNotificaciones = async () => {
       console.log("Solicitando permisos desde App.jsx...");
@@ -27,12 +26,15 @@ function App() {
     };
 
     activarNotificaciones();
-  }, []); // Los corchetes vacíos hacen que solo se ejecute una vez al cargar la web
+  }, []); 
 
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AppRoutes /> {/* Tus rutas siguen funcionando exactamente igual */}
+        {/* 2. <-- Envolvemos AppRoutes con nuestro NotificationProvider */}
+        <NotificationProvider> 
+          <AppRoutes /> 
+        </NotificationProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

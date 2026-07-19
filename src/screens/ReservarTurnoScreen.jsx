@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 
 const BACKEND_URL = 'https://padel-api-backend-production.up.railway.app';
 
@@ -45,6 +46,7 @@ const ReservarTurnoScreen = () => {
   const [horaInicio, setHoraInicio] = useState("");
   const [horaFin, setHoraFin] = useState("");
   const [esPartidoAbierto, setEsPartidoAbierto] = useState(false);
+  const { mostrarNotificacion } = useNotification();
 
   const generarSlotsHorarios = () => {
     const slots = [];
@@ -139,7 +141,7 @@ const ReservarTurnoScreen = () => {
         horaFin,
         tipoTurno: esPartidoAbierto ? 'partido_abierto' : 'normal'
       });
-      alert(esPartidoAbierto ? "¡Partido abierto creado con éxito!" : "¡Turno reservado con éxito!");
+      mostrarNotificacion(esPartidoAbierto ? "¡Partido abierto creado con éxito!" : "¡Turno reservado con éxito!", 'success');
       
       setHoraInicio("");
       setHoraFin("");
@@ -147,13 +149,13 @@ const ReservarTurnoScreen = () => {
       setTurnos(res.data);
       setEsPartidoAbierto(false); 
     } catch (err) {
-      alert("No se pudo completar la reserva.");
+      mostrarNotificacion("No se pudo completar la reserva.", 'error');
     }
   };
 
   const gestionarCompraProducto = async (producto) => {
     if (producto.stock <= 0) {
-      alert("Producto agotado.");
+      mostrarNotificacion("Producto agotado.", 'error');
       return;
     }
     const accion = producto.esAlquiler ? 'alquilar' : 'comprar';
@@ -172,10 +174,10 @@ const ReservarTurnoScreen = () => {
         )
       }));
       
-      alert(`¡${accion.charAt(0).toUpperCase() + accion.slice(1)} exitosa! Retiralo por la cantina el día de tu partido.`);
+      mostrarNotificacion(`¡${accion.charAt(0).toUpperCase() + accion.slice(1)} exitosa! Retiralo por la cantina el día de tu partido.`, 'success');
     } catch (error) {
       console.error("Error al procesar la transacción:", error);
-      alert("Error al procesar la operación.");
+      mostrarNotificacion("Error al procesar la operación.", 'error');
     }
   };
 

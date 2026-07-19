@@ -4,12 +4,14 @@ import { AuthContext } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import { useQuery } from '@tanstack/react-query';
+import { useNotification } from '../context/NotificationContext';
 
 const BACKEND_URL = 'https://padel-api-backend-production.up.railway.app'; 
 
 const DashboardScreen = () => {
   const { usuario } = useContext(AuthContext);
   const navigate = useNavigate(); 
+  const { mostrarNotificacion } = useNotification();
 
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['dashboardDatos'], 
@@ -72,10 +74,10 @@ const DashboardScreen = () => {
   const handleUnirsePartido = async (partidoId) => {
     try {
       const res = await API.post(`/turnos/${partidoId}/inscripciones`);
-      alert(res.data.message); 
+      mostrarNotificacion(res.data.message, 'success');
       refetch(); 
     } catch (err) {
-      alert(err.response?.data?.error || "Error al unirse al partido.");
+      mostrarNotificacion(err.response?.data?.error || "Error al unirse al partido.", 'error');
     }
   };
 

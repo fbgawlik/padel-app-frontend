@@ -2,9 +2,11 @@
 import React, { useState, useEffect, useContext } from 'react';
 import API from '../services/api';
 import { AuthContext } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 const GestionComplejo = () => {
   const { usuario } = useContext(AuthContext);
+  const { mostrarNotificacion } = useNotification();
   const [complejo, setComplejo] = useState(null); 
   const [canchas, setCanchas] = useState([]);
   const [productos, setProductos] = useState([]);
@@ -134,13 +136,13 @@ const GestionComplejo = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      alert("¡Complejo registrado con éxito!");
+      mostrarNotificacion("¡Complejo registrado con éxito!", 'success');
       const clubCreado = res.data.complejo || res.data;
       setComplejo(clubCreado);
       setFormComplejo({ nombre: clubCreado.nombre, direccion: clubCreado.direccion, telefono: clubCreado.telefono || '' });
       setNecesitaCrear(false); 
     } catch (err) {
-      alert(err.response?.data?.error || "Error al crear el complejo.");
+      mostrarNotificacion(err.response?.data?.error || "Error al crear el complejo.", 'error');
     }
   };
 
@@ -159,11 +161,11 @@ const GestionComplejo = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
-      alert("¡Datos del complejo actualizados!");
+      mostrarNotificacion("¡Datos del complejo actualizados!", 'success');
       setComplejo(res.data.complejo || res.data);
       setArchivoImagenEdit(null);
     } catch (err) {
-      alert(err.response?.data?.error || "Error al actualizar los datos.");
+      mostrarNotificacion(err.response?.data?.error || "Error al actualizar los datos.", 'error');
     }
   };
 
@@ -172,7 +174,7 @@ const GestionComplejo = () => {
     try {
       const idComplejo = complejo.id || complejo._id;
       const res = await API.post('/canchas', { ...formCancha, complejoId: idComplejo });
-      alert("Cancha añadida exitosamente.");
+      mostrarNotificacion("Cancha añadida exitosamente.", 'success');
       const nuevaCancha = res.data.cancha || res.data;
       const nuevasCanchas = [...canchas, nuevaCancha];
       setCanchas(nuevasCanchas);
@@ -180,13 +182,13 @@ const GestionComplejo = () => {
       
       cargarTurnosDelDia(nuevasCanchas.map(c => c.id || c._id));
     } catch (err) {
-      alert(err.response?.data?.error || "Error al guardar cancha.");
+      mostrarNotificacion(err.response?.data?.error || "Error al guardar cancha.", 'error');
     }
   };
 
   const gestionarCrearProducto = async (e) => {
     e.preventDefault();
-    if (!formProducto.nombre || !formProducto.precio) return alert("Ingresá nombre y precio.");
+    if (!formProducto.nombre || !formProducto.precio) return mostrarNotificacion("Ingresá nombre y precio.", 'error');
 
     try {
       const idComplejo = complejo.id || complejo._id;
@@ -194,7 +196,7 @@ const GestionComplejo = () => {
       setProductos([...productos, res.data.producto || res.data]);
       setFormProducto({ nombre: '', precio: '', stock: '0', esAlquiler: false });
     } catch (err) {
-      alert(err.response?.data?.error || "Error registrando producto.");
+      mostrarNotificacion(err.response?.data?.error || "Error registrando producto.", 'error');
     }
   };
 
@@ -204,7 +206,7 @@ const GestionComplejo = () => {
       await API.delete(`/productos/${productoId}`);
       setProductos(productos.filter(p => (p.id || p._id) !== productoId));
     } catch (err) {
-      alert(err.response?.data?.error || "Error al eliminar producto.");
+      mostrarNotificacion(err.response?.data?.error || "Error al eliminar producto.", 'error');
     }
   };
 

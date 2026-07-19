@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import API from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 
 // Bloques de restricción estándar para torneos de pádel en Resistencia (Viernes a Domingo)
 const BLOQUES_HORARIOS = [
@@ -19,6 +20,7 @@ const TorneoInscripcionScreen = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { mostrarNotificacion } = useNotification();
 
   // 1. Obtener perfil del usuario logueado (Jugador 1)
   const { data: usuarioLogueado } = useQuery({
@@ -93,7 +95,7 @@ const TorneoInscripcionScreen = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['torneo', id]);
-      alert('¡Inscripción registrada con éxito! 🎾 Tu pareja ha sido anotada.');
+      mostrarNotificacion('¡Inscripción registrada con éxito! 🎾 Tu pareja ha sido anotada.', 'success');
       navigate(`/torneos/${id}`);
     },
     onError: (error) => {

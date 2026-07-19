@@ -2,10 +2,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../services/api';
+import { useNotification } from '../context/NotificationContext';
 
 const TiendaScreen = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { mostrarNotificacion } = useNotification();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -35,7 +37,7 @@ const TiendaScreen = () => {
 
   const gestionarCompraProducto = async (producto) => {
     if (producto.stock <= 0) {
-      alert("Producto agotado.");
+      mostrarNotificacion("Producto agotado.", 'error');
       return;
     }
     const accion = producto.esAlquiler ? 'alquilar' : 'comprar';
@@ -50,10 +52,10 @@ const TiendaScreen = () => {
         )
       }));
       
-      alert("¡Operación exitosa!");
+      mostrarNotificacion("¡Operación exitosa!", 'success');
     } catch (error) {
       console.error("Error al procesar la transacción:", error);
-      alert("Error al procesar la operación.");
+      mostrarNotificacion("Error al procesar la operación.", 'error');
     }
   };
 
