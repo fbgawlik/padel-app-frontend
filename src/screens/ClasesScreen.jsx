@@ -16,6 +16,15 @@ const ClasesScreen = () => {
 
   // Verificamos permisos para mostrar el botón de crear (Asegurando que solo profesores/admins lo vean)
   const esProfesorOAdmin = usuario?.rol === 'profesor' || usuario?.rol === 'admin_complejo';
+  const BACKEND_URL = import.meta.env.VITE_API_URL || 'https://padel-api-backend-production.up.railway.app';
+
+  const resolverUrlImagen = (ruta) => {
+    if (!ruta) return null;
+    const valor = ruta.trim();
+    if (valor.startsWith('http://') || valor.startsWith('https://')) return valor;
+    if (valor.startsWith('/')) return `${BACKEND_URL}${valor}`;
+    return `${BACKEND_URL}/${valor}`;
+  };
 
   const cargarClases = async () => {
     try {
@@ -58,17 +67,17 @@ const ClasesScreen = () => {
           <h1 style={styles.tituloSeccion}>Clases de Pádel</h1>
           <p style={styles.descSeccion}>Anotate en clases particulares o grupales para subir tu nivel de juego.</p>
         </div>
-        
-        {/* Botón protegido por rol que navega a la nueva ruta */}
-        {esProfesorOAdmin && (
-          <button 
-            onClick={() => navigate('/crear-clase')} 
-            style={styles.botonCrear}
-          >
-            ＋ Crear Nueva Clase
-          </button>
-        )}
       </div>
+
+      {esProfesorOAdmin && (
+        <button 
+          onClick={() => navigate('/crear-clase')} 
+          style={styles.fabCrearClase}
+        >
+          <span style={styles.fabIcon}>＋</span>
+          Crear Clase
+        </button>
+      )}
 
       {error && <div style={styles.alertaError}>{error}</div>}
 
@@ -84,6 +93,8 @@ const ClasesScreen = () => {
             const inscritosCount = clase.inscripciones?.length || 0;
             const cuposDisponibles = clase.cupoMax - inscritosCount;
             const claseLlena = cuposDisponibles <= 0;
+            const imagenDocente = resolverUrlImagen(clase.profesor?.imagenPerfil || clase.fotoProfesor || '');
+            const profesorNombre = clase.profesor?.nombre ? `${clase.profesor.nombre} ${clase.profesor.apellido}` : (clase.profesorId || 'Staff Técnico');
 
             return (
               <div key={clase.id} style={styles.tarjetaClase}>
@@ -99,22 +110,19 @@ const ClasesScreen = () => {
                 </div>
 
                 <div style={styles.cuerpoTarjeta}>
-                  <h3 style={styles.claseName}>{clase.titulo}</h3>
-                  
-                  {/* Info del Profesor */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '8px 0 16px 0' }}>
-                    {clase.fotoProfesor ? (
-                      <img src={clase.fotoProfesor} alt="Profesor" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
-                    ) : (
-                      <div style={{ width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>👨‍🏫</div>
-                    )}
-                    <p style={{ color: '#8A8A8A', fontSize: '14px', margin: 0, fontWeight: '500' }}>
-                      Prof. {clase.profesor?.nombre || clase.profesorId || 'Staff Técnico'}
-                    </p>
+                  <div style={styles.cardTopRow}>
+                    <div style={styles.profesorAvatarWrapper}>
+                      {imagenDocente ? (
+                        <img src={imagenDocente} alt="Profesor" style={styles.profesorAvatar} />
+                      ) : (
+                        <div style={styles.profesorAvatarPlaceholder}>👨‍🏫</div>
+                      )}
+                    </div>
+                    <div style={styles.cardTitleContainer}>
+                      <h3 style={styles.claseName}>{clase.titulo}</h3>
+                      <p style={styles.profesorLabel}>Prof. {profesorNombre}</p>
+                    </div>
                   </div>
-                  
-                  <div style={styles.divisor}></div>
-
                   {/* Detalles con SVGs */}
                   <div style={styles.contenedorDetalles}>
                     <div style={styles.filaDetalle}>
@@ -192,7 +200,7 @@ const ClasesScreen = () => {
 
 // Estilos limpios (Se eliminaron los estilos exclusivos del formulario viejo)
 const styles = {
-  contenedor: { width: '100%', boxSizing: 'border-box', padding: '40px' },
+  contenedor: { width: '100%', boxSizing: 'border-box', padding: '40px 24px 140px 24px' },
   headerSeccion: { 
     display: 'flex', justifyContent: 'space-between', alignItems: 'center', 
     borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '24px', marginBottom: '32px',
@@ -211,7 +219,13 @@ const styles = {
   tarjetaClase: { backgroundColor: '#121212', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)', position: 'relative', display: 'flex', flexDirection: 'column', overflow: 'hidden', transition: 'transform 0.2s, border-color 0.2s' },
   badgePrecio: { position: 'absolute', top: '16px', right: '16px', backgroundColor: 'rgba(26, 26, 26, 0.8)', backdropFilter: 'blur(4px)', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', padding: '6px 14px', borderRadius: '12px', textAlign: 'right' },
   cuerpoTarjeta: { padding: '24px 24px 16px 24px', flex: 1 },
-  claseName: { fontSize: '20px', fontWeight: '800', color: '#fff', margin: '0 0 4px 0', letterSpacing: '-0.3px', paddingRight: '100px' },
+  cardTopRow: { display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '18px' },
+  profesorAvatarWrapper: { width: '56px', height: '56px', borderRadius: '16px', overflow: 'hidden', flexShrink: 0, border: '1px solid rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)' },
+  profesorAvatar: { width: '100%', height: '100%', objectFit: 'cover' },
+  profesorAvatarPlaceholder: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#191919', color: '#39FF14', fontSize: '22px' },
+  cardTitleContainer: { display: 'flex', flexDirection: 'column', gap: '6px' },
+  profesorLabel: { color: '#8A8A8A', margin: 0, fontSize: '14px', fontWeight: '600' },
+  claseName: { fontSize: '22px', fontWeight: '800', color: '#fff', margin: 0, letterSpacing: '-0.4px' },
   divisor: { height: '1px', backgroundColor: 'rgba(255,255,255,0.05)', marginBottom: '16px' },
   contenedorDetalles: { display: 'flex', flexDirection: 'column', gap: '10px' },
   filaDetalle: { display: 'flex', alignItems: 'center', gap: '10px' },
@@ -219,6 +233,15 @@ const styles = {
   footerTarjeta: { padding: '16px 24px 24px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', borderTop: '1px solid rgba(255,255,255,0.02)' },
   badgeCupos: { fontSize: '12px', fontWeight: '700', padding: '6px 12px', borderRadius: '20px' },
   botonInscribir: { border: 'none', padding: '10px 18px', borderRadius: '10px', fontSize: '13px', fontWeight: '800', transition: 'all 0.2s' },
+  fabCrearClase: {
+    position: 'fixed', bottom: '24px', right: '24px',
+    padding: '16px 20px', borderRadius: '999px',
+    backgroundColor: '#39FF14', color: '#0F0F10', border: 'none',
+    fontWeight: '800', fontSize: '14px', cursor: 'pointer',
+    boxShadow: '0 16px 40px rgba(57, 255, 20, 0.18)',
+    display: 'flex', alignItems: 'center', gap: '10px', zIndex: 100
+  },
+  fabIcon: { fontSize: '18px', lineHeight: 1 },
   estadoVacioTarjeta: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', color: '#8A8A8A', backgroundColor: '#121212', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.05)' },
   estadoVacio: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', color: '#8A8A8A' },
   spinner: { width: '30px', height: '30px', border: '3px solid rgba(0,255,102,0.2)', borderTop: '3px solid #00ff66', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '16px' }
