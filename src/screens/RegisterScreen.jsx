@@ -248,19 +248,24 @@ const RegisterScreen = () => {
 const styles = {
   contenedor: { 
     width: '100%', 
+    minHeight: '100vh',         // Obliga al contenedor a usar todo el alto de la pantalla
+    backgroundColor: '#050505', // Fondo general para fundirse con la tarjeta
     color: '#fff', 
     fontFamily: 'sans-serif',
     boxSizing: 'border-box',
     display: 'flex',
     justifyContent: 'center',
-    padding: '20px 0'
+    alignItems: 'center',       // Centra la tarjeta verticalmente
+    padding: '20px'             // Padding en todos los lados (importante para móviles)
   },
   tarjetaRegister: {
     backgroundColor: '#0A0A0B', 
     width: '100%',
     maxWidth: '420px',
-    padding: '24px',
-    boxSizing: 'border-box'
+    padding: '32px 24px',       // Un poco más de aire interno
+    boxSizing: 'border-box',
+    borderRadius: '16px',       // Suaviza los bordes para estilo App
+    boxShadow: '0 10px 30px rgba(0,0,0,0.5)' // Sutil sombra para separarlo del fondo
   },
   contenedorLogo: {
     textAlign: 'center',
@@ -288,19 +293,21 @@ const styles = {
   filaDoble: {
     display: 'flex',
     gap: '14px',
+    // En pantallas MUY chicas (ej. iPhone SE), podrías necesitar que esto sea flex-direction: column. 
+    // Como usas estilos en línea, dejémoslo en row pero asegurándonos que los inputs tengan un ancho mínimo de 100%.
   },
   grupoInput: {
     display: 'flex',
     flexDirection: 'column',
     flex: 1,
-    position: 'relative' // Vital para posicionar las listas flotantes
+    position: 'relative' 
   },
   etiqueta: {
     color: '#8E8E93',
     fontSize: '13px',
     fontWeight: '700',
     marginBottom: '8px',
-    textAlign: 'center'
+    textAlign: 'left' // Cambiado a 'left' (o 'center' si lo prefieres, pero left suele ser mejor en móviles)
   },
   input: {
     backgroundColor: '#161618',
@@ -313,7 +320,7 @@ const styles = {
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box',
-    textAlign: 'center',
+    textAlign: 'left', // Cambiado a 'left' para mejorar usabilidad móvil
   },
   customSelectTrigger: {
     backgroundColor: '#161618',
@@ -356,21 +363,18 @@ const styles = {
     border: '1px solid rgba(255, 255, 255, 0.12)',
     borderRadius: '12px',
     zIndex: 100,
-    maxHeight: '200px', // Limita la altura de categorías largas
-    overflowY: 'auto',   // Scroll impecable in-app
+    maxHeight: '200px', 
+    overflowY: 'auto',   
     boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
   },
   opcion: {
     padding: '14px',
     fontSize: '14px',
-    textAlign: 'center',
+    textAlign: 'left', // Cambiado a 'left'
     cursor: 'pointer',
     borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
     color: '#FFFFFF',
     transition: 'background-color 0.2s',
-    ':hover': {
-      backgroundColor: '#2C2C2E'
-    }
   },
   botonRegistrar: {
     backgroundColor: '#39FF14',
@@ -378,7 +382,7 @@ const styles = {
     border: 'none',
     borderRadius: '14px',
     height: '52px',
-    fontSize: '15px',
+    fontSize: '16px', // Un poco más grande para el tap
     fontWeight: '800',
     cursor: 'pointer',
     marginTop: '12px',
@@ -410,5 +414,4 @@ const styles = {
     marginLeft: '5px',
   },
 };
-
 export default RegisterScreen;
