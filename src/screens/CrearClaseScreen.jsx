@@ -131,12 +131,12 @@ const styles = {
   contenedor: { padding: '40px', maxWidth: '800px', margin: '0 auto', color: '#fff' },
   titulo: { fontSize: '28px', marginBottom: '8px' },
   subtitulo: { color: '#8A8A8A', marginBottom: '32px' },
-  tarjetaFormulario: { backgroundColor: '#121212', padding: '30px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' },
-  formularioGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' },
-  grupoInput: { display: 'flex', flexDirection: 'column', gap: '8px' },
+  tarjetaFormulario: { backgroundColor: '#121212', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', width: '100%', boxSizing: 'border-box' },
+  formularioGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px' },
+  grupoInput: { display: 'flex', flexDirection: 'column', gap: '8px', minWidth: 0 },
   label: { fontSize: '13px', color: '#8A8A8A' },
-  input: { padding: '12px', backgroundColor: '#1A1A1A', border: '1px solid #333', borderRadius: '8px', color: '#fff' },
- botonGuardar: { gridColumn: 'span 2', padding: '16px', backgroundColor: '#00ff66', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }
+  input: { padding: '12px', backgroundColor: '#1A1A1A', border: '1px solid #333', borderRadius: '8px', color: '#fff', width: '100%', boxSizing: 'border-box' },
+ botonGuardar: { gridColumn: '1 / -1', width: '100%', padding: '14px', backgroundColor: '#00ff66', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', marginTop: '10px' }
 };
 
 export default CrearClaseScreen;
