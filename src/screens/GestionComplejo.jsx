@@ -26,6 +26,9 @@ const GestionComplejo = () => {
   // Pestañas e interactividad de métricas
   const [subTabActiva, setSubTabActiva] = useState('canchas');
   const [metricaExpandida, setMetricaExpandida] = useState(null);
+  const [torneosClub, setTorneosClub] = useState([]);
+  const [openInscriptos, setOpenInscriptos] = useState({});
+  const [categoriaSeleccionada, setCategoriaSeleccionada] = useState({});
 
   // Obtener fecha actual en formato YYYY-MM-DD local de Argentina
   const obtenerFechaLocalArgentina = () => {
@@ -85,6 +88,8 @@ const GestionComplejo = () => {
           
           const ids = filtradas.map(c => c.id || c._id);
           await cargarTurnosDelDia(ids);
+          // Cargamos torneos del complejo
+          cargarTorneosDelComplejo(miClub.id);
         } else {
           setNecesitaCrear(true);
         }
@@ -96,6 +101,25 @@ const GestionComplejo = () => {
     };
     cargarDatosClub();
   }, [usuario]);
+
+  // Cargar torneos pertenecientes a este complejo y sus inscripciones
+  const cargarTorneosDelComplejo = async (complejoId) => {
+    try {
+      const res = await API.get('/torneos');
+      const todos = res.data || [];
+      const filtrados = todos.filter(t => (t.complejoId || t.complejo?.id || t.complejo) === complejoId);
+      setTorneosClub(filtrados);
+      // inicializamos la categoría seleccionada para cada torneo
+      const catMap = {};
+      filtrados.forEach(t => {
+        const opciones = (t.categoria || '').split('|').map(s => s.trim()).filter(Boolean);
+        catMap[t.id] = opciones.length ? opciones[0] : t.categoria;
+      });
+      setCategoriaSeleccionada(catMap);
+    } catch (err) {
+      console.error('Error al cargar torneos del complejo:', err);
+    }
+  };
 
   // Filtro flexible para capturar turnos reservados o con usuarios asignados
   const turnosReservadosHoy = turnosHoy.filter(t => 
@@ -377,6 +401,71 @@ const GestionComplejo = () => {
             )}
           </div>
         )}
+
+        {/* ─── TORNEOS DEL COMPLEJO Y GESTIÓN DE INSCRIPTOS ─── */}
+        <div style={{ marginTop: '18px' }}>
+          <h3 style={{ color: '#E5E5EA', margin: '0 0 10px 0' }}>Torneos del Complejo</h3>
+          {torneosClub.length === 0 ? (
+            <p style={styles.textoListaVacia}>No hay torneos cargados para este complejo.</p>
+          ) : (
+            torneosClub.map(t => (
+              <div key={t.id} style={{ ...styles.tarjetaMetrica, marginBottom: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: 800 }}>{t.nombre}</div>
+                    <div style={{ fontSize: 12, color: '#8E8E93' }}>{t.fechaInicio} → {t.fechaFin}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div style={{ fontSize: 12, color: '#39FF14', fontWeight: 800 }}>{(t.inscripciones || []).length} parejas</div>
+                    <button onClick={() => setOpenInscriptos(prev => ({ ...prev, [t.id]: !prev[t.id] }))} style={{ ...styles.btnAjustesRedondo, width: '36px', height: '36px' }}>{openInscriptos[t.id] ? '🔽' : '🔍'}</button>
+                  </div>
+                </div>
+
+                {openInscriptos[t.id] && (
+                  <div style={{ marginTop: '10px' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
+                      <label style={{ color: '#8E8E93', fontSize: 12 }}>Categoría:</label>
+                      <select value={categoriaSeleccionada[t.id] || ''} onChange={(e) => setCategoriaSeleccionada(prev => ({ ...prev, [t.id]: e.target.value }))} style={styles.selectInput}>
+                        {(t.categoria || '').split('|').map((c, idx) => <option key={idx} value={c.trim()}>{c.trim()}</option>)}
+                      </select>
+                      <button onClick={async () => {
+                        try {
+                          const categoria = categoriaSeleccionada[t.id] || (t.categoria || '').split('|')[0];
+                          const resp = await API.post('/torneos/generar-zonas', { torneoId: t.id, categoria });
+                          mostrarNotificacion(resp.data?.message || 'Zonas generadas', 'success');
+                          // refetch torneos para mostrar zonas
+                          cargarTorneosDelComplejo(complejo.id);
+                        } catch (err) {
+                          console.error(err);
+                          mostrarNotificacion(err.response?.data?.error || 'Error generando zonas', 'error');
+                        }
+                      }} style={{ ...styles.botonPrincipal, padding: '8px 10px' }}>Generar Zonas</button>
+                    </div>
+
+                    <div style={{ maxHeight: '220px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {(t.inscripciones || []).length === 0 ? (
+                        <div style={styles.textoListaVacia}>Aún no hay parejas inscriptas.</div>
+                      ) : (
+                        (t.inscripciones || []).map(ins => (
+                          <div key={ins.id} style={{ backgroundColor: '#1C1C1E', padding: '10px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div>
+                              <div style={{ fontWeight: 800 }}>{ins.jugador1} & {ins.jugador2}</div>
+                              <div style={{ fontSize: 12, color: '#8E8E93' }}>{ins.telefono1 || '—'} • {ins.restriccionHoraria || 'Sin restricción'}</div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: 12, color: '#8E8E93' }}>Categoria: {ins.categoria}</div>
+                              <div style={{ fontSize: 12, color: '#8E8E93' }}>{ins.zonaId ? `Zona: ${ins.zonaId}` : ''}</div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
 
         {/* 📊 DESGLOSE DE OCUPACIÓN REAL (AHORA MISMO) */}
         {metricaExpandida === 'ocupacion' && (
