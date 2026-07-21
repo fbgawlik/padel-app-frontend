@@ -1,5 +1,5 @@
 // src/screens/ClasesScreen.jsx
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import { AuthContext } from '../context/AuthContext';
@@ -66,10 +66,51 @@ const ClasesScreen = () => {
     }
   };
 
-  const filteredClases = clases.filter((clase) => {
-    const texto = `${clase.titulo} ${clase.profesor?.nombre || ''} ${clase.profesor?.apellido || ''}`.toLowerCase();
-    return texto.includes(search.toLowerCase());
-  });
+  const filteredClases = useMemo(() => {
+    const textoBusqueda = search.trim().toLowerCase();
+    return clases.filter((clase) => {
+      const texto = `${clase.titulo} ${clase.profesor?.nombre || ''} ${clase.profesor?.apellido || ''}`.toLowerCase();
+      return texto.includes(textoBusqueda);
+    });
+  }, [clases, search]);
+
+  const clasesAgrupadas = useMemo(() => {
+    const grupos = new Map();
+
+    filteredClases.forEach((clase) => {
+      const key = [
+        clase.titulo,
+        clase.hora,
+        clase.profesorId || clase.profesor?.id || '',
+        clase.canchaId || clase.cancha?.id || '',
+        clase.precio,
+        clase.precioCancha || 0,
+      ].join('|');
+
+      const fecha = clase.fecha || '';
+      const profesor = clase.profesor || {};
+      const existing = grupos.get(key);
+
+      if (!existing) {
+        grupos.set(key, {
+          ...clase,
+          fechas: fecha ? [fecha] : [],
+          claseIds: [clase.id],
+          tipo: 'Única',
+        });
+      } else {
+        existing.fechas = Array.from(new Set([...existing.fechas, fecha])).sort();
+        existing.claseIds.push(clase.id);
+        existing.tipo = 'Mensual';
+      }
+    });
+
+    return Array.from(grupos.values()).map((clase) => ({
+      ...clase,
+      fechas: clase.fechas.sort(),
+      cantidadFechas: clase.fechas.length,
+    }));
+  }, [filteredClases]);
 
   if (loading) return (
     <div style={styles.estadoVacio}>
@@ -108,14 +149,14 @@ const ClasesScreen = () => {
       {error && <div style={styles.alertaError}>{error}</div>}
 
       {/* LISTADO DE CLASES */}
-      {filteredClases.length === 0 ? (
+      {clasesAgrupadas.length === 0 ? (
         <div style={styles.estadoVacioTarjeta}>
           <span style={{ fontSize: '40px', marginBottom: '16px' }}>🎓</span>
           <p>No hay clases que coincidan con tu búsqueda.</p>
         </div>
       ) : (
         <div style={styles.grillaClases}>
-          {filteredClases.map((clase) => {
+          {clasesAgrupadas.map((clase) => {
             const inscritosCount = clase.inscripciones?.length || 0;
             const cuposDisponibles = clase.cupoMax - inscritosCount;
             const claseLlena = cuposDisponibles <= 0;
@@ -123,6 +164,8 @@ const ClasesScreen = () => {
             const profesorNombre = clase.profesor?.nombre ? `${clase.profesor.nombre} ${clase.profesor.apellido}` : (clase.profesorId || 'Staff Técnico');
             const skillTagProps = getSkillTagColor(clase.nivelSkill);
             const totalPrecio = clase.precio + (clase.precioCancha || 0);
+            const claseIdForInscripcion = clase.claseIds?.[0] || clase.id;
+            const fechaTexto = clase.fechas?.length > 1 ? `${clase.fechas[0]} +${clase.fechas.length - 1}` : clase.fechas?.[0] || clase.fecha;
 
             return (
               <div key={clase.id} style={styles.tarjetaClase}>
@@ -141,8 +184,11 @@ const ClasesScreen = () => {
 
                   {/* Columna 2: Detalles de la Clase */}
                   <div style={styles.tarjetaColumnaDetalles}>
-                    <h3 style={styles.claseName}>{clase.titulo}</h3>
-                    <p style={styles.claseDateTime}>{clase.fecha}, {clase.hora} hs</p>
+                    <div style={styles.headerMiniRow}>
+                      <h3 style={styles.claseName}>{clase.titulo}</h3>
+                      <span style={styles.tipoBadge}>{clase.tipo || 'Única'}</span>
+                    </div>
+                    <p style={styles.claseDateTime}>{fechaTexto}, {clase.hora} hs</p>
                     <p style={styles.profesorLabel}>Prof. {profesorNombre}</p>
                     
                     {/* Etiqueta de Nivel */}
@@ -161,8 +207,8 @@ const ClasesScreen = () => {
                         <input 
                           type="text" 
                           placeholder="Nombre completo..."
-                          value={inscripcionesTerceros[clase.id] || ''} 
-                          onChange={(e) => setInscripcionesTerceros(prev => ({ ...prev, [clase.id]: e.target.value }))}
+                          value={inscripcionesTerceros[claseIdForInscripcion] || ''} 
+                          onChange={(e) => setInscripcionesTerceros(prev => ({ ...prev, [claseIdForInscripcion]: e.target.value }))}
                           style={styles.inputFormTerceros}
                         />
                       </div>
@@ -180,14 +226,14 @@ const ClasesScreen = () => {
                         <div style={styles.plazasText}>Plazas: {inscritosCount}/{clase.cupoMax}</div>
                         <button 
                           disabled={claseLlena}
-                          onClick={() => gestionarInscripcion(clase.id, inscripcionesTerceros[clase.id] || "")}
+                          onClick={() => gestionarInscripcion(claseIdForInscripcion, inscripcionesTerceros[claseIdForInscripcion] || "")}
                           style={{
                             ...styles.botonInscribirDestacado,
                             backgroundColor: claseLlena ? '#1A1A1A' : '#00ff66',
                             color: claseLlena ? '#444' : '#000',
                           }}
                         >
-                          {claseLlena ? 'Cerrado' : (inscripcionesTerceros[clase.id]?.trim() ? 'Inscribir Otro' : 'Inscribirse')}
+                          {claseLlena ? 'Cerrado' : (inscripcionesTerceros[claseIdForInscripcion]?.trim() ? 'Inscribir Otro' : 'Inscribirse')}
                         </button>
                       </>
                     )}
@@ -223,27 +269,32 @@ const styles = {
   estadoVacioTarjeta: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', color: '#8A8A8A', backgroundColor: '#121212', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.05)' },
   estadoVacio: { display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', color: '#8A8A8A' },
   spinner: { width: '30px', height: '30px', border: '3px solid rgba(0,255,102,0.2)', borderTop: '3px solid #00ff66', borderRadius: '50%', animation: 'spin 1s linear infinite', marginBottom: '16px' },
-  grillaClases: { display: 'flex', flexDirection: 'column', gap: '24px' },
+  grillaClases: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' },
   tarjetaClase: { 
-    backgroundColor: '#121212', borderRadius: '24px', 
-    border: '1px solid rgba(255,255,255,0.03)', position: 'relative', 
+    backgroundColor: '#121212', borderRadius: '18px', 
+    border: '1px solid rgba(255,255,255,0.08)', position: 'relative', 
     display: 'flex', flexDirection: 'column', overflow: 'hidden', 
-    transition: 'transform 0.2s, border-color 0.2s',
+    transition: 'transform 0.18s, border-color 0.18s',
     cursor: 'default',
+    padding: '12px'
   },
   cuerpoTarjetaRediseñado: {
-    padding: '24px', flex: 1, display: 'flex', gap: '16px', 
-    alignItems: 'start'
+    flex: 1, display: 'flex', gap: '10px', 
+    alignItems: 'flex-start'
   },
-  tarjetaColumnaAvatar: { width: '64px', height: '64px', flexShrink: 0, borderRadius: '50%', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)' },
+  headerMiniRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' },
+  tipoBadge: { fontSize: '10px', fontWeight: '800', color: '#39FF14', textTransform: 'uppercase', letterSpacing: '0.6px', backgroundColor: 'rgba(57,255,20,0.1)', padding: '4px 8px', borderRadius: '999px' },
+  claseName: { fontSize: '15px', fontWeight: '800', color: '#fff', margin: 0, letterSpacing: '-0.3px' },
+  claseDateTime: { color: '#EAEAEA', fontSize: '12px', fontWeight: '500', margin: '3px 0' },
+  profesorLabel: { color: '#8A8A8A', margin: 0, fontSize: '12px', fontWeight: '600' },
+  precioGrande: { fontSize: '18px', fontWeight: '800', color: '#fff', letterSpacing: '-0.4px', textAlign: 'right' },
+  tarjetaColumnaDetalles: { flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' },
+  tarjetaColumnaAccion: { width: '88px', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end', justifyContent: 'flex-start' },
+  tarjetaColumnaAvatar: { width: '50px', height: '50px', flexShrink: 0, borderRadius: '16px', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.08)', backgroundColor: 'rgba(255,255,255,0.04)' },
   profesorAvatar: { width: '100%', height: '100%', objectFit: 'cover' },
-  profesorAvatarPlaceholder: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#191919', color: '#39FF14', fontSize: '28px' },
-  tarjetaColumnaDetalles: { flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' },
-  claseName: { fontSize: '20px', fontWeight: '800', color: '#fff', margin: 0, letterSpacing: '-0.3px' },
-  claseDateTime: { color: '#EAEAEA', fontSize: '15px', fontWeight: '500', margin: '2px 0' },
-  profesorLabel: { color: '#8A8A8A', margin: 0, fontSize: '14px', fontWeight: '600' },
-  skillTag: { display: 'inline-block', fontSize: '12px', fontWeight: '800', padding: '6px 12px', borderRadius: '16px', margin: '8px 0 0 0', alignSelf: 'start' },
-  inputTercerosWrapper: { marginTop: '16px', paddingTop: '12px', borderTop: '1px dashed rgba(255,255,255,0.05)' },
+  profesorAvatarPlaceholder: { width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#191919', color: '#39FF14', fontSize: '24px' },
+  skillTag: { display: 'inline-block', fontSize: '11px', fontWeight: '800', padding: '4px 10px', borderRadius: '14px', margin: '6px 0 0 0', alignSelf: 'start' },
+  inputTercerosWrapper: { marginTop: '14px', paddingTop: '10px', borderTop: '1px dashed rgba(255,255,255,0.05)' },
   inputLabelTerceros: { fontSize: '12px', color: '#8A8A8A', display: 'block', marginBottom: '6px', fontWeight: '600' },
   inputFormTerceros: { backgroundColor: '#1A1A1A', color: '#fff', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', outline: 'none', padding: '8px 12px', fontSize: '13px', width: '100%', boxSizing: 'border-box' },
   tarjetaColumnaAccion: { width: '110px', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'end', justifyContent: 'start' },
