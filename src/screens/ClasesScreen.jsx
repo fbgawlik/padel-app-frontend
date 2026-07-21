@@ -307,12 +307,12 @@ const styles = {
   },
   statusClosed: { fontSize: '12px', fontWeight: '700', padding: '8px 16px', borderRadius: '20px', backgroundColor: 'rgba(255, 51, 51, 0.1)', color: '#ff4d4d', textAlign: 'center', width: '100%', boxSizing: 'border-box' },
   fabCrearClase: {
-    position: 'fixed', bottom: '24px', right: '24px',
+    position: 'fixed', bottom: '88px', right: '24px',
     padding: '16px 20px', borderRadius: '999px',
     backgroundColor: '#39FF14', color: '#0F0F10', border: 'none',
     fontWeight: '800', fontSize: '14px', cursor: 'pointer',
     boxShadow: '0 16px 40px rgba(57, 255, 20, 0.18)',
-    display: 'flex', alignItems: 'center', gap: '10px', zIndex: 100
+    display: 'flex', alignItems: 'center', gap: '10px', zIndex: 200
   },
   fabIcon: { fontSize: '18px', lineHeight: 1 }
 };
