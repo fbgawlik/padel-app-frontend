@@ -12,6 +12,7 @@ import ReservarTurnoScreen from '../screens/ReservarTurnoScreen';
 import ClasesScreen from '../screens/ClasesScreen'; 
 import CrearClaseScreen from '../screens/CrearClaseScreen';
 import TorneosScreen from '../screens/TorneosScreen';
+import GestionTorneoScreen from '../screens/GestionTorneoScreen';
 import BuscadorClubesScreen from '../screens/BuscadorClubesScreen'; 
 import TiendaScreen from '../screens/TiendaScreen'; 
 import MisReservasScreen from '../screens/MisReservasScreen';
@@ -20,6 +21,7 @@ import Layout from '../components/Layout';
 import RankingScreen from "../screens/RankingScreen";
 import CrearTorneoScreen from "../screens/CrearTorneoScreen";
 import TorneoDetalleScreen from '../screens/TorneoDetalleScreen'; 
+
 import PerfilPublicoScreen from '../screens/PerfilPublicoScreen';
 import TorneoInscripcionScreen from '../screens/TorneoInscripcionScreen';
 
@@ -72,6 +74,7 @@ const AppRoutes = () => {
           <Route path="/perfil" element={<PerfilScreen />} />
           <Route path="/torneos/crear" element={<CrearTorneoScreen />} />
           <Route path="/torneos/:id" element={<TorneoDetalleScreen />} />
+          <Route path="/torneos/:id/gestion" element={<GestionTorneoScreen />} />
           <Route path="/torneos/:id/inscribirse" element={<TorneoInscripcionScreen />} />
           <Route path="/jugador/:id" element={<PerfilPublicoScreen />} />
         </Route>
