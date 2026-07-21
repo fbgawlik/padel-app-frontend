@@ -162,11 +162,12 @@ const TorneosScreen = () => {
                       </div>
                       
                       {(
+                        esOrganizador || (
                         usuario?.id && (
                           usuario.id === torneo.complejo?.administradorId ||
                           usuario.id === torneo.usuarioId ||
                           usuario.id === torneo.organizadorId
-                        )
+                        ))
                       ) && (
                         <button 
                           onClick={() => navigate(`/torneos/${torneo.id}/gestion`)} 
