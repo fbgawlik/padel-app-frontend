@@ -13,23 +13,16 @@ const GestionTorneoScreen = () => {
   const [busqueda, setBusqueda] = useState('');
   const [diaSeleccionado, setDiaSeleccionado] = useState('7ago');
 
-  // Fetch básico del torneo (puedes adaptarlo al endpoint de gestión real)
-  const { data: torneo, isLoading } = useQuery({
+  // Fetch básico del torneo (usa el endpoint de torneos que incluye las inscripciones)
+  const { data: torneo, isLoading, isError, error } = useQuery({
     queryKey: ['torneoGestion', id],
     queryFn: async () => {
-      const res = await API.get('/torneos');
-      return res.data.find(t => t.id === parseInt(id) || t.id === id) || { nombre: 'Edición Origen' };
+      const res = await API.get(`/torneos/${id}`);
+      return res.data || { nombre: 'Edición Origen', inscripciones: [] };
     }
   });
 
-  // --- MOCKS PARA VISUALIZACIÓN (Reemplazar con datos de la API) ---
-  const inscriptosMock = [
-    { id: 1, nombres: 'S. GÓMEZ / A. FERNÁNDEZ', cat: '3ª Masc.', estado: 'Confirmado' },
-    { id: 2, nombres: 'J. PÉREZ / M. GONZÁLEZ', cat: '4ª Masc.', estado: 'Confirmado' },
-    { id: 3, nombres: 'L. MARTÍNEZ / D. SILVA', cat: '2ª Masc.', estado: 'Pendiente Pago' },
-    { id: 4, nombres: 'A. GARCÍA / C. BENÍTEZ', cat: '5ª Masc.', estado: 'Confirmado' },
-  ];
-
+  // --- RESULTADOS (mock por ahora; inscriptos vendrán desde la API) ---
   const resultadosMock = [
     { id: 1, hora: '10:30 AM', pista: 'Pista Central', estado: 'EN VIVO', pareja1: 'G. Garcia / M. Rossi', pareja2: 'J. Perez / F. Diaz', cat: '3ra.', sets1: [6, 6, 3], sets2: [2, 4, 1] },
     { id: 2, hora: '09:00 AM', pista: 'Pista 2', estado: 'FINALIZADO', pareja1: 'A. Fernandez / E. Sanchez', pareja2: 'P. Martinez / K. Silva', cat: '4ta.', sets1: [6, 6], sets2: [1, 2], ganador: 1 },
@@ -37,6 +30,7 @@ const GestionTorneoScreen = () => {
   // -----------------------------------------------------------------
 
   if (isLoading) return <div style={styles.centerContainer}><div style={styles.spinner}></div></div>;
+  if (isError) return <div style={styles.centerContainer}><div style={{color:'#fff'}}>Error cargando torneo: {error?.message || 'Error desconocido'}</div></div>;
 
   return (
     <div style={styles.screenContainer}>
@@ -105,8 +99,8 @@ const GestionTorneoScreen = () => {
                 />
               </div>
               <div style={styles.counterBox}>
-                <span style={styles.counterNumber}>128 Inscriptos</span>
-                <span style={styles.counterSub}>(64 Parejas)</span>
+                <span style={styles.counterNumber}>{(torneo?.inscripciones?.length || 0) * 2} Inscriptos</span>
+                <span style={styles.counterSub}>({torneo?.inscripciones?.length || 0} Parejas)</span>
               </div>
             </div>
 
@@ -116,17 +110,17 @@ const GestionTorneoScreen = () => {
             </div>
 
             <div style={styles.listContainer}>
-              {inscriptosMock.map(pareja => (
-                <div key={pareja.id} style={{...styles.cardInscripto, borderColor: pareja.estado === 'Confirmado' ? '#39FF14' : 'rgba(255,255,255,0.1)'}}>
+              {(torneo?.inscripciones || []).map(insc => (
+                <div key={insc.id} style={{...styles.cardInscripto, borderColor: '#39FF14'}}>
                   <div style={styles.avatarDoble}>
                     <div style={{...styles.avatar, zIndex: 2}}>👤</div>
                     <div style={{...styles.avatar, zIndex: 1, marginLeft: '-10px'}}>👤</div>
                   </div>
                   <div style={styles.infoInscripto}>
-                    <h4 style={styles.nombreInscripto}>{pareja.nombres}</h4>
-                    <span style={styles.catInscripto}>Categoría: {pareja.cat}</span>
-                    <span style={{...styles.estadoInscripto, color: pareja.estado === 'Confirmado' ? '#39FF14' : '#8E8E93'}}>
-                      {pareja.estado}
+                    <h4 style={styles.nombreInscripto}>{`${insc.jugador1} / ${insc.jugador2}`}</h4>
+                    <span style={styles.catInscripto}>Categoría: {insc.categoria}</span>
+                    <span style={{...styles.estadoInscripto, color: '#39FF14'}}>
+                      Confirmado
                     </span>
                   </div>
                   <div style={styles.actionIcons}>
