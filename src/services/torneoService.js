@@ -14,9 +14,21 @@ export const torneoService = {
     return response.data;
   },
 
+  // Obtener un torneo por su id, incluyendo partidos y zonas
+  getById: async (torneoId) => {
+    const response = await API.get(`/torneos/${torneoId}`);
+    return response.data;
+  },
+
   // Registrar una pareja a un torneo
   inscribirPareja: async (torneoId, datosInscripcion) => {
     const response = await API.post(`/torneos/${torneoId}/inscripciones`, datosInscripcion);
+    return response.data;
+  },
+
+  // Generar zonas y cuadros a partir de inscripciones
+  generarZonas: async (torneoId, categoria) => {
+    const response = await API.post('/torneos/generar-zonas', { torneoId, categoria });
     return response.data;
   },
 

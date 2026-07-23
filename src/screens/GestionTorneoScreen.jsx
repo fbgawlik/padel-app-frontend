@@ -1,33 +1,94 @@
 // src/screens/GestionTorneoScreen.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import API from '../services/api';
-import { useQuery } from '@tanstack/react-query';
+import { torneoService } from '../services/torneoService';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const GestionTorneoScreen = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  
+  const queryClient = useQueryClient();
+
   // Pestañas: 'inscriptos', 'llaves', 'resultados'
   const [pestanaActiva, setPestanaActiva] = useState('resultados');
   const [busqueda, setBusqueda] = useState('');
   const [diaSeleccionado, setDiaSeleccionado] = useState('7ago');
+  const [categoriaFiltrada, setCategoriaFiltrada] = useState('');
+  const [resultadoEdicion, setResultadoEdicion] = useState({});
+  const [toast, setToast] = useState(null);
 
-  // Fetch básico del torneo (usa el endpoint de torneos que incluye las inscripciones)
   const { data: torneo, isLoading, isError, error } = useQuery({
     queryKey: ['torneoGestion', id],
     queryFn: async () => {
-      const res = await API.get(`/torneos/${id}`);
-      return res.data || { nombre: 'Edición Origen', inscripciones: [] };
+      const data = await torneoService.getById(id);
+      return data || { nombre: 'Edición Origen', inscripciones: [], partidos: [], zonas: [] };
     }
   });
 
-  // --- RESULTADOS (mock por ahora; inscriptos vendrán desde la API) ---
-  const resultadosMock = [
-    { id: 1, hora: '10:30 AM', pista: 'Pista Central', estado: 'EN VIVO', pareja1: 'G. Garcia / M. Rossi', pareja2: 'J. Perez / F. Diaz', cat: '3ra.', sets1: [6, 6, 3], sets2: [2, 4, 1] },
-    { id: 2, hora: '09:00 AM', pista: 'Pista 2', estado: 'FINALIZADO', pareja1: 'A. Fernandez / E. Sanchez', pareja2: 'P. Martinez / K. Silva', cat: '4ta.', sets1: [6, 6], sets2: [1, 2], ganador: 1 },
-  ];
-  // -----------------------------------------------------------------
+  useEffect(() => {
+    if (torneo?.categoria) {
+      const categorias = torneo.categoria.split(/[|/]+/).map(c => c.trim()).filter(Boolean);
+      setCategoriaFiltrada(categorias[0] || '');
+    }
+  }, [torneo]);
+
+  const partidos = torneo?.partidos || [];
+  const zonas = torneo?.zonas || [];
+  const categoriasDisponibles = torneo?.categoria ? torneo.categoria.split(/[|/]+/).map(c => c.trim()).filter(Boolean) : [];
+  const inscriptosFiltrados = (torneo?.inscripciones || []).filter(insc => {
+    const texto = `${insc.jugador1} ${insc.jugador2}`.toLowerCase();
+    return !busqueda || texto.includes(busqueda.toLowerCase());
+  });
+  const partidosFiltrados = partidos.filter(partido => !categoriaFiltrada || partido.categoria === categoriaFiltrada);
+  const zonasFiltradas = zonas.filter(zona => !categoriaFiltrada || zona.categoria === categoriaFiltrada);
+
+  const mostrarToast = (mensaje, tipo = 'success') => {
+    setToast({ mensaje, tipo });
+    setTimeout(() => setToast(null), 4000);
+  };
+
+  const generarZonasMutation = useMutation({
+    mutationFn: async (categoria) => {
+      return await torneoService.generarZonas(id, categoria);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['torneoGestion', id]);
+      mostrarToast('Cuadros y zonas generados correctamente.', 'success');
+    },
+    onError: (error) => {
+      mostrarToast(error.response?.data?.error || 'Error al generar zonas.', 'error');
+    }
+  });
+
+  const resultadoMutation = useMutation({
+    mutationFn: async ({ partidoId, resultado }) => {
+      return await torneoService.actualizarPartido(partidoId, resultado);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['torneoGestion', id]);
+      mostrarToast('Resultado guardado correctamente.', 'success');
+    },
+    onError: (error) => {
+      mostrarToast(error.response?.data?.error || 'Error al guardar resultado.', 'error');
+    }
+  });
+
+  const handleResultadoChange = (partidoId, value) => {
+    setResultadoEdicion(prev => ({ ...prev, [partidoId]: value }));
+  };
+
+  const handleGuardarResultado = (partidoId) => {
+    const resultado = (resultadoEdicion[partidoId] || '').trim();
+    if (!resultado) {
+      mostrarToast('Ingresá un resultado válido.', 'error');
+      return;
+    }
+    resultadoMutation.mutate({ partidoId, resultado });
+  };
+
+  const obtenerPartidosPorFase = (fase) => partidosFiltrados.filter(partido => partido.tipoFase === fase);
+  const fasesOrden = ['ZONA', 'OCTAVOS', 'CUARTOS', 'SEMIFINAL', 'FINAL'];
+  const fasesEtiqueta = { ZONA: 'Zonas', OCTAVOS: 'Octavos', CUARTOS: 'Cuartos', SEMIFINAL: 'Semifinal', FINAL: 'Final' };
 
   if (isLoading) return <div style={styles.centerContainer}><div style={styles.spinner}></div></div>;
   if (isError) return <div style={styles.centerContainer}><div style={{color:'#fff'}}>Error cargando torneo: {error?.message || 'Error desconocido'}</div></div>;
@@ -105,30 +166,35 @@ const GestionTorneoScreen = () => {
             </div>
 
             <div style={styles.filtersRow}>
-              <select style={styles.selectInput}><option>Categoría: Todas</option></select>
+              <select style={styles.selectInput} value={categoriaFiltrada} onChange={(e) => setCategoriaFiltrada(e.target.value)}>
+                <option value="">Categoría: Todas</option>
+                {categoriasDisponibles.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
+              </select>
               <select style={styles.selectInput}><option>Género: Todos</option></select>
             </div>
 
             <div style={styles.listContainer}>
-              {(torneo?.inscripciones || []).map(insc => (
-                <div key={insc.id} style={{...styles.cardInscripto, borderColor: '#39FF14'}}>
-                  <div style={styles.avatarDoble}>
-                    <div style={{...styles.avatar, zIndex: 2}}>👤</div>
-                    <div style={{...styles.avatar, zIndex: 1, marginLeft: '-10px'}}>👤</div>
+              {inscriptosFiltrados.length === 0 ? (
+                <div style={styles.textoListaVacia}>No se encontraron inscriptos para esta búsqueda.</div>
+              ) : (
+                inscriptosFiltrados.map(insc => (
+                  <div key={insc.id} style={{...styles.cardInscripto, borderColor: '#39FF14'}}>
+                    <div style={styles.avatarDoble}>
+                      <div style={{...styles.avatar, zIndex: 2}}>👤</div>
+                      <div style={{...styles.avatar, zIndex: 1, marginLeft: '-10px'}}>👤</div>
+                    </div>
+                    <div style={styles.infoInscripto}>
+                      <h4 style={styles.nombreInscripto}>{`${insc.jugador1} / ${insc.jugador2}`}</h4>
+                      <span style={styles.catInscripto}>Categoría: {insc.categoria}</span>
+                      <span style={{...styles.estadoInscripto, color: '#39FF14'}}>Confirmado</span>
+                    </div>
+                    <div style={styles.actionIcons}>
+                      <button style={styles.iconBtn}>💬</button>
+                      <button style={styles.iconBtn}>👁️</button>
+                    </div>
                   </div>
-                  <div style={styles.infoInscripto}>
-                    <h4 style={styles.nombreInscripto}>{`${insc.jugador1} / ${insc.jugador2}`}</h4>
-                    <span style={styles.catInscripto}>Categoría: {insc.categoria}</span>
-                    <span style={{...styles.estadoInscripto, color: '#39FF14'}}>
-                      Confirmado
-                    </span>
-                  </div>
-                  <div style={styles.actionIcons}>
-                    <button style={styles.iconBtn}>💬</button>
-                    <button style={styles.iconBtn}>👁️</button>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         )}
@@ -137,19 +203,53 @@ const GestionTorneoScreen = () => {
         {pestanaActiva === 'llaves' && (
           <div style={styles.seccionContenido}>
             <div style={styles.filtersRow}>
-               <select style={styles.selectInput}><option>Categoría: 3ra Masc.</option></select>
-               <select style={styles.selectInput}><option>Género: Todos</option></select>
+               <select style={styles.selectInput} value={categoriaFiltrada} onChange={(e) => setCategoriaFiltrada(e.target.value)}>
+                 <option value="">Categoría: Todas</option>
+                 {categoriasDisponibles.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+               </select>
+               <button 
+                 onClick={() => generarZonasMutation.mutate(categoriaFiltrada)}
+                 disabled={generarZonasMutation.isLoading || !categoriaFiltrada}
+                 style={{ ...styles.botonPrincipal, width: '220px', opacity: (!categoriaFiltrada || generarZonasMutation.isLoading) ? 0.6 : 1 }}
+               >
+                 {generarZonasMutation.isLoading ? 'Generando...' : 'Generar Zonas'}
+               </button>
             </div>
-            {/* Visualizador de llaves simplificado */}
-            <div style={styles.llavesContainer}>
-               <div style={styles.mensajePlaceholder}>
-                 <span style={{fontSize: '32px'}}>🏆</span>
-                 <p>Cuadro de eliminación directa en desarrollo.</p>
-                 <button style={styles.btnGenerarCuadro}>
-                   ✨ GENERAR O ACTUALIZAR CUADROS
-                 </button>
-               </div>
-            </div>
+
+            {zonasFiltradas.length === 0 ? (
+              <div style={styles.llavesContainer}>
+                <div style={styles.mensajePlaceholder}>
+                  <span style={{fontSize: '32px'}}>🏆</span>
+                  <p>No hay zonas generadas todavía para esta categoría.</p>
+                  <p style={{ color: '#8E8E93', marginTop: '8px' }}>Usá el botón de arriba para crear las zonas según las inscripciones existentes.</p>
+                </div>
+              </div>
+            ) : (
+              zonasFiltradas.map(zona => {
+                const partidosZona = partidosFiltrados.filter(partido => partido.zonaId === zona.id);
+                return (
+                  <div key={zona.id} style={styles.zoneCard}>
+                    <div style={styles.zoneHeader}>{zona.nombre} • {zona.categoria}</div>
+                    {partidosZona.length === 0 ? (
+                      <div style={styles.textoListaVacia}>No hay partidos generados para esta zona.</div>
+                    ) : partidosZona.map(partido => (
+                      <div key={partido.id} style={styles.partidoCard}>
+                        <div style={styles.partidoHeader}>
+                          <span>{partido.fecha || 'Fecha pendiente'} • {partido.hora || 'Hora pendiente'}</span>
+                          <span style={styles.badgeEstado}>{partido.estado.toUpperCase()}</span>
+                        </div>
+                        <div style={styles.partidoEquipos}>
+                          <span>{partido.pareja1 ? `${partido.pareja1.jugador1} / ${partido.pareja1.jugador2}` : 'Pareja A'}</span>
+                          <span>vs</span>
+                          <span>{partido.pareja2 ? `${partido.pareja2.jugador1} / ${partido.pareja2.jugador2}` : 'Pareja B'}</span>
+                        </div>
+                        <div style={styles.partidoResultado}>{partido.resultado || 'Resultado pendiente'}</div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })
+            )}
           </div>
         )}
 
@@ -180,47 +280,65 @@ const GestionTorneoScreen = () => {
             <h3 style={styles.tituloFecha}>Resultados del viernes, 7 de agosto</h3>
 
             <div style={styles.listContainer}>
-              {resultadosMock.map(partido => (
-                <div key={partido.id} style={styles.cardResultado}>
-                  <div style={styles.resultadoHeader}>
-                     <span style={styles.textoPista}>{partido.pista} - {partido.hora}</span>
-                     <span style={{...styles.badgeEstado, color: partido.estado === 'EN VIVO' ? '#FF3B30' : '#E5C200'}}>
-                       {partido.estado === 'EN VIVO' && <span style={styles.puntoRojo}></span>}
-                       {partido.estado === 'FINALIZADO' ? 'FINALIZADO 🏆' : partido.estado}
-                     </span>
-                  </div>
+              {partidosFiltrados.length === 0 ? (
+                <div style={styles.textoListaVacia}>No hay partidos registrados para esta categoría.</div>
+              ) : (
+                partidosFiltrados.map(partido => (
+                  <div key={partido.id} style={styles.cardResultado}>
+                    <div style={styles.resultadoHeader}>
+                      <span style={styles.textoPista}>{partido.zona?.nombre || partido.tipoFase} • {partido.fecha || 'Fecha pendiente'}</span>
+                      <span style={{...styles.badgeEstado, color: partido.estado === 'finalizado' ? '#39FF14' : '#E5C200'}}>
+                        {partido.estado.toUpperCase()}
+                      </span>
+                    </div>
 
-                  <div style={styles.enfrentamientoRow}>
-                    <div style={styles.parejasCol}>
-                      <div style={styles.parejaItem}>
-                        <span style={styles.parejaLetra}>Pareja A</span>
-                        <span style={styles.parejaNombres}>{partido.pareja1}</span>
+                    <div style={styles.enfrentamientoRow}>
+                      <div style={styles.parejasCol}>
+                        <div style={styles.parejaItem}>
+                          <span style={styles.parejaLetra}>Pareja A</span>
+                          <span style={styles.parejaNombres}>{partido.pareja1 ? `${partido.pareja1.jugador1} / ${partido.pareja1.jugador2}` : 'Pareja A'}</span>
+                        </div>
+                        <div style={styles.vsSmall}>vs</div>
+                        <div style={styles.parejaItem}>
+                          <span style={styles.parejaLetra}>Pareja B</span>
+                          <span style={styles.parejaNombres}>{partido.pareja2 ? `${partido.pareja2.jugador1} / ${partido.pareja2.jugador2}` : 'Pareja B'}</span>
+                        </div>
                       </div>
-                      <div style={styles.vsSmall}>vs</div>
-                      <div style={styles.parejaItem}>
-                        <span style={styles.parejaLetra}>Pareja B</span>
-                        <span style={styles.parejaNombres}>{partido.pareja2}</span>
+
+                      <div style={styles.setsCol}>
+                        <div style={styles.setFila}>
+                          <span style={styles.setCaja}>{partido.resultado || 'Resultado pendiente'}</span>
+                        </div>
                       </div>
                     </div>
-                    
-                    <div style={styles.setsCol}>
-                      <div style={styles.setFila}>
-                        {partido.sets1.map((s, i) => <span key={i} style={styles.setCaja}>[{s}]</span>)}
-                      </div>
-                      <div style={styles.setFila}>
-                        {partido.sets2.map((s, i) => <span key={i} style={styles.setCaja}>[{s}]</span>)}
-                      </div>
-                    </div>
-                  </div>
 
-                  <div style={styles.resultadoFooter}>
-                    <span style={styles.textoLiveScore}>Categoría: {partido.cat}</span>
-                    <button style={partido.estado === 'FINALIZADO' ? styles.btnSecundario : styles.btnPrimario}>
-                      {partido.estado === 'FINALIZADO' ? 'VER DETALLES' : '✎ EDITAR PUNTUACIÓN'}
-                    </button>
+                    {partido.estado !== 'finalizado' ? (
+                      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          value={resultadoEdicion[partido.id] || ''}
+                          onChange={(e) => handleResultadoChange(partido.id, e.target.value)}
+                          placeholder="Ej: 6-3 / 6-4 o W.O. P1"
+                          style={styles.inputResultado}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleGuardarResultado(partido.id)}
+                          disabled={resultadoMutation.isLoading}
+                          style={{ ...styles.btnPrimario, opacity: resultadoMutation.isLoading ? 0.6 : 1 }}
+                        >
+                          {resultadoMutation.isLoading ? 'Guardando...' : 'Guardar resultado'}
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={styles.resultadoFooter}>
+                        <span style={styles.textoLiveScore}>Resultado final: {partido.resultado}</span>
+                        <span style={{ color: '#8E8E93', fontSize: '12px' }}>No editable</span>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         )}
@@ -272,7 +390,13 @@ const styles = {
   selectInput: { flex: 1, backgroundColor: '#161618', border: '1px solid rgba(255,255,255,0.08)', color: '#8E8E93', padding: '12px', borderRadius: '14px', fontSize: '13px', outline: 'none' },
   
   listContainer: { display: 'flex', flexDirection: 'column', gap: '12px' },
-  
+  zoneCard: { backgroundColor: '#141416', borderRadius: '16px', padding: '14px', border: '1px solid rgba(255,255,255,0.07)' },
+  zoneHeader: { fontSize: '14px', fontWeight: '800', color: '#39FF14', marginBottom: '12px' },
+  partidoCard: { backgroundColor: '#1D1D20', borderRadius: '14px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '10px' },
+  partidoHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', fontSize: '12px', color: '#8E8E93' },
+  partidoEquipos: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', marginBottom: '10px', fontSize: '12px', color: '#FFFFFF', flexWrap: 'wrap' },
+  partidoResultado: { fontSize: '13px', color: '#8E8E93', padding: '10px 14px', borderRadius: '12px', backgroundColor: 'rgba(255,255,255,0.03)', textAlign: 'center' },
+  inputResultado: { flex: 1, backgroundColor: '#161618', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '12px', color: '#FFF', fontSize: '13px', outline: 'none', minWidth: '220px' },
   cardInscripto: { display: 'flex', alignItems: 'center', backgroundColor: 'rgba(22, 22, 24, 0.7)', borderRadius: '20px', padding: '16px', border: '1px solid rgba(255,255,255,0.05)', gap: '12px' },
   avatarDoble: { display: 'flex', position: 'relative' },
   avatar: { width: '40px', height: '40px', borderRadius: '50%', backgroundColor: '#2C2C2E', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', border: '2px solid #161618' },
