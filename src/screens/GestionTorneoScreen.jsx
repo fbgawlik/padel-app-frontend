@@ -1,8 +1,10 @@
 // src/screens/GestionTorneoScreen.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { torneoService } from '../services/torneoService';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AuthContext } from '../context/AuthContext';
+import { resolverUrlImagen } from '../services/imageHelper';
 
 const GestionTorneoScreen = () => {
   const { id } = useParams();
@@ -24,6 +26,8 @@ const GestionTorneoScreen = () => {
       return data || { nombre: 'Edición Origen', inscripciones: [], partidos: [], zonas: [] };
     }
   });
+
+  const { usuario } = useContext(AuthContext);
 
   useEffect(() => {
     if (torneo?.categoria) {
@@ -113,8 +117,18 @@ const GestionTorneoScreen = () => {
           <h1 style={styles.tituloSecundario}>GESTIÓN DE TORNEO:</h1>
           <h2 style={styles.tituloPrincipal}>{torneo?.nombre?.toUpperCase()}</h2>
           <div style={styles.organizadorRow}>
-            <span style={styles.iconoAvatar}>👤</span>
-            <span style={styles.organizadorText}>PEPE (ORGANIZADOR)</span>
+            <div style={{ width: '36px', height: '36px', borderRadius: '50%', overflow: 'hidden', backgroundColor: '#2C2C2E' }}>
+              {torneo?.usuario?.imagenPerfil ? (
+                <img src={resolverUrlImagen(torneo.usuario.imagenPerfil)} alt="Organizador" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFF', fontWeight: 800 }}>
+                  { (torneo?.usuario?.nombre?.charAt(0) || 'O').toUpperCase() }
+                </div>
+              )}
+            </div>
+            <span style={styles.organizadorText}>
+              {torneo?.usuario ? `${torneo.usuario.nombre} ${torneo.usuario.apellido}` : 'Organizador'} {torneo?.usuario?.id === usuario?.id ? '(Tú - ORGANIZADOR)' : '(ORGANIZADOR)'}
+            </span>
           </div>
         </div>
       </div>
@@ -180,8 +194,20 @@ const GestionTorneoScreen = () => {
                 inscriptosFiltrados.map(insc => (
                   <div key={insc.id} style={{...styles.cardInscripto, borderColor: '#39FF14'}}>
                     <div style={styles.avatarDoble}>
-                      <div style={{...styles.avatar, zIndex: 2}}>👤</div>
-                      <div style={{...styles.avatar, zIndex: 1, marginLeft: '-10px'}}>👤</div>
+                      <div style={{...styles.avatar, zIndex: 2, overflow: 'hidden'}}>
+                        {insc.usuario1?.imagenPerfil ? (
+                          <img src={resolverUrlImagen(insc.usuario1.imagenPerfil)} alt={insc.jugador1} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <div style={{ color: '#FFF', fontWeight: 800 }}>{(insc.jugador1 || 'J').charAt(0).toUpperCase()}</div>
+                        )}
+                      </div>
+                      <div style={{...styles.avatar, zIndex: 1, marginLeft: '-10px', overflow: 'hidden'}}>
+                        {insc.usuario2?.imagenPerfil ? (
+                          <img src={resolverUrlImagen(insc.usuario2.imagenPerfil)} alt={insc.jugador2} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                          <div style={{ color: '#FFF', fontWeight: 800 }}>{(insc.jugador2 || 'J').charAt(0).toUpperCase()}</div>
+                        )}
+                      </div>
                     </div>
                     <div style={styles.infoInscripto}>
                       <h4 style={styles.nombreInscripto}>{`${insc.jugador1} / ${insc.jugador2}`}</h4>
