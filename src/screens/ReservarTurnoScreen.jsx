@@ -4,8 +4,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import { useNotification } from '../context/NotificationContext';
 
-const BACKEND_URL = 'https://padel-api-backend-production.up.railway.app';
-
 const ReservarTurnoScreen = () => {
   const { id } = useParams();
   const navigate = useNavigate();

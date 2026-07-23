@@ -1,7 +1,8 @@
 // src/screens/PerfilPublicoScreen.jsx
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import API from '../services/api'; 
+import API from '../services/api';
+import { resolverUrlImagen } from '../services/imageHelper';
 
 const PerfilPublicoScreen = () => {
   const { id } = useParams();
@@ -26,16 +27,6 @@ const PerfilPublicoScreen = () => {
     fetchJugador();
   }, [id]);
 
-  // Lógica segura para resolver URLs de imágenes (Igual que en tus otras screens)
-  const resolverUrlImagen = (ruta) => {
-    if (!ruta) return null;
-    if (ruta.includes('localhost:5000')) {
-      const rutaRelativa = ruta.replace('http://localhost:5000', ''); 
-      return `${import.meta.env.VITE_API_URL}${rutaRelativa}`;
-    }
-    if (ruta.startsWith('http')) return ruta; 
-    return `${import.meta.env.VITE_API_URL}${ruta}`; 
-  };
 
   const obtenerIniciales = () => {
     const n = jugador?.nombre?.charAt(0) || '';

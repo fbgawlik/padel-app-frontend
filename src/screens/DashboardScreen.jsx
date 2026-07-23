@@ -5,8 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import { useQuery } from '@tanstack/react-query';
 import { useNotification } from '../context/NotificationContext';
-
-const BACKEND_URL = 'https://padel-api-backend-production.up.railway.app'; 
+import { resolverUrlImagen } from '../services/imageHelper';
 
 const DashboardScreen = () => {
   const { usuario } = useContext(AuthContext);
@@ -44,18 +43,6 @@ const DashboardScreen = () => {
     }
   };
 
-  // 🛠️ RESOLVER IMÁGENES (Cloudinary vs Localhost/Absolutas)
-  const resolverUrlImagen = (url) => {
-    if (!url) return null;
-    const ruta = url.trim();
-    if (ruta.startsWith('http://') || ruta.startsWith('https://')) return ruta;
-    if (ruta.startsWith('//')) return `https:${ruta}`;
-    if (ruta.includes('localhost:5000')) {
-      return ruta.replace('http://localhost:5000', BACKEND_URL);
-    }
-    if (ruta.startsWith('/')) return `${BACKEND_URL}${ruta}`;
-    return `${BACKEND_URL}/${ruta}`;
-  };
 
   const complejos = data?.complejos || [];
   

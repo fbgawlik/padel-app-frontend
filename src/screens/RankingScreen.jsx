@@ -1,7 +1,8 @@
 // src/screens/RankingScreen.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API from '../services/api'; 
+import API from '../services/api';
+import { resolverUrlImagen } from '../services/imageHelper'; 
 
 const RankingScreen = () => {
   // Manejamos estados limpios para simplificar el renderizado y la lógica
@@ -37,15 +38,6 @@ const RankingScreen = () => {
   }, [categoria, rama]); // Se vuelve a disparar al cambiar pestaña o categoría
 
   // Lógica de resolución de imágenes
-  const resolverUrlImagen = (ruta) => {
-    if (!ruta) return null;
-    if (ruta.includes('localhost:5000')) {
-      const rutaRelativa = ruta.replace('http://localhost:5000', ''); 
-      return `${import.meta.env.VITE_API_URL}${rutaRelativa}`;
-    }
-    if (ruta.startsWith('http')) return ruta; 
-    return `${import.meta.env.VITE_API_URL}${ruta}`; 
-  };
 
   // Obtener iniciales de respaldo
   const obtenerIniciales = (jugador) => {

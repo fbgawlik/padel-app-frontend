@@ -3,6 +3,7 @@ import React, { useContext, useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import API from '../services/api';
+import { resolverUrlImagen } from '../services/imageHelper';
 
 const PerfilScreen = () => {
   const { usuario, actualizarDatosUsuario, logout } = useContext(AuthContext); 
@@ -60,15 +61,6 @@ const PerfilScreen = () => {
     cargarPerfilCompleto();
   }, []);
 
-  const resolverUrlImagen = (ruta) => {
-    if (!ruta) return null;
-    if (ruta.includes('localhost:5000')) {
-      const rutaRelativa = ruta.replace('http://localhost:5000', ''); 
-      return `${import.meta.env.VITE_API_URL}${rutaRelativa}`;
-    }
-    if (ruta.startsWith('http')) return ruta; 
-    return `${import.meta.env.VITE_API_URL}${ruta}`; 
-  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });

@@ -35,10 +35,11 @@ const TorneoInscripcionScreen = () => {
   const { data: torneo, isLoading: cargandoTorneo } = useQuery({
     queryKey: ['torneo', id],
     queryFn: async () => {
-      const res = await API.get('/torneos');
-      return res.data.find(t => t.id === parseInt(id) || t.id === id);
+      const res = await API.get(`/torneos/${id}`);
+      return res.data;
     },
     staleTime: 1000 * 60 * 5,
+    enabled: !!id,
   });
 
   // --- Estados del Formulario ---

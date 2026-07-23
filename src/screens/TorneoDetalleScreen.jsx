@@ -1,12 +1,15 @@
 // src/screens/TorneoDetalleScreen.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import { useQuery } from '@tanstack/react-query';
+import { AuthContext } from '../context/AuthContext';
+import { resolverUrlImagen } from '../services/imageHelper';
 
 const TorneoDetalleScreen = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { usuario } = useContext(AuthContext);
   
   const [pestanaActiva, setPestanaActiva] = useState('cronograma');
   const [diaSeleccionado, setDiaSeleccionado] = useState('');
@@ -16,11 +19,16 @@ const TorneoDetalleScreen = () => {
   const { data: torneo, isLoading, isError } = useQuery({
     queryKey: ['torneo', id],
     queryFn: async () => {
-      const res = await API.get('/torneos');
-      return res.data.find(t => t.id === parseInt(id) || t.id === id);
+      const res = await API.get(`/torneos/${id}`);
+      return res.data;
     },
     staleTime: 1000 * 60 * 5,
+    enabled: !!id,
   });
+
+  const yaInscripto = torneo?.inscripciones?.some(insc =>
+    insc.jugador1Id === usuario?.id || insc.jugador2Id === usuario?.id
+  );
 
   // 2. Generar días dinámicos entre fechaInicio y fechaFin
   const generarFechasTorneo = (inicio, fin) => {
@@ -79,7 +87,7 @@ const TorneoDetalleScreen = () => {
     : [];
 
   const fechaActivaData = fechasDinamicas.find(f => f.id === diaSeleccionado);
-  const bannerImagen = torneo.imagenPortada || torneo.complejo?.imagenUrl || "https://images.unsplash.com/photo-1592656094267-764a4506f368?w=800";
+  const bannerImagen = resolverUrlImagen(torneo.imagenPortada || torneo.complejo?.imagenUrl || "https://images.unsplash.com/photo-1592656094267-764a4506f368?w=800");
 
   // Evaluar si las inscripciones están abiertas (Fecha de inicio es posterior a hoy)
   const hoyStr = new Date().toISOString().split('T')[0];
@@ -266,8 +274,12 @@ const TorneoDetalleScreen = () => {
       </div>
 
       {/* 🔥 BOTÓN PREMIUM FLOTANTE DE INSCRIPCIÓN */}
-      {inscripcionesAbiertas ? (
-        <div style={styles.fixedActionContainer}>
+      <div style={styles.fixedActionContainer}>
+        {yaInscripto ? (
+          <div style={styles.badgeInscripto}>
+            ✅ Ya estás inscripto en este torneo
+          </div>
+        ) : inscripcionesAbiertas ? (
           <button 
             onClick={() => navigate(`/torneos/${torneo.id}/inscribirse`)}
             style={styles.btnInscribirse}
@@ -275,14 +287,12 @@ const TorneoDetalleScreen = () => {
             <span>Inscribirme al Torneo</span>
             <span style={styles.precioBadge}>${torneo.precioInscripcion || '0'}</span>
           </button>
-        </div>
-      ) : (
-        <div style={styles.fixedActionContainer}>
+        ) : (
           <div style={styles.badgeCerrado}>
             🔒 Inscripciones cerradas o torneo en curso
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
     </div>
   );
@@ -433,6 +443,19 @@ const styles = {
     color: '#8E8E93',
     fontSize: '13px',
     fontWeight: '600',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  badgeInscripto: {
+    width: '100%',
+    minHeight: '50px',
+    backgroundColor: 'rgba(57, 255, 20, 0.12)',
+    border: '1px solid rgba(57, 255, 20, 0.25)',
+    borderRadius: '18px',
+    color: '#39FF14',
+    fontSize: '13px',
+    fontWeight: '700',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center'

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import { resolverUrlImagen } from '../services/imageHelper';
 
 const ClasesScreen = () => {
   const navigate = useNavigate();
@@ -17,18 +18,6 @@ const ClasesScreen = () => {
 
   // Verificamos permisos para mostrar el botón de crear (Asegurando que solo profesores/admins lo vean)
   const esProfesorOAdmin = usuario?.rol === 'profesor' || usuario?.rol === 'admin_complejo';
-  const BACKEND_URL = (import.meta.env.VITE_API_URL || 'https://padel-api-backend-production.up.railway.app').replace(/\/$/, '');
-
-  const resolverUrlImagen = (ruta) => {
-    if (!ruta) return null;
-    const valor = String(ruta).trim();
-    if (valor.startsWith('http://') || valor.startsWith('https://')) return valor;
-    if (valor.includes('localhost:5000')) {
-      return valor.replace('http://localhost:5000', BACKEND_URL);
-    }
-    if (valor.startsWith('/')) return `${BACKEND_URL}${valor}`;
-    return `${BACKEND_URL}/${valor}`;
-  };
 
   const cargarClases = async () => {
     try {

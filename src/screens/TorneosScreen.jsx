@@ -4,23 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import { useQuery } from '@tanstack/react-query';
 import { AuthContext } from '../context/AuthContext';
+import { resolverUrlImagen } from '../services/imageHelper';
 
 const TorneosScreen = () => {
   const navigate = useNavigate();
   const { usuario } = useContext(AuthContext);
   const [busqueda, setBusqueda] = useState('');
   const [mostrarBuscador, setMostrarBuscador] = useState(false);
-
-  // 1. 🔥 FUNCIÓN PARA RESOLVER LA URL DE LA IMAGEN CORRECTAMENTE
-  const resolverUrlImagen = (ruta) => {
-    if (!ruta) return null;
-    if (ruta.includes('localhost:5000')) {
-      const rutaRelativa = ruta.replace('http://localhost:5000', ''); 
-      return `${import.meta.env.VITE_API_URL}${rutaRelativa}`;
-    }
-    if (ruta.startsWith('http')) return ruta; 
-    return `${import.meta.env.VITE_API_URL}${ruta}`; 
-  };
 
   // Validación de permisos para mostrar funcionalidades de administración
   const esOrganizador = usuario?.rol === 'admin_complejo' || usuario?.rol === 'organizador';
