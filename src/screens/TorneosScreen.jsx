@@ -11,6 +11,7 @@ const TorneosScreen = () => {
   const { usuario } = useContext(AuthContext);
   const [busqueda, setBusqueda] = useState('');
   const [mostrarBuscador, setMostrarBuscador] = useState(false);
+  const [filtroFormato, setFiltroFormato] = useState('TODOS'); // 'TODOS' | 'TRADICIONAL' | 'AMERICANO'
 
   // Validación de permisos para mostrar funcionalidades de administración
   const esOrganizador = usuario?.rol === 'admin_complejo' || usuario?.rol === 'organizador';
@@ -26,9 +27,26 @@ const TorneosScreen = () => {
     refetchOnWindowFocus: true
   });
 
-  const torneosFiltrados = torneos.filter(t => 
-    t.nombre.toLowerCase().includes(busqueda.toLowerCase())
-  );
+  // Helper para detectar si un torneo es de formato Americano
+  const esTorneoAmericano = (torneo) => {
+    return (
+      torneo.partidos?.some(p => p.tipoFase === 'AMERICANO') ||
+      torneo.nombre?.toLowerCase().includes('americano') ||
+      torneo.reglas?.toLowerCase().includes('americano')
+    );
+  };
+
+  // Filtrado por búsqueda y tipo de torneo
+  const torneosFiltrados = torneos.filter(t => {
+    const coincideNombre = t.nombre.toLowerCase().includes(busqueda.toLowerCase());
+    const esAmericano = esTorneoAmericano(t);
+
+    if (!coincideNombre) return false;
+
+    if (filtroFormato === 'AMERICANO') return esAmericano;
+    if (filtroFormato === 'TRADICIONAL') return !esAmericano;
+    return true;
+  });
 
   if (isLoading) return (
     <div style={styles.centerContainer}>
@@ -64,6 +82,24 @@ const TorneosScreen = () => {
         </button>
       </div>
 
+      {/* ─── FILTROS DE FORMATO ─── */}
+      <div style={styles.filterTabsContainer}>
+        {['TODOS', 'TRADICIONAL', 'AMERICANO'].map((formato) => (
+          <button
+            key={formato}
+            onClick={() => setFiltroFormato(formato)}
+            style={{
+              ...styles.filterTab,
+              ...(filtroFormato === formato ? styles.filterTabActive : {})
+            }}
+          >
+            {formato === 'TODOS' && 'Todos'}
+            {formato === 'TRADICIONAL' && 'Cuadro / Zonas'}
+            {formato === 'AMERICANO' && 'Americanos ⚡'}
+          </button>
+        ))}
+      </div>
+
       {/* ─── BUSCADOR EXPANDIBLE ─── */}
       {mostrarBuscador && (
         <div style={styles.searchContainer}>
@@ -89,6 +125,7 @@ const TorneosScreen = () => {
               estado = { texto: 'Finalizado', color: '#8E8E93' };
             }
 
+            const esAmericano = esTorneoAmericano(torneo);
             const imagenCruda = torneo.imagenPortada || torneo.complejo?.imagenUrl;
             const bannerImagen = resolverUrlImagen(imagenCruda);
 
@@ -113,9 +150,21 @@ const TorneosScreen = () => {
                       <span>🏆 {torneo.nombre}</span>
                     </div>
                   )}
-                  <div style={{...styles.badgeFlotante, backgroundColor: `${estado.color}22`, borderColor: estado.color}}>
-                    <span style={{...styles.statusDot, backgroundColor: estado.color}} />
-                    <span style={{...styles.statusText, color: estado.color}}>{estado.texto}</span>
+
+                  {/* Badges Flotantes */}
+                  <div style={styles.badgeGroupFlotante}>
+                    {/* Badge de Estado */}
+                    <div style={{...styles.badgeFlotante, backgroundColor: `${estado.color}22`, borderColor: estado.color}}>
+                      <span style={{...styles.statusDot, backgroundColor: estado.color}} />
+                      <span style={{...styles.statusText, color: estado.color}}>{estado.texto}</span>
+                    </div>
+
+                    {/* Badge de Formato Americano (Si Aplica) */}
+                    {esAmericano && (
+                      <div style={styles.badgeAmericano}>
+                        <span>⚡ AMERICANO</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -217,7 +266,7 @@ const styles = {
     boxSizing: 'border-box'
   },
   header: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px'
   },
   mainTitle: {
     fontSize: '28px', fontWeight: '800', color: '#FFF', margin: 0, letterSpacing: '-0.5px'
@@ -229,6 +278,17 @@ const styles = {
     width: '44px', height: '44px', borderRadius: '14px',
     backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+  },
+  filterTabsContainer: {
+    display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '4px'
+  },
+  filterTab: {
+    padding: '8px 14px', borderRadius: '20px', backgroundColor: 'rgba(255,255,255,0.05)',
+    border: '1px solid rgba(255,255,255,0.08)', color: '#8E8E93', fontSize: '12px',
+    fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s'
+  },
+  filterTabActive: {
+    backgroundColor: 'rgba(57, 255, 20, 0.15)', borderColor: '#39FF14', color: '#39FF14'
   },
   searchContainer: {
     marginBottom: '20px', animation: 'fadeIn 0.2s ease'
@@ -261,10 +321,18 @@ const styles = {
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     color: '#39FF14', fontWeight: '700', fontSize: '16px', padding: '20px', textAlign: 'center'
   },
+  badgeGroupFlotante: {
+    position: 'absolute', top: '12px', left: '12px', display: 'flex', gap: '8px', alignItems: 'center'
+  },
   badgeFlotante: {
-    position: 'absolute', top: '12px', left: '12px',
     display: 'flex', alignItems: 'center', gap: '6px',
-    padding: '6px 12px', borderRadius: '12px', border: '1px solid'
+    padding: '6px 12px', borderRadius: '12px', border: '1px solid',
+    backdropFilter: 'blur(8px)'
+  },
+  badgeAmericano: {
+    backgroundColor: 'rgba(255, 179, 0, 0.2)', borderColor: '#FFB300',
+    color: '#FFB300', border: '1px solid', padding: '6px 12px', borderRadius: '12px',
+    fontSize: '11px', fontWeight: '800', letterSpacing: '0.5px', backdropFilter: 'blur(8px)'
   },
   statusDot: {
     width: '6px', height: '6px', borderRadius: '50%'
@@ -298,7 +366,6 @@ const styles = {
   dateContainer: {
     display: 'flex', alignItems: 'center', color: '#A0A0A5', fontSize: '12px', fontWeight: '500'
   },
-  // 🔥 NUEVO ESTILO PARA EL BOTÓN DE GESTIÓN
   btnGestionar: {
     padding: '8px 14px', borderRadius: '10px', backgroundColor: 'rgba(57, 255, 20, 0.1)',
     border: '1px solid rgba(57, 255, 20, 0.4)', color: '#39FF14', fontSize: '12px',
