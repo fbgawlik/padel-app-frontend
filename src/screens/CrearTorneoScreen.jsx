@@ -4,6 +4,18 @@ import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import { useQueryClient } from '@tanstack/react-query'; 
 
+const REGLAS_TRADICIONAL = `REGLAS DEL TORNEO (FORMATO TRADICIONAL):
+
+1. Fase inicial de zonas (round robin) y fase final a llaves eliminatorias directas.
+2. Tolerancia máxima de espera: 15 minutos respecto al horario programado.
+3. Parejas descalificadas sin reembolso en caso de categoría inadecuada.`;
+
+const REGLAS_AMERICANO = `REGLAS DEL TORNEO AMERICANO ⚡:
+
+1. Formato de juego rápido por tiempo o a número fijo de juegos/puntos (ej. 21 puntos o tie-break).
+2. Rotación de parejas/rivales según la modalidad del torneo.
+3. Tolerancia de espera: 10 minutos estricta para mantener el cronograma.`;
+
 const CrearTorneoScreen = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient(); 
@@ -22,18 +34,19 @@ const CrearTorneoScreen = () => {
 
   const categoriasDamas = ['1ra Damas', '2da Damas', '3ra Damas', '4ta Damas', '5ta Damas', '6ta Damas', '7ma Damas', '8va Damas'];
   const categoriasCaballeros = ['1ra Caballeros', '2da Caballeros', '3ra Caballeros', '4ta Caballeros', '5ta Caballeros', '6ta Caballeros', '7ma Caballeros', '8va Caballeros'];
-  const opcionesCupos = [12, 16, 20, 24, 28, 32]; // 16 es el valor default de tu Prisma
+  const opcionesCupos = [8, 12, 16, 20, 24, 32];
 
   const [formData, setFormData] = useState({
+    tipoTorneo: 'TRADICIONAL', // 'TRADICIONAL' | 'AMERICANO'
     complejoId: '', 
     nombre: '',
     fechaInicio: '',
     fechaFin: '',
     categorias: [],
-    cupoParejas: 16, // Default por schema de Prisma
+    cupoParejas: 16,
     precio: '',
     premios: '',
-    reglas: 'REGLAS DEL TORNEO:\n\n1. Todas las parejas que no pertenezcan a la categoría correspondiente serán descalificadas sin devolución de la inscripción.\n2. Tolerancia máxima de espera: 15 minutos respecto al horario programado.\n3. El sistema de juego será en formato de zonas y luego llaves eliminatorias.',
+    reglas: REGLAS_TRADICIONAL,
     imagenArchivo: null, 
     imagenPreview: null 
   });
@@ -58,6 +71,15 @@ const CrearTorneoScreen = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Selector de Tipo de Torneo (Tradicional vs Americano)
+  const handleCambioTipoTorneo = (tipo) => {
+    setFormData((prev) => ({
+      ...prev,
+      tipoTorneo: tipo,
+      reglas: tipo === 'AMERICANO' ? REGLAS_AMERICANO : REGLAS_TRADICIONAL
+    }));
   };
 
   // Manejar preview e imagen física
@@ -110,15 +132,22 @@ const CrearTorneoScreen = () => {
       setCargando(true);
 
       const datosParaEnviar = new FormData();
-      datosParaEnviar.append('nombre', formData.nombre.trim());
+      
+      // Si es americano y el nombre no trae la palabra, le agregamos el prefijo para identificación directa
+      let nombreTorneoFinal = formData.nombre.trim();
+      if (formData.tipoTorneo === 'AMERICANO' && !nombreTorneoFinal.toLowerCase().includes('americano')) {
+        nombreTorneoFinal = `${nombreTorneoFinal} (Americano)`;
+      }
+
+      datosParaEnviar.append('nombre', nombreTorneoFinal);
       datosParaEnviar.append('fechaInicio', formData.fechaInicio);
       datosParaEnviar.append('fechaFin', formData.fechaFin);
       
-      // 1. Guardamos las categorías separadas por " | " según la especificación del Prisma schema
+      // Categorías concatenadas
       const stringCategorias = formData.categorias.join(' | ');
       datosParaEnviar.append('categoria', stringCategorias); 
 
-      // 2. PARSEOS NUMÉRICOS OBLIGATORIOS (Para evitar errores 500 de Prisma)
+      // Parseos numéricos obligatorios
       const precioFloat = parseFloat(formData.precio);
       const cupoInt = parseInt(formData.cupoParejas, 10);
 
@@ -126,7 +155,10 @@ const CrearTorneoScreen = () => {
       datosParaEnviar.append('cupoParejas', isNaN(cupoInt) ? 16 : cupoInt);
       
       datosParaEnviar.append('premios', formData.premios.trim());
-      datosParaEnviar.append('reglas', formData.reglas.trim());
+      
+      // Adjuntamos flag de formato dentro del texto de reglas
+      const reglasFinales = `[FORMATO: ${formData.tipoTorneo}]\n\n${formData.reglas.trim()}`;
+      datosParaEnviar.append('reglas', reglasFinales);
       datosParaEnviar.append('complejoId', formData.complejoId);
 
       if (formData.imagenArchivo) {
@@ -177,7 +209,43 @@ const CrearTorneoScreen = () => {
       </header>
 
       <form onSubmit={handleSubmit} style={styles.formContainer}>
-        
+
+        {/* SELECTOR DE FORMATO DE TORNEO */}
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Formato / Dinámica de Juego</label>
+          <div style={styles.tipoTorneoGrid}>
+            <button
+              type="button"
+              onClick={() => handleCambioTipoTorneo('TRADICIONAL')}
+              style={{
+                ...styles.tipoTorneoCard,
+                ...(formData.tipoTorneo === 'TRADICIONAL' ? styles.tipoTorneoCardActive : {})
+              }}
+            >
+              <span style={{ fontSize: '20px' }}>🏆</span>
+              <div>
+                <div style={styles.tipoTorneoTitulo}>Tradicional</div>
+                <div style={styles.tipoTorneoSub}>Fase de Zonas + Eliminatoria</div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleCambioTipoTorneo('AMERICANO')}
+              style={{
+                ...styles.tipoTorneoCard,
+                ...(formData.tipoTorneo === 'AMERICANO' ? styles.tipoTorneoCardAmericanoActive : {})
+              }}
+            >
+              <span style={{ fontSize: '20px' }}>⚡</span>
+              <div>
+                <div style={styles.tipoTorneoTitulo}>Americano Express</div>
+                <div style={styles.tipoTorneoSub}>Todos vs Todos / Dinámico</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
         {/* COMPLEJO / CLUB */}
         <div style={styles.inputGroup}>
           <label style={styles.label}>Complejo / Club Anfitrión</label>
@@ -206,7 +274,7 @@ const CrearTorneoScreen = () => {
           <input
             type="text"
             name="nombre"
-            placeholder="Ej: Copa Challenger ADN Pádel"
+            placeholder={formData.tipoTorneo === 'AMERICANO' ? "Ej: Americano Nocturno 6ta Categoría" : "Ej: Copa Challenger ADN Pádel"}
             value={formData.nombre}
             onChange={handleChange}
             style={styles.input}
@@ -376,7 +444,7 @@ const CrearTorneoScreen = () => {
 
         {/* BOTÓN ACCIÓN */}
         <button type="submit" disabled={cargando} style={cargando ? styles.btnSubmitDisabled : styles.btnSubmit}>
-          {cargando ? 'Publicando torneo...' : 'Publicar Torneo de Pádel 🏆'}
+          {cargando ? 'Publicando torneo...' : `Publicar Torneo (${formData.tipoTorneo === 'AMERICANO' ? 'Americano ⚡' : 'Tradicional 🏆'})`}
         </button>
       </form>
     </div>
@@ -419,6 +487,42 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '24px'
+  },
+  tipoTorneoGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '12px'
+  },
+  tipoTorneoCard: {
+    padding: '14px',
+    borderRadius: '16px',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    cursor: 'pointer',
+    textAlign: 'left',
+    transition: 'all 0.2s ease'
+  },
+  tipoTorneoCardActive: {
+    backgroundColor: 'rgba(57, 255, 20, 0.1)',
+    borderColor: '#39FF14'
+  },
+  tipoTorneoCardAmericanoActive: {
+    backgroundColor: 'rgba(255, 179, 0, 0.15)',
+    borderColor: '#FFB300'
+  },
+  tipoTorneoTitulo: {
+    color: '#FFF',
+    fontSize: '14px',
+    fontWeight: '700'
+  },
+  tipoTorneoSub: {
+    color: '#8E8E93',
+    fontSize: '11px',
+    fontWeight: '500',
+    marginTop: '2px'
   },
   row: {
     display: 'flex',
@@ -573,7 +677,6 @@ const styles = {
     cursor: 'not-allowed',
     marginTop: '10px',
   },
-  // ESTILOS DEL TOAST NOTIFICATION
   toast: {
     position: 'fixed',
     top: '24px',
