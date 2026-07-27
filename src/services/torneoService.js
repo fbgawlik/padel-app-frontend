@@ -36,5 +36,15 @@ export const torneoService = {
   actualizarPartido: async (partidoId, resultado) => {
     const response = await API.put(`/torneos/partido/${partidoId}/resultado`, { resultado });
     return response.data;
+  },
+
+  // Subir imagen a la galería del torneo
+  subirImagenGaleria: async (torneoId, archivoImagen) => {
+    const formData = new FormData();
+    formData.append('imagen', archivoImagen);
+    const response = await API.post(`/torneos/${torneoId}/galeria`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
   }
 };

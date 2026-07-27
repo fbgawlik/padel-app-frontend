@@ -5,6 +5,7 @@ import API from '../services/api';
 import { useQuery } from '@tanstack/react-query';
 import { AuthContext } from '../context/AuthContext';
 import { resolverUrlImagen } from '../services/imageHelper';
+import { torneoService } from '../services/torneoService';
 
 const TorneoDetalleScreen = () => {
   const { id } = useParams();
@@ -14,6 +15,9 @@ const TorneoDetalleScreen = () => {
   const [pestanaActiva, setPestanaActiva] = useState('cronograma');
   const [diaSeleccionado, setDiaSeleccionado] = useState('');
   const [filtroGaleria, setFiltroGaleria] = useState('Todo');
+  const [archivoGaleria, setArchivoGaleria] = useState(null);
+  const [subiendoImagen, setSubiendoImagen] = useState(false);
+  const [mensajeGaleria, setMensajeGaleria] = useState(null);
 
   // 1. Traemos el torneo específico desde el backend usando React Query
   const { data: torneo, isLoading, isError } = useQuery({
@@ -92,6 +96,37 @@ const TorneoDetalleScreen = () => {
   // Evaluar si las inscripciones están abiertas (Fecha de inicio es posterior a hoy)
   const hoyStr = new Date().toISOString().split('T')[0];
   const inscripcionesAbiertas = torneo.fechaInicio > hoyStr && torneo.estado !== 'finalizado';
+
+  const imagenesGaleria = torneo?.imagenes || [];
+  const imagenesFiltradas = imagenesGaleria.filter(img => filtroGaleria === 'Todo' || filtroGaleria === 'Fotos');
+
+  const handleArchivoChange = (event) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setArchivoGaleria(file);
+      setMensajeGaleria(null);
+    }
+  };
+
+  const handleSubirImagen = async () => {
+    if (!archivoGaleria) {
+      setMensajeGaleria({ tipo: 'error', texto: 'Seleccioná una imagen primero.' });
+      return;
+    }
+
+    try {
+      setSubiendoImagen(true);
+      await torneoService.subirImagenGaleria(id, archivoGaleria);
+      setArchivoGaleria(null);
+      setMensajeGaleria({ tipo: 'success', texto: 'Imagen subida correctamente.' });
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+      setMensajeGaleria({ tipo: 'error', texto: error.response?.data?.error || 'Error al subir la imagen.' });
+    } finally {
+      setSubiendoImagen(false);
+    }
+  };
 
   return (
     <div style={styles.screenContainer}>
@@ -260,13 +295,51 @@ const TorneoDetalleScreen = () => {
               </div>
             </div>
 
+            <div style={styles.uploadRow}>
+              <label htmlFor="imagenGaleria" style={styles.uploadLabel}>
+                {archivoGaleria ? archivoGaleria.name : 'Seleccionar imagen para subir'}
+              </label>
+              <input
+                id="imagenGaleria"
+                type="file"
+                accept="image/*"
+                onChange={handleArchivoChange}
+                style={styles.uploadInput}
+              />
+              <button
+                onClick={handleSubirImagen}
+                disabled={subiendoImagen}
+                style={{ ...styles.btnSubirImagen, opacity: subiendoImagen ? 0.6 : 1 }}
+              >
+                {subiendoImagen ? 'Subiendo...' : 'Subir foto'}
+              </button>
+            </div>
+
+            {mensajeGaleria && (
+              <div style={{
+                ...styles.messageBox,
+                backgroundColor: mensajeGaleria.tipo === 'success' ? 'rgba(57,255,20,0.12)' : 'rgba(255,75,75,0.12)',
+                color: mensajeGaleria.tipo === 'success' ? '#39FF14' : '#FF6B6B'
+              }}>
+                {mensajeGaleria.texto}
+              </div>
+            )}
+
             <div style={styles.galeriaGrid}>
-              <div style={styles.imageCard}>
-                <img src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=500" alt="Padel 1" style={styles.img} />
-              </div>
-              <div style={styles.imageCard}>
-                <img src="https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=500" alt="Padel 2" style={styles.img} />
-              </div>
+              {imagenesFiltradas.length > 0 ? imagenesFiltradas.map((imagen) => (
+                <div key={imagen.id} style={styles.imageCard}>
+                  <img src={resolverUrlImagen(imagen.imagenUrl)} alt={`Torneo ${torneo.nombre}`} style={styles.img} />
+                  <div style={styles.imageMeta}>
+                    <span>{imagen.usuario ? `${imagen.usuario.nombre} ${imagen.usuario.apellido}` : 'Subido por invitado'}</span>
+                    <span>{new Date(imagen.createdAt).toLocaleString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                </div>
+              )) : (
+                <div style={styles.noMatches}>
+                  <span style={{ fontSize: '24px' }}>📸</span>
+                  <p style={{ marginTop: '8px' }}>No hay fotos en la galería todavía.</p>
+                </div>
+              )}
             </div>
           </div>
         )}
