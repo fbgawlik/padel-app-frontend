@@ -94,8 +94,8 @@ const TorneosScreen = () => {
             }}
           >
             {formato === 'TODOS' && 'Todos'}
-            {formato === 'TRADICIONAL' && 'Cuadro / Zonas'}
-            {formato === 'AMERICANO' && 'Americanos ⚡'}
+            {formato === 'TRADICIONAL' && 'tradicional'}
+            {formato === 'AMERICANO' && 'Americanos '}
           </button>
         ))}
       </div>
