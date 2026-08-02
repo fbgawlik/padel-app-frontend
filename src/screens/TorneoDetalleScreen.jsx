@@ -85,10 +85,30 @@ const TorneoDetalleScreen = () => {
     </div>
   );
 
+  const zonasDisponibles = torneo?.zonas || [];
+
   // Filtrar los partidos que pertenezcan estrictamente al día seleccionado
   const partidosDelDia = torneo.partidos 
-    ? torneo.partidos.filter(partido => partido.fecha === diaSeleccionado)
+    ? torneo.partidos.filter(partido => {
+        const partidoFecha = partido.fecha ? partido.fecha.split('T')[0] : null;
+        return partidoFecha === diaSeleccionado;
+      })
     : [];
+
+  const partidosPorZona = zonasDisponibles.map(zona => {
+    const zonaPartidos = zona.partidos?.length > 0
+      ? zona.partidos
+      : torneo.partidos.filter(partido => partido.zonaId === zona.id);
+
+    return {
+      ...zona,
+      partidos: zonaPartidos.map(partido => ({
+        ...partido,
+        pareja1: partido.pareja1 || torneo.partidos.find(p => p.id === partido.id)?.pareja1 || null,
+        pareja2: partido.pareja2 || torneo.partidos.find(p => p.id === partido.id)?.pareja2 || null
+      }))
+    };
+  });
 
   const fechaActivaData = fechasDinamicas.find(f => f.id === diaSeleccionado);
   const bannerImagen = resolverUrlImagen(torneo.imagenPortada || torneo.complejo?.imagenUrl || "https://images.unsplash.com/photo-1592656094267-764a4506f368?w=800");
@@ -268,10 +288,74 @@ const TorneoDetalleScreen = () => {
         {/* ─── PESTAÑA: FIXTURE ─── */}
         {pestanaActiva === 'fixture' && (
           <div style={styles.tabSection}>
-            <div style={styles.noMatches}>
-              <span style={{ fontSize: '32px' }}>📊</span>
-              <p style={{ marginTop: '10px' }}>Estructura de zonas y llaves de eliminación directa.</p>
-            </div>
+            {partidosPorZona.length > 0 ? (
+              partidosPorZona.map((zona) => (
+                <div key={zona.id} style={styles.zonaCard}>
+                  <div style={styles.zonaHeader}>
+                    <div>
+                      <div style={styles.zonaNombre}>{zona.nombre || 'Zona sin nombre'}</div>
+                      <div style={styles.zonaCategoria}>{zona.categoria || torneo.categoria || 'Categoría general'}</div>
+                    </div>
+                    <div style={styles.zonaMeta}>
+                      <span style={styles.zonaMetaText}>{zona.partidos?.length || 0} partido{zona.partidos?.length === 1 ? '' : 's'}</span>
+                      <span style={styles.zonaMetaText}>{zona.parejas?.length || 0} pareja{zona.parejas?.length === 1 ? '' : 's'}</span>
+                    </div>
+                  </div>
+
+                  {zona.partidos && zona.partidos.length > 0 ? (
+                    <div style={styles.zonaPartidosList}>
+                      {zona.partidos.map((partido) => (
+                        <div key={partido.id} style={styles.matchCardNested}>
+                          <div style={styles.badgesRow}>
+                            <span style={styles.badgeEstado(partido.estado || 'programado')}>
+                              {`• ${(partido.estado || 'programado').toUpperCase()}`}
+                            </span>
+                            <span style={styles.badgeCategoria}>{partido.categoria || torneo.categoria}</span>
+                          </div>
+
+                          <div style={styles.playersBlock}>
+                            <div style={styles.playerLine}>
+                              🎾 {partido.pareja1?.jugador1 || 'Pareja A'} / {partido.pareja1?.jugador2 || ''}
+                            </div>
+                            <div style={styles.vsText}>VS</div>
+                            <div style={styles.playerLine}>
+                              🎾 {partido.pareja2?.jugador1 || 'Pareja B'} / {partido.pareja2?.jugador2 || ''}
+                            </div>
+                          </div>
+
+                          <div style={styles.locationRow}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2.5">
+                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                              <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            <span style={styles.locationText}>{torneo.complejo?.nombre || 'Complejo ADN'}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : zona.parejas && zona.parejas.length > 0 ? (
+                    <div style={styles.parejasList}>
+                      {zona.parejas.map((pareja) => (
+                        <div key={pareja.id} style={styles.parejaItem}>
+                          <span>🎾 {pareja.jugador1} / {pareja.jugador2}</span>
+                          <span style={{ color: '#8E8E93' }}>{pareja.categoria || zona.categoria}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={styles.noMatches}>
+                      <span style={{ fontSize: '24px' }}>📊</span>
+                      <p style={{ marginTop: '10px' }}>No hay partidos ni parejas cargadas en esta zona.</p>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div style={styles.noMatches}>
+                <span style={{ fontSize: '32px' }}>📊</span>
+                <p style={{ marginTop: '10px' }}>No hay zonas generadas todavía para este torneo.</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -463,6 +547,17 @@ const styles = {
   galeriaGrid: { display: 'flex', flexDirection: 'column', gap: '16px' },
   imageCard: { width: '100%', height: '200px', borderRadius: '20px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' },
   img: { width: '100%', height: '100%', objectFit: 'cover' },
+  zonaCard: { backgroundColor: 'rgba(22, 22, 24, 0.75)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.06)', padding: '18px', display: 'flex', flexDirection: 'column', gap: '16px' },
+  zonaHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' },
+  zonaNombre: { fontSize: '16px', fontWeight: '800', color: '#FFFFFF' },
+  zonaCategoria: { fontSize: '12px', color: '#8E8E93', textTransform: 'uppercase', letterSpacing: '0.8px', marginTop: '4px' },
+  zonaMeta: { display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' },
+  zonaMetaText: { fontSize: '12px', color: '#8E8E93' },
+  zonaPartidosList: { display: 'flex', flexDirection: 'column', gap: '12px' },
+  matchCardNested: { display: 'flex', flexDirection: 'column', gap: '10px', backgroundColor: 'rgba(255,255,255,0.03)', borderRadius: '16px', padding: '14px', border: '1px solid rgba(255,255,255,0.04)' },
+  parejasList: { display: 'flex', flexDirection: 'column', gap: '10px' },
+  parejaItem: { padding: '12px 14px', backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '14px', display: 'flex', justifyContent: 'space-between', gap: '10px', fontSize: '13px', color: '#fff' },
+  noDataText: { fontSize: '13px', color: '#8E8E93', textAlign: 'center' },
   centerContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh', flexDirection: 'column' },
   spinner: { width: '32px', height: '32px', border: '3px solid rgba(57, 255, 20, 0.1)', borderTopColor: '#39FF14', borderRadius: '50%' },
   alerta: { padding: '20px', backgroundColor: 'rgba(255, 77, 77, 0.05)', borderRadius: '16px', border: '1px solid rgba(255, 77, 77, 0.2)', textAlign: 'center' },
