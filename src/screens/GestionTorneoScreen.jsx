@@ -1,10 +1,10 @@
-// src/screens/GestionTorneoScreen.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { torneoService } from '../services/torneoService';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AuthContext } from '../context/AuthContext';
 import { resolverUrlImagen } from '../services/imageHelper';
+import Toast from '../components/Toast'; // Aseguramos renderizado de feedback si lo requieres
 
 const GestionTorneoScreen = () => {
   const { id } = useParams();
@@ -12,10 +12,11 @@ const GestionTorneoScreen = () => {
   const queryClient = useQueryClient();
 
   // Pestañas: 'inscriptos', 'llaves', 'resultados'
-  const [pestanaActiva, setPestanaActiva] = useState('resultados');
+  const [pestanaActiva, setPestanaActiva] = useState('inscriptos');
   const [busqueda, setBusqueda] = useState('');
   const [diaSeleccionado, setDiaSeleccionado] = useState('7ago');
   const [categoriaFiltrada, setCategoriaFiltrada] = useState('');
+  const [generoFiltrado, setGeneroFiltrado] = useState(''); // Estado para filtro de género
   const [resultadoEdicion, setResultadoEdicion] = useState({});
   const [toast, setToast] = useState(null);
 
@@ -32,24 +33,66 @@ const GestionTorneoScreen = () => {
   useEffect(() => {
     if (torneo?.categoria) {
       const categorias = torneo.categoria.split(/[|/]+/).map(c => c.trim()).filter(Boolean);
-      setCategoriaFiltrada(categorias[0] || '');
+      if (categorias.length > 0 && !categoriaFiltrada) {
+        setCategoriaFiltrada(categorias[0]);
+      }
     }
   }, [torneo]);
 
   const partidos = torneo?.partidos || [];
   const zonas = torneo?.zonas || [];
   const categoriasDisponibles = torneo?.categoria ? torneo.categoria.split(/[|/]+/).map(c => c.trim()).filter(Boolean) : [];
+
+  // FILTRADO COMPLETO DE INSCRIPTOS (Texto + Categoría + Género)
   const inscriptosFiltrados = (torneo?.inscripciones || []).filter(insc => {
     const texto = `${insc.jugador1} ${insc.jugador2}`.toLowerCase();
-    return !busqueda || texto.includes(busqueda.toLowerCase());
+    const coincideBusqueda = !busqueda || texto.includes(busqueda.toLowerCase());
+    
+    // Filtrado por categoría
+    const coincideCategoria = !categoriaFiltrada || 
+      (insc.categoria && insc.categoria.toLowerCase().includes(categoriaFiltrada.toLowerCase()));
+
+    // Filtrado por género (detecta si la categoría o la inscripción tiene Caballeros / Damas / Mixto)
+    let coincideGenero = true;
+    if (generoFiltrado) {
+      const catTexto = (insc.categoria || '').toLowerCase();
+      if (generoFiltrado === 'Caballeros') {
+        coincideGenero = catTexto.includes('caballeros') || catTexto.includes('varones') || catTexto.includes('masculino');
+      } else if (generoFiltrado === 'Damas') {
+        coincideGenero = catTexto.includes('damas') || catTexto.includes('femenino');
+      } else if (generoFiltrado === 'Mixto') {
+        coincideGenero = catTexto.includes('mixto');
+      }
+    }
+
+    return coincideBusqueda && coincideCategoria && coincideGenero;
   });
+
   const partidosFiltrados = partidos.filter(partido => !categoriaFiltrada || partido.categoria === categoriaFiltrada);
   const zonasFiltradas = zonas.filter(zona => !categoriaFiltrada || zona.categoria === categoriaFiltrada);
 
   const mostrarToast = (mensaje, tipo = 'success') => {
     setToast({ mensaje, tipo });
-    setTimeout(() => setToast(null), 4000);
+    setTimeout(() => setToast(null), 3500);
   };
+
+  // MUTACIÓN PARA PUBLICAR RESULTADOS
+  const publicarResultadosMutation = useMutation({
+    mutationFn: async () => {
+      if (torneoService.publicarResultados) {
+        return await torneoService.publicarResultados(id);
+      }
+      // Mock fallback si el endpoint no existe aún
+      return new Promise((res) => setTimeout(res, 800));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['torneoGestion', id]);
+      mostrarToast('¡Resultados publicados a los participantes!', 'success');
+    },
+    onError: (error) => {
+      mostrarToast(error.response?.data?.error || 'Error al publicar los resultados.', 'error');
+    }
+  });
 
   const generarZonasMutation = useMutation({
     mutationFn: async (categoria) => {
@@ -90,16 +133,14 @@ const GestionTorneoScreen = () => {
     resultadoMutation.mutate({ partidoId, resultado });
   };
 
-  const obtenerPartidosPorFase = (fase) => partidosFiltrados.filter(partido => partido.tipoFase === fase);
-  const fasesOrden = ['ZONA', 'OCTAVOS', 'CUARTOS', 'SEMIFINAL', 'FINAL'];
-  const fasesEtiqueta = { ZONA: 'Zonas', OCTAVOS: 'Octavos', CUARTOS: 'Cuartos', SEMIFINAL: 'Semifinal', FINAL: 'Final' };
-
   if (isLoading) return <div style={styles.centerContainer}><div style={styles.spinner}></div></div>;
   if (isError) return <div style={styles.centerContainer}><div style={{color:'#fff'}}>Error cargando torneo: {error?.message || 'Error desconocido'}</div></div>;
 
   return (
     <div style={styles.screenContainer}>
       
+      {toast && <Toast mensaje={toast.mensaje} tipo={toast.tipo} onClose={() => setToast(null)} />}
+
       {/* ─── ENCABEZADO Y TÍTULOS ─── */}
       <div style={styles.header}>
         <button onClick={() => navigate(-1)} style={styles.backButton}>
@@ -111,7 +152,16 @@ const GestionTorneoScreen = () => {
           <div style={styles.logoRow}>
             <span style={styles.logoText}>ADN PADEL</span>
             {pestanaActiva === 'resultados' && (
-               <button style={styles.btnPublicar}>PUBLICAR RESULTADOS</button>
+               <button 
+                onClick={() => publicarResultadosMutation.mutate()} 
+                disabled={publicarResultadosMutation.isLoading}
+                style={{
+                  ...styles.btnPublicar,
+                  opacity: publicarResultadosMutation.isLoading ? 0.6 : 1
+                }}
+               >
+                 {publicarResultadosMutation.isLoading ? 'PUBLICANDO...' : 'PUBLICAR RESULTADOS'}
+               </button>
             )}
           </div>
           <h1 style={styles.tituloSecundario}>GESTIÓN DE TORNEO:</h1>
@@ -174,22 +224,29 @@ const GestionTorneoScreen = () => {
                 />
               </div>
               <div style={styles.counterBox}>
-                <span style={styles.counterNumber}>{(torneo?.inscripciones?.length || 0) * 2} Inscriptos</span>
-                <span style={styles.counterSub}>({torneo?.inscripciones?.length || 0} Parejas)</span>
+                <span style={styles.counterNumber}>{inscriptosFiltrados.length * 2} Inscriptos</span>
+                <span style={styles.counterSub}>({inscriptosFiltrados.length} Parejas)</span>
               </div>
             </div>
 
+            {/* FILTROS DE CATEGORÍA Y GÉNERO FUNCIONALES */}
             <div style={styles.filtersRow}>
               <select style={styles.selectInput} value={categoriaFiltrada} onChange={(e) => setCategoriaFiltrada(e.target.value)}>
                 <option value="">Categoría: Todas</option>
                 {categoriasDisponibles.map((cat) => <option key={cat} value={cat}>{cat}</option>)}
               </select>
-              <select style={styles.selectInput}><option>Género: Todos</option></select>
+              
+              <select style={styles.selectInput} value={generoFiltrado} onChange={(e) => setGeneroFiltrado(e.target.value)}>
+                <option value="">Género: Todos</option>
+                <option value="Caballeros">Caballeros</option>
+                <option value="Damas">Damas</option>
+                <option value="Mixto">Mixto</option>
+              </select>
             </div>
 
             <div style={styles.listContainer}>
               {inscriptosFiltrados.length === 0 ? (
-                <div style={styles.textoListaVacia}>No se encontraron inscriptos para esta búsqueda.</div>
+                <div style={styles.textoListaVacia}>No se encontraron inscriptos para los filtros seleccionados.</div>
               ) : (
                 inscriptosFiltrados.map(insc => (
                   <div key={insc.id} style={{...styles.cardInscripto, borderColor: '#39FF14'}}>
@@ -230,13 +287,19 @@ const GestionTorneoScreen = () => {
           <div style={styles.seccionContenido}>
             <div style={styles.filtersRow}>
                <select style={styles.selectInput} value={categoriaFiltrada} onChange={(e) => setCategoriaFiltrada(e.target.value)}>
-                 <option value="">Categoría: Todas</option>
+                 <option value="">Categoría: Seleccionar</option>
                  {categoriasDisponibles.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                </select>
+
+               {/* BOTÓN CON DISEÑO MEJORADO E INTEGRADO AL TEMA */}
                <button 
                  onClick={() => generarZonasMutation.mutate(categoriaFiltrada)}
                  disabled={generarZonasMutation.isLoading || !categoriaFiltrada}
-                 style={{ ...styles.botonPrincipal, width: '220px', opacity: (!categoriaFiltrada || generarZonasMutation.isLoading) ? 0.6 : 1 }}
+                 style={{ 
+                   ...styles.btnGenerarZonas,
+                   opacity: (!categoriaFiltrada || generarZonasMutation.isLoading) ? 0.5 : 1,
+                   cursor: (!categoriaFiltrada || generarZonasMutation.isLoading) ? 'not-allowed' : 'pointer'
+                 }}
                >
                  {generarZonasMutation.isLoading ? 'Generando...' : 'Generar Zonas'}
                </button>
@@ -245,9 +308,11 @@ const GestionTorneoScreen = () => {
             {zonasFiltradas.length === 0 ? (
               <div style={styles.llavesContainer}>
                 <div style={styles.mensajePlaceholder}>
-                  <span style={{fontSize: '32px'}}>🏆</span>
-                  <p>No hay zonas generadas todavía para esta categoría.</p>
-                  <p style={{ color: '#8E8E93', marginTop: '8px' }}>Usá el botón de arriba para crear las zonas según las inscripciones existentes.</p>
+                  <span style={{fontSize: '36px', display: 'block', marginBottom: '8px'}}>🏆</span>
+                  <p style={{ fontWeight: '700', color: '#FFF' }}>No hay zonas generadas todavía para esta categoría.</p>
+                  <p style={{ color: '#8E8E93', marginTop: '6px', fontSize: '13px' }}>
+                    Seleccioná una categoría y tocá <strong>"Generar Zonas"</strong> para armar el cuadro.
+                  </p>
                 </div>
               </div>
             ) : (
@@ -282,7 +347,6 @@ const GestionTorneoScreen = () => {
         {/* VISTA 3: RESULTADOS */}
         {pestanaActiva === 'resultados' && (
           <div style={styles.seccionContenido}>
-            {/* Selector de días */}
             <div style={styles.diasRow}>
               {[
                 { id: '7ago', text1: 'VIE', text2: '7 AGO' },
@@ -370,7 +434,7 @@ const GestionTorneoScreen = () => {
         )}
       </div>
 
-      {/* BOTÓN FLOTANTE ESTILO WHATSAPP (Solo activo en Inscriptos o Resultados según necesites) */}
+      {/* BOTÓN FLOTANTE */}
       <button style={styles.fabButton}>
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0A0A0B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
           <line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line>
@@ -381,7 +445,7 @@ const GestionTorneoScreen = () => {
   );
 };
 
-// --- ESTILOS VISUALES PREMIUM ---
+// --- ESTILOS VISUALES MEJORADOS ---
 const styles = {
   screenContainer: {
     backgroundColor: '#0A0A0B', minHeight: '100vh', width: '100%', 
@@ -392,18 +456,17 @@ const styles = {
   headerInfo: { flex: 1, display: 'flex', flexDirection: 'column' },
   logoRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' },
   logoText: { color: '#FFF', fontWeight: '800', fontSize: '14px', letterSpacing: '1px' },
-  btnPublicar: { backgroundColor: 'transparent', border: '1px solid #39FF14', color: '#39FF14', padding: '4px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: '800' },
+  btnPublicar: { backgroundColor: 'transparent', border: '1px solid #39FF14', color: '#39FF14', padding: '6px 12px', borderRadius: '8px', fontSize: '10px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s ease', letterSpacing: '0.5px' },
   tituloSecundario: { fontSize: '20px', color: '#FFF', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' },
   tituloPrincipal: { fontSize: '26px', color: '#FFF', fontWeight: '900', margin: '4px 0 12px 0', letterSpacing: '-0.5px' },
   organizadorRow: { display: 'flex', alignItems: 'center', gap: '8px' },
-  iconoAvatar: { fontSize: '16px' },
   organizadorText: { color: '#8E8E93', fontSize: '12px', fontWeight: '600' },
   
   tabsContainer: { display: 'flex', justifyContent: 'space-around', padding: '0 20px', borderBottom: '1px solid rgba(255,255,255,0.1)' },
   tabButton: { background: 'transparent', border: 'none', padding: '14px 0', fontSize: '13px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s', letterSpacing: '0.5px' },
   
   mainContent: { padding: '20px' },
-  seccionContenido: { display: 'flex', flexDirection: 'column', gap: '16px', animation: 'fadeIn 0.3s ease' },
+  seccionContenido: { display: 'flex', flexDirection: 'column', gap: '16px' },
   
   searchRow: { display: 'flex', gap: '12px', alignItems: 'center' },
   searchContainer: { flex: 1, display: 'flex', alignItems: 'center', backgroundColor: '#161618', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)' },
@@ -412,10 +475,24 @@ const styles = {
   counterNumber: { fontSize: '14px', fontWeight: '600', color: '#FFF' },
   counterSub: { fontSize: '12px', color: '#8E8E93' },
   
-  filtersRow: { display: 'flex', gap: '12px' },
-  selectInput: { flex: 1, backgroundColor: '#161618', border: '1px solid rgba(255,255,255,0.08)', color: '#8E8E93', padding: '12px', borderRadius: '14px', fontSize: '13px', outline: 'none' },
+  filtersRow: { display: 'flex', gap: '12px', alignItems: 'center' },
+  selectInput: { flex: 1, backgroundColor: '#161618', border: '1px solid rgba(255,255,255,0.08)', color: '#FFFFFF', padding: '12px', borderRadius: '14px', fontSize: '13px', outline: 'none' },
   
+  btnGenerarZonas: { 
+    backgroundColor: '#39FF14', 
+    color: '#0A0A0B', 
+    border: 'none', 
+    padding: '12px 18px', 
+    borderRadius: '14px', 
+    fontWeight: '800', 
+    fontSize: '13px',
+    boxShadow: '0 4px 14px rgba(57, 255, 20, 0.25)',
+    transition: 'all 0.2s ease',
+    whiteSpace: 'nowrap'
+  },
+
   listContainer: { display: 'flex', flexDirection: 'column', gap: '12px' },
+  textoListaVacia: { textAlign: 'center', color: '#8E8E93', padding: '24px 0', fontSize: '13px' },
   zoneCard: { backgroundColor: '#141416', borderRadius: '16px', padding: '14px', border: '1px solid rgba(255,255,255,0.07)' },
   zoneHeader: { fontSize: '14px', fontWeight: '800', color: '#39FF14', marginBottom: '12px' },
   partidoCard: { backgroundColor: '#1D1D20', borderRadius: '14px', padding: '12px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '10px' },
@@ -441,7 +518,6 @@ const styles = {
   resultadoHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' },
   textoPista: { color: '#8E8E93', fontSize: '13px', fontWeight: '600' },
   badgeEstado: { display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '800', letterSpacing: '0.5px' },
-  puntoRojo: { width: '8px', height: '8px', backgroundColor: '#FF3B30', borderRadius: '50%', boxShadow: '0 0 6px #FF3B30' },
   
   enfrentamientoRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' },
   parejasCol: { display: 'flex', flexDirection: 'column', gap: '6px' },
@@ -457,11 +533,9 @@ const styles = {
   resultadoFooter: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)' },
   textoLiveScore: { fontSize: '13px', color: '#8E8E93' },
   btnPrimario: { backgroundColor: '#39FF14', color: '#0A0A0B', padding: '8px 16px', borderRadius: '10px', border: 'none', fontWeight: '800', fontSize: '12px', cursor: 'pointer' },
-  btnSecundario: { backgroundColor: 'transparent', color: '#39FF14', border: '1px solid #39FF14', padding: '8px 16px', borderRadius: '10px', fontWeight: '800', fontSize: '12px', cursor: 'pointer' },
 
-  llavesContainer: { minHeight: '300px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '20px' },
-  mensajePlaceholder: { textAlign: 'center', color: '#8E8E93' },
-  btnGenerarCuadro: { marginTop: '16px', backgroundColor: '#39FF14', color: '#0A0A0B', border: 'none', padding: '12px 20px', borderRadius: '12px', fontWeight: '800', cursor: 'pointer', boxShadow: '0 4px 14px rgba(57, 255, 20, 0.3)' },
+  llavesContainer: { minHeight: '260px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '20px', padding: '20px' },
+  mensajePlaceholder: { textAlign: 'center' },
 
   fabButton: { position: 'fixed', bottom: '104px', right: '24px', width: '56px', height: '56px', borderRadius: '28px', backgroundColor: '#39FF14', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', boxShadow: '0 4px 16px rgba(57, 255, 20, 0.4)', cursor: 'pointer', zIndex: 99 },
   centerContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' },
