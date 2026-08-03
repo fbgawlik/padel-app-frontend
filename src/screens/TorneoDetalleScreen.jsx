@@ -1,5 +1,5 @@
 // src/screens/TorneoDetalleScreen.jsx
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import { useQuery } from '@tanstack/react-query';
@@ -18,6 +18,7 @@ const TorneoDetalleScreen = () => {
   const [archivoGaleria, setArchivoGaleria] = useState(null);
   const [subiendoImagen, setSubiendoImagen] = useState(false);
   const [mensajeGaleria, setMensajeGaleria] = useState(null);
+  const fileInputRef = useRef(null);
 
   // 1. Traemos el torneo específico desde el backend usando React Query
   const { data: torneo, isLoading, isError } = useQuery({
@@ -119,6 +120,8 @@ const TorneoDetalleScreen = () => {
 
   const imagenesGaleria = torneo?.imagenes || [];
   const imagenesFiltradas = imagenesGaleria.filter(img => filtroGaleria === 'Todo' || filtroGaleria === 'Fotos');
+
+  const esOrganizador = usuario?.id && torneo?.organizadorId && usuario.id === torneo.organizadorId;
 
   const handleArchivoChange = (event) => {
     const file = event.target.files?.[0];
@@ -379,27 +382,42 @@ const TorneoDetalleScreen = () => {
               </div>
             </div>
 
-            <div style={styles.uploadRow}>
-              <label htmlFor="imagenGaleria" style={styles.uploadLabel}>
-                {archivoGaleria ? archivoGaleria.name : 'Seleccionar imagen para subir'}
-              </label>
-              <input
-                id="imagenGaleria"
-                type="file"
-                accept="image/*"
-                onChange={handleArchivoChange}
-                style={styles.uploadInput}
-              />
-              <button
-                onClick={handleSubirImagen}
-                disabled={subiendoImagen}
-                style={{ ...styles.btnSubirImagen, opacity: subiendoImagen ? 0.6 : 1 }}
-              >
-                {subiendoImagen ? 'Subiendo...' : 'Subir foto'}
-              </button>
-            </div>
+            {esOrganizador && (
+              <div style={styles.uploadSection}>
+                <input
+                  ref={fileInputRef}
+                  id="imagenGaleria"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleArchivoChange}
+                  style={styles.uploadInput}
+                />
 
-            {mensajeGaleria && (
+                <div style={styles.uploadControls}>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    style={styles.btnFilePicker}
+                  >
+                    📁 Elegir archivo
+                  </button>
+
+                  <span style={styles.fileName}>
+                    {archivoGaleria ? archivoGaleria.name : 'Ningún archivo seleccionado'}
+                  </span>
+
+                  <button
+                    onClick={handleSubirImagen}
+                    disabled={subiendoImagen || !archivoGaleria}
+                    style={{ ...styles.btnSubirImagen, opacity: (subiendoImagen || !archivoGaleria) ? 0.6 : 1 }}
+                  >
+                    {subiendoImagen ? 'Subiendo...' : 'Subir foto'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {esOrganizador && mensajeGaleria && (
               <div style={{
                 ...styles.messageBox,
                 backgroundColor: mensajeGaleria.tipo === 'success' ? 'rgba(57,255,20,0.12)' : 'rgba(255,75,75,0.12)',
@@ -544,6 +562,29 @@ const styles = {
   galeriaFiltros: { display: 'flex', gap: '8px' },
   galeriaPill: { padding: '8px 16px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', backgroundColor: 'transparent', fontSize: '13px', fontWeight: '600', color: '#8E8E93', cursor: 'pointer', outline: 'none' },
   galeriaPillActivo: { backgroundColor: 'rgba(57, 255, 20, 0.1)', borderColor: '#39FF14', color: '#39FF14' },
+  uploadSection: { display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '18px', padding: '18px', borderRadius: '20px', backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(57,255,20,0.12)' },
+  uploadControls: { display: 'flex', flexDirection: 'column', gap: '10px' },
+  btnFilePicker: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '12px 16px', backgroundColor: 'rgba(10, 10, 11, 0.95)', border: '1px solid rgba(57,255,20,0.4)', borderRadius: '16px', color: '#FFFFFF', fontWeight: '700', cursor: 'pointer', outline: 'none', width: '100%', transition: 'all 0.2s' },
+  uploadInput: { position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', border: 0 },
+  fileName: { color: '#8E8E93', fontSize: '13px', lineHeight: '1.4', minHeight: '20px', wordBreak: 'break-word' },
+  btnSubirImagen: {
+    width: '100%',
+    height: '50px',
+    backgroundColor: '#39FF14',
+    border: 'none',
+    borderRadius: '16px',
+    color: '#0A0A0B',
+    fontSize: '14px',
+    fontWeight: '800',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '0 20px',
+    boxShadow: '0 8px 20px rgba(57, 255, 20, 0.25)',
+    transition: 'opacity 0.2s ease',
+    outline: 'none'
+  },
   galeriaGrid: { display: 'flex', flexDirection: 'column', gap: '16px' },
   imageCard: { width: '100%', height: '200px', borderRadius: '20px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' },
   img: { width: '100%', height: '100%', objectFit: 'cover' },
