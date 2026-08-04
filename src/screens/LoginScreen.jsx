@@ -93,7 +93,7 @@ const styles = {
   display: 'flex',
   justifyContent: 'center', // Centra la tarjeta horizontalmente
   alignItems: 'center',     // Centra la tarjeta verticalmente
-  minHeight: '100vh',       // Ocupa el 100% del alto de la pantalla
+  minHeight: '100dvh',      // Ajustado para el navegador móvil moderno
   padding: '20px', 
   color: '#fff', 
   fontFamily: 'sans-serif',

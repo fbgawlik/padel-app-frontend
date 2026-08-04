@@ -293,7 +293,7 @@ const PerfilScreen = () => {
 
 // ESTILOS MODERNOS (Conservados y optimizados)
 const styles = {
-  container: { minHeight: '100vh', backgroundColor: '#0C0C0E', padding: '40px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'system-ui, sans-serif' },
+  container: { backgroundColor: '#0C0C0E', padding: '40px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'system-ui, sans-serif' },
   tarjeta: { width: '100%', maxWidth: '700px', backgroundColor: '#141416', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', position: 'relative' },
   bannerPortada: { width: '100%', height: '160px', backgroundColor: '#1F1F23', position: 'relative', overflow: 'hidden', cursor: 'pointer' },
   imagenPortadaImg: { width: '100%', height: '100%', objectFit: 'cover' },

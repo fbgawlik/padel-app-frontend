@@ -30,7 +30,7 @@ const RutaPrivada = ({ children }) => {
 
   if (loading) {
     return (
-      <div style={{ backgroundColor: '#0a0a0a', color: '#fff', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <div style={{ backgroundColor: '#0a0a0a', color: '#fff', minHeight: '100dvh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         Cargando ADN Pádel...
       </div>
     );

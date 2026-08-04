@@ -454,7 +454,6 @@ const CrearTorneoScreen = () => {
 // ─── ESTILOS PREMIUM ───
 const styles = {
   container: {
-    minHeight: '100vh',
     backgroundColor: '#0A0A0B',
     color: '#FFF',
     paddingBottom: '120px', 

@@ -477,7 +477,6 @@ const TorneoDetalleScreen = () => {
 const styles = {
   screenContainer: {
     backgroundColor: 'transparent',
-    minHeight: '100vh',
     width: '100%',
     boxSizing: 'border-box',
     color: '#FFFFFF',

@@ -448,7 +448,7 @@ const GestionTorneoScreen = () => {
 // --- ESTILOS VISUALES MEJORADOS ---
 const styles = {
   screenContainer: {
-    backgroundColor: '#0A0A0B', minHeight: '100vh', width: '100%', 
+    backgroundColor: '#0A0A0B', width: '100%', 
     color: '#FFF', paddingBottom: '120px', boxSizing: 'border-box'
   },
   header: { display: 'flex', padding: '20px', gap: '16px', alignItems: 'flex-start', background: 'linear-gradient(180deg, rgba(30,50,40,0.4) 0%, rgba(10,10,11,1) 100%)' },

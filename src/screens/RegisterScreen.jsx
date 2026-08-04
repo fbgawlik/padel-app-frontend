@@ -248,7 +248,7 @@ const RegisterScreen = () => {
 const styles = {
   contenedor: { 
     width: '100%', 
-    minHeight: '100vh',         // Obliga al contenedor a usar todo el alto de la pantalla
+    minHeight: '100dvh',        // Ajustado para el navegador móvil moderno
     backgroundColor: '#050505', // Fondo general para fundirse con la tarjeta
     color: '#fff', 
     fontFamily: 'sans-serif',

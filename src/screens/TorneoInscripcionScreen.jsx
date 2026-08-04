@@ -400,7 +400,6 @@ const TorneoInscripcionScreen = () => {
 const styles = {
   screenContainer: {
     backgroundColor: '#0A0A0B',
-    minHeight: '100vh',
     width: '100%',
     color: '#FFFFFF',
     boxSizing: 'border-box',
@@ -607,7 +606,7 @@ const styles = {
     boxShadow: '0 8px 20px rgba(57, 255, 20, 0.2)',
     marginTop: '15px'
   },
-  centerContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#0A0A0B' },
+  centerContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#0A0A0B' },
   spinner: { width: '32px', height: '32px', border: '3px solid rgba(57, 255, 20, 0.1)', borderTopColor: '#39FF14', borderRadius: '50%' },
 };
 

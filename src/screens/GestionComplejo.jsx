@@ -642,7 +642,7 @@ const GestionComplejo = () => {
 
 // ESTILOS UNIFICADOS PREMIUM
 const styles = {
-  contenedorBase: { width: '100%', color: '#FFFFFF', fontFamily: 'system-ui, -apple-system, sans-serif', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#0C0C0E', padding: '16px' },
+  contenedorBase: { width: '100%', color: '#FFFFFF', fontFamily: 'system-ui, -apple-system, sans-serif', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', backgroundColor: '#0C0C0E', padding: '16px' },
   panelAnchoMaximo: { width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column' },
   headerClubContainer: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
   headerClubLeft: { display: 'flex', alignItems: 'center', gap: '12px', flex: 1 },
@@ -692,7 +692,7 @@ const styles = {
   badgeTipoProducto: { fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' },
   btnEliminarIcono: { backgroundColor: 'rgba(255, 69, 58, 0.1)', border: 'none', cursor: 'pointer', padding: '6px 10px', borderRadius: '8px' },
   textoListaVacia: { fontSize: '12px', color: '#8E8E93', textAlign: 'center', fontStyle: 'italic', margin: '10px 0' },
-  contenedorLoading: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', backgroundColor: '#0C0C0E' },
+  contenedorLoading: { display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#0C0C0E' },
   spinner: { width: '36px', height: '36px', border: '3px solid rgba(255, 255, 255, 0.05)', borderTop: '3px solid #39FF14', borderRadius: '50%' },
   tarjetaCentralForm: { width: '100%', maxWidth: '400px', backgroundColor: '#141416', borderRadius: '24px', padding: '24px', border: '1px solid rgba(255,255,255,0.04)', alignSelf: 'center' },
   alertaError: { backgroundColor: 'rgba(255,69,58,0.1)', color: '#FF453A', padding: '12px', borderRadius: '10px', fontSize: '12px', marginBottom: '14px', textAlign: 'center' },

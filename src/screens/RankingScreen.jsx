@@ -168,7 +168,6 @@ const styles = {
     boxSizing: 'border-box',
     display: 'flex',
     justifyContent: 'center',
-    minHeight: '100vh',
     backgroundColor: '#0C0C0E'
   },
   tarjetaContenido: {
