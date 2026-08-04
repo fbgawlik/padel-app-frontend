@@ -13,6 +13,8 @@ const CrearClaseScreen = () => {
   const [profesores, setProfesores] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mostrarModalHora, setMostrarModalHora] = useState(false);
+  const [mostrarSelectorFecha, setMostrarSelectorFecha] = useState(false);
+  const [mostrarSelectorHora, setMostrarSelectorHora] = useState(false);
   const [busquedaProfesor, setBusquedaProfesor] = useState('');
   const [mostrarResultadosProfesor, setMostrarResultadosProfesor] = useState(false);
 
@@ -34,6 +36,14 @@ const CrearClaseScreen = () => {
     precioCancha: '',
     frecuencia: 'unica'
   });
+
+  const [calendarioBase, setCalendarioBase] = useState({
+    mes: new Date().getMonth(),
+    anio: new Date().getFullYear()
+  });
+
+  const NOMBRE_MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+  const DIAS_SEMANA = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
 
   useEffect(() => {
     const fetchComplejos = async () => {
@@ -82,7 +92,7 @@ const CrearClaseScreen = () => {
       try {
         const res = await API.get(`/torneos/buscar-companero?busqueda=${encodeURIComponent(busquedaProfesor)}`);
         const usuarios = Array.isArray(res.data) ? res.data : [];
-        setProfesores(usuarios.filter(u => u.rol === 'profesor'));
+        setProfesores(usuarios);
         setMostrarResultadosProfesor(true);
       } catch (err) {
         console.error('Error buscando profesores:', err);
@@ -109,6 +119,29 @@ const CrearClaseScreen = () => {
     }
   };
 
+  const manejarCambioFecha = () => {
+    setMostrarSelectorFecha(prev => !prev);
+    setMostrarSelectorHora(false);
+  };
+
+  const manejarCambioHora = () => {
+    setMostrarSelectorHora(prev => !prev);
+    setMostrarSelectorFecha(false);
+  };
+
+  const seleccionarFecha = (dia) => {
+    const fecha = new Date(calendarioBase.anio, calendarioBase.mes, dia);
+    const fechaISO = fecha.toISOString().split('T')[0];
+
+    setNuevaClase(prev => ({ ...prev, fecha: fechaISO }));
+    setMostrarSelectorFecha(false);
+  };
+
+  const seleccionarHora = (hora) => {
+    setNuevaClase(prev => ({ ...prev, hora }));
+    setMostrarSelectorHora(false);
+  };
+
   const handleProfesorSeleccionado = (profesor) => {
     setNuevaClase(prev => ({
       ...prev,
@@ -124,6 +157,26 @@ const CrearClaseScreen = () => {
     setNuevaClase(prev => ({ ...prev, hora }));
     setMostrarModalHora(false);
   };
+
+  const diasDelMes = useMemo(() => {
+    const primerDia = new Date(calendarioBase.anio, calendarioBase.mes, 1).getDay();
+    const diasEnMes = new Date(calendarioBase.anio, calendarioBase.mes + 1, 0).getDate();
+    const dias = [];
+
+    for (let i = 0; i < primerDia; i += 1) {
+      dias.push(null);
+    }
+
+    for (let dia = 1; dia <= diasEnMes; dia += 1) {
+      dias.push(dia);
+    }
+
+    return dias;
+  }, [calendarioBase]);
+
+  const fechaSeleccionadaTexto = nuevaClase.fecha
+    ? new Date(nuevaClase.fecha).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })
+    : 'Seleccionar fecha';
 
   const gestionarCrearClase = async (e) => {
     e.preventDefault();
@@ -252,8 +305,9 @@ const CrearClaseScreen = () => {
                       onClick={() => handleProfesorSeleccionado(profesor)}
                     >
                       <strong>{profesor.nombre} {profesor.apellido}</strong>
-                      <div style={{ fontSize: '12px', color: '#8A8A8E', marginTop: '4px' }}>
-                        {profesor.telefono || profesor.email}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', fontSize: '12px', color: '#8A8A8E', marginTop: '4px' }}>
+                        <span>{profesor.telefono || profesor.email}</span>
+                        {profesor.rol && <span style={{ textTransform: 'capitalize' }}>{profesor.rol.replace('_', ' ')}</span>}
                       </div>
                     </div>
                   ))}
@@ -264,35 +318,104 @@ const CrearClaseScreen = () => {
 
           <div style={styles.grupoInput}>
             <label style={styles.label}>Fecha</label>
-            <input 
-              type="date" 
-              name="fecha" 
-              value={nuevaClase.fecha}
-              onChange={manejarCambioInput} 
-              required 
-              style={styles.input} 
-            />
+            <div style={styles.inputButtonWrapper}>
+              <button
+                type="button"
+                onClick={manejarCambioFecha}
+                style={styles.inputButton}
+              >
+                <span>{fechaSeleccionadaTexto}</span>
+                <span style={styles.inputButtonIcon}>📅</span>
+              </button>
+
+              {mostrarSelectorFecha && (
+                <div style={styles.selectorPopover}>
+                  <div style={styles.selectorHeader}>
+                    <button
+                      type="button"
+                      onClick={() => setCalendarioBase(prev => {
+                        const mesAnterior = prev.mes === 0 ? 11 : prev.mes - 1;
+                        const anioAnterior = prev.mes === 0 ? prev.anio - 1 : prev.anio;
+                        return { mes: mesAnterior, anio: anioAnterior };
+                      })}
+                      style={styles.selectorNavButton}
+                    >
+                      ‹
+                    </button>
+                    <span>{NOMBRE_MESES[calendarioBase.mes]} {calendarioBase.anio}</span>
+                    <button
+                      type="button"
+                      onClick={() => setCalendarioBase(prev => {
+                        const mesSiguiente = prev.mes === 11 ? 0 : prev.mes + 1;
+                        const anioSiguiente = prev.mes === 11 ? prev.anio + 1 : prev.anio;
+                        return { mes: mesSiguiente, anio: anioSiguiente };
+                      })}
+                      style={styles.selectorNavButton}
+                    >
+                      ›
+                    </button>
+                  </div>
+
+                  <div style={styles.selectorGridHeader}>
+                    {DIAS_SEMANA.map(dia => (
+                      <div key={dia} style={styles.selectorDayLabel}>{dia}</div>
+                    ))}
+                  </div>
+
+                  <div style={styles.selectorGrid}>
+                    {diasDelMes.map((dia, index) => {
+                      const esSeleccionado = nuevaClase.fecha && new Date(nuevaClase.fecha).getDate() === dia && new Date(nuevaClase.fecha).getMonth() === calendarioBase.mes && new Date(nuevaClase.fecha).getFullYear() === calendarioBase.anio;
+                      return (
+                        <button
+                          key={`${index}-${dia}`}
+                          type="button"
+                          disabled={!dia}
+                          onClick={() => dia && seleccionarFecha(dia)}
+                          style={{
+                            ...styles.selectorDay,
+                            ...(dia ? {} : styles.selectorDayDisabled),
+                            ...(esSeleccionado ? styles.selectorDaySelected : {})
+                          }}
+                        >
+                          {dia || ''}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div style={styles.grupoInput}>
             <label style={styles.label}>Hora</label>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input 
-                type="time" 
-                name="hora" 
-                value={nuevaClase.hora}
-                onChange={manejarCambioInput} 
-                required 
-                style={{ ...styles.input, flex: 1 }} 
-              />
-              <button 
-                type="button" 
-                onClick={() => setMostrarModalHora(true)}
-                style={styles.botonModalHora}
-                title="Sugerencias de hora"
+            <div style={styles.inputButtonWrapper}>
+              <button
+                type="button"
+                onClick={manejarCambioHora}
+                style={styles.inputButton}
               >
-                ⏰
+                <span>{nuevaClase.hora || 'Seleccionar hora'}</span>
+                <span style={styles.inputButtonIcon}>⏰</span>
               </button>
+
+              {mostrarSelectorHora && (
+                <div style={styles.selectorPopover}>
+                  {horasSugeridas.map((hora) => (
+                    <button
+                      key={hora}
+                      type="button"
+                      onClick={() => seleccionarHora(hora)}
+                      style={{
+                        ...styles.selectorOption,
+                        ...(nuevaClase.hora === hora ? styles.selectorOptionSelected : {})
+                      }}
+                    >
+                      {hora}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -452,6 +575,111 @@ const styles = {
     boxSizing: 'border-box',
     outline: 'none',
     transition: 'all 0.2s ease'
+  },
+  inputButtonWrapper: {
+    position: 'relative'
+  },
+  inputButton: {
+    width: '100%',
+    padding: '12px 14px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#141416',
+    color: '#FFFFFF',
+    borderRadius: '14px',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    cursor: 'pointer',
+    outline: 'none',
+    fontSize: '14px'
+  },
+  inputButtonIcon: {
+    marginLeft: '10px',
+    fontSize: '16px'
+  },
+  selectorPopover: {
+    position: 'absolute',
+    top: '110%',
+    left: 0,
+    right: 0,
+    zIndex: 3000,
+    backgroundColor: '#121212',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    borderRadius: '18px',
+    padding: '16px',
+    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.35)',
+    marginTop: '8px'
+  },
+  selectorHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '12px',
+    color: '#FFFFFF',
+    fontWeight: 600
+  },
+  selectorNavButton: {
+    backgroundColor: 'transparent',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    color: '#FFFFFF',
+    borderRadius: '10px',
+    width: '34px',
+    height: '34px',
+    cursor: 'pointer',
+    fontSize: '18px'
+  },
+  selectorGridHeader: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(7, 1fr)',
+    gap: '6px',
+    marginBottom: '10px'
+  },
+  selectorGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(7, 1fr)',
+    gap: '6px'
+  },
+  selectorDayLabel: {
+    color: '#8A8A8E',
+    fontSize: '12px',
+    textAlign: 'center'
+  },
+  selectorDay: {
+    width: '100%',
+    minHeight: '38px',
+    borderRadius: '12px',
+    border: '1px solid transparent',
+    backgroundColor: '#1A1A1A',
+    color: '#FFFFFF',
+    cursor: 'pointer',
+    fontSize: '14px'
+  },
+  selectorDayDisabled: {
+    backgroundColor: 'transparent',
+    borderColor: 'transparent',
+    color: 'transparent',
+    cursor: 'default'
+  },
+  selectorDaySelected: {
+    backgroundColor: '#39FF14',
+    color: '#000000',
+    borderColor: '#39FF14'
+  },
+  selectorOption: {
+    width: '100%',
+    padding: '10px 14px',
+    backgroundColor: '#1A1A1A',
+    color: '#FFFFFF',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    borderRadius: '12px',
+    textAlign: 'left',
+    cursor: 'pointer',
+    marginBottom: '8px'
+  },
+  selectorOptionSelected: {
+    backgroundColor: '#39FF14',
+    color: '#000000',
+    borderColor: '#39FF14'
   },
   botonModalHora: {
     padding: '0 12px',
