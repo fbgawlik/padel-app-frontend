@@ -1,5 +1,5 @@
 // src/screens/CrearClaseScreen.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
 import { useNotification } from '../context/NotificationContext';
@@ -8,20 +8,26 @@ const CrearClaseScreen = () => {
   const navigate = useNavigate();
   const { mostrarNotificacion } = useNotification();
   
+  const [complejos, setComplejos] = useState([]);
   const [canchas, setCanchas] = useState([]);
+  const [profesores, setProfesores] = useState([]);
   const [loading, setLoading] = useState(false);
   const [mostrarModalHora, setMostrarModalHora] = useState(false);
+  const [busquedaProfesor, setBusquedaProfesor] = useState('');
+  const [mostrarResultadosProfesor, setMostrarResultadosProfesor] = useState(false);
 
   // Lista de horas rápidas para padel (modificables)
   const horasSugeridas = [
-    "08:00", "09:30", "11:00", "16:00", "17:30", "19:00", "20:30", "22:00"
+    '08:00', '09:30', '11:00', '16:00', '17:30', '19:00', '20:30', '22:00'
   ];
 
   const [nuevaClase, setNuevaClase] = useState({
     titulo: '',
     profesorId: '',
+    profesorLabel: '',
     fecha: '',
     hora: '',
+    complejoId: '',
     canchaId: '',
     cupoMax: 4,
     precio: '',
@@ -30,20 +36,88 @@ const CrearClaseScreen = () => {
   });
 
   useEffect(() => {
-    const fetchCanchas = async () => {
+    const fetchComplejos = async () => {
       try {
-        const res = await API.get('/canchas');
-        setCanchas(Array.isArray(res.data) ? res.data : []);
+        const res = await API.get('/complejos');
+        setComplejos(Array.isArray(res.data) ? res.data : []);
       } catch (err) {
-        console.error("Error cargando canchas:", err);
+        console.error('Error cargando complejos:', err);
       }
     };
-    fetchCanchas();
+    fetchComplejos();
   }, []);
+
+  useEffect(() => {
+    const fetchCanchas = async () => {
+      if (!nuevaClase.complejoId) {
+        setCanchas([]);
+        setNuevaClase(prev => ({ ...prev, canchaId: '' }));
+        return;
+      }
+
+      try {
+        const res = await API.get(`/complejos/${nuevaClase.complejoId}`);
+        setCanchas(Array.isArray(res.data.canchas) ? res.data.canchas : []);
+      } catch (err) {
+        console.error('Error cargando canchas del complejo:', err);
+        setCanchas([]);
+      }
+    };
+
+    fetchCanchas();
+  }, [nuevaClase.complejoId]);
+
+  useEffect(() => {
+    if (!busquedaProfesor.trim()) {
+      setProfesores([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      if (busquedaProfesor.trim().length < 3) {
+        setProfesores([]);
+        return;
+      }
+
+      try {
+        const res = await API.get(`/torneos/buscar-companero?busqueda=${encodeURIComponent(busquedaProfesor)}`);
+        const usuarios = Array.isArray(res.data) ? res.data : [];
+        setProfesores(usuarios.filter(u => u.rol === 'profesor'));
+        setMostrarResultadosProfesor(true);
+      } catch (err) {
+        console.error('Error buscando profesores:', err);
+        setProfesores([]);
+      }
+    }, 400);
+
+    return () => clearTimeout(timeoutId);
+  }, [busquedaProfesor]);
 
   const manejarCambioInput = (e) => {
     const { name, value } = e.target;
+
+    if (name === 'profesorSearch') {
+      setBusquedaProfesor(value);
+      setNuevaClase(prev => ({ ...prev, profesorLabel: value, profesorId: '' }));
+      return;
+    }
+
     setNuevaClase(prev => ({ ...prev, [name]: value }));
+
+    if (name === 'complejoId') {
+      setNuevaClase(prev => ({ ...prev, canchaId: '' }));
+    }
+  };
+
+  const handleProfesorSeleccionado = (profesor) => {
+    setNuevaClase(prev => ({
+      ...prev,
+      profesorId: profesor.id,
+      profesorLabel: `${profesor.nombre} ${profesor.apellido}`
+    }));
+    setBusquedaProfesor('');
+    setProfesores([]);
+    setMostrarResultadosProfesor(false);
   };
 
   const seleccionarHoraRapida = (hora) => {
@@ -54,19 +128,31 @@ const CrearClaseScreen = () => {
   const gestionarCrearClase = async (e) => {
     e.preventDefault();
     
+    if (!nuevaClase.complejoId) {
+      mostrarNotificacion('Debes seleccionar un complejo.', 'error');
+      return;
+    }
+
     if (!nuevaClase.canchaId) {
-      mostrarNotificacion("Por favor, seleccioná una cancha para la clase.", 'error');
+      mostrarNotificacion('Debes seleccionar una cancha.', 'error');
+      return;
+    }
+
+    if (!nuevaClase.profesorId) {
+      mostrarNotificacion('Debes seleccionar un profesor válido.', 'error');
       return;
     }
 
     setLoading(true);
     try {
-      // Parse de números para evitar enviar strings a la API
       const payload = {
-        ...nuevaClase,
+        titulo: nuevaClase.titulo,
+        fecha: nuevaClase.fecha,
+        hora: nuevaClase.hora,
         cupoMax: Number(nuevaClase.cupoMax),
         precio: Number(nuevaClase.precio),
-        precioCancha: Number(nuevaClase.precioCancha)
+        precioCancha: Number(nuevaClase.precioCancha),
+        frecuencia: nuevaClase.frecuencia
       };
 
       await API.post(`/clases/cancha/${nuevaClase.canchaId}`, payload);
@@ -96,6 +182,7 @@ const CrearClaseScreen = () => {
             <input 
               name="titulo" 
               placeholder="Ej: Clase Avanzada de Bandeja" 
+              value={nuevaClase.titulo}
               onChange={manejarCambioInput} 
               required 
               style={styles.input} 
@@ -103,37 +190,90 @@ const CrearClaseScreen = () => {
           </div>
 
           <div style={styles.grupoInput}>
-            <label style={styles.label}>Profesor ID / Nombre</label>
-            <input 
-              name="profesorId" 
-              placeholder="ID del profesor" 
-              onChange={manejarCambioInput} 
-              required 
-              style={styles.input} 
-            />
+            <label style={styles.label}>Complejo</label>
+            <select
+              name="complejoId"
+              value={nuevaClase.complejoId}
+              onChange={manejarCambioInput}
+              required
+              style={styles.input}
+            >
+              <option value="">Seleccionar un complejo...</option>
+              {complejos.map(complejo => (
+                <option key={complejo.id} value={complejo.id}>
+                  {complejo.nombre}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div style={styles.grupoInput}>
             <label style={styles.label}>Cancha</label>
-            <select name="canchaId" onChange={manejarCambioInput} required style={styles.input}>
-              <option value="">Seleccionar...</option>
-              {canchas.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+            <select
+              name="canchaId"
+              value={nuevaClase.canchaId}
+              onChange={manejarCambioInput}
+              required
+              disabled={!nuevaClase.complejoId}
+              style={{
+                ...styles.input,
+                ...(nuevaClase.complejoId ? {} : styles.inputDisabled)
+              }}
+            >
+              <option value="">Seleccionar una cancha...</option>
+              {canchas.map(c => (
+                <option key={c.id} value={c.id}>{c.nombre}</option>
+              ))}
             </select>
           </div>
 
-          {/* Selector de Fecha Nativo Estilizado */}
+          <div style={styles.grupoInputFull}>
+            <label style={styles.label}>Profesor</label>
+            <div style={styles.autocompleteWrapper}>
+              <input
+                name="profesorSearch"
+                placeholder="Buscar profesor por nombre o teléfono"
+                value={nuevaClase.profesorLabel || busquedaProfesor}
+                onChange={manejarCambioInput}
+                onFocus={() => setMostrarResultadosProfesor(true)}
+                required
+                style={styles.input}
+              />
+
+              {mostrarResultadosProfesor && profesores.length > 0 && (
+                <div style={styles.listaSugerencias}>
+                  {profesores.map((profesor, index) => (
+                    <div
+                      key={profesor.id}
+                      style={{
+                        ...styles.itemSugerencia,
+                        ...(index === profesores.length - 1 ? styles.itemSugerenciaUltimo : {})
+                      }}
+                      onClick={() => handleProfesorSeleccionado(profesor)}
+                    >
+                      <strong>{profesor.nombre} {profesor.apellido}</strong>
+                      <div style={{ fontSize: '12px', color: '#8A8A8E', marginTop: '4px' }}>
+                        {profesor.telefono || profesor.email}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
           <div style={styles.grupoInput}>
             <label style={styles.label}>Fecha</label>
             <input 
               type="date" 
               name="fecha" 
+              value={nuevaClase.fecha}
               onChange={manejarCambioInput} 
               required 
               style={styles.input} 
             />
           </div>
 
-          {/* Selector de Hora con Modal Emergente Custom */}
           <div style={styles.grupoInput}>
             <label style={styles.label}>Hora</label>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -169,7 +309,7 @@ const CrearClaseScreen = () => {
 
           <div style={styles.grupoInput}>
             <label style={styles.label}>Frecuencia</label>
-            <select name="frecuencia" onChange={manejarCambioInput} style={styles.input}>
+            <select name="frecuencia" value={nuevaClase.frecuencia} onChange={manejarCambioInput} style={styles.input}>
               <option value="unica">Clase Única</option>
               <option value="mensual">Mensual</option>
             </select>
@@ -181,6 +321,7 @@ const CrearClaseScreen = () => {
               type="number" 
               name="precio" 
               placeholder="0.00" 
+              value={nuevaClase.precio}
               onChange={manejarCambioInput} 
               required 
               style={styles.input} 
@@ -193,6 +334,7 @@ const CrearClaseScreen = () => {
               type="number" 
               name="precioCancha" 
               placeholder="0.00" 
+              value={nuevaClase.precioCancha}
               onChange={manejarCambioInput} 
               required 
               style={styles.input} 
