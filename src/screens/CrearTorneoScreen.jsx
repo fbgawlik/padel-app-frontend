@@ -34,7 +34,7 @@ const CrearTorneoScreen = () => {
 
   const categoriasDamas = ['1ra Damas', '2da Damas', '3ra Damas', '4ta Damas', '5ta Damas', '6ta Damas', '7ma Damas', '8va Damas'];
   const categoriasCaballeros = ['1ra Caballeros', '2da Caballeros', '3ra Caballeros', '4ta Caballeros', '5ta Caballeros', '6ta Caballeros', '7ma Caballeros', '8va Caballeros'];
-  const opcionesCupos = [8, 12, 16, 20, 24, 32];
+  const opcionesCupos = [9, 12, 15,18, 21, 24, 27, 30, 33];
 
   const [formData, setFormData] = useState({
     tipoTorneo: 'TRADICIONAL', // 'TRADICIONAL' | 'AMERICANO'
