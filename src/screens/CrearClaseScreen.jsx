@@ -90,7 +90,7 @@ const CrearClaseScreen = () => {
       }
 
       try {
-        const res = await API.get(`/torneos/buscar-companero?busqueda=${encodeURIComponent(busquedaProfesor)}`);
+        const res = await API.get(`/clases/buscar-profesor?busqueda=${encodeURIComponent(busquedaProfesor)}`);
         const usuarios = Array.isArray(res.data) ? res.data : [];
         setProfesores(usuarios);
         setMostrarResultadosProfesor(true);
@@ -596,6 +596,37 @@ const styles = {
   inputButtonIcon: {
     marginLeft: '10px',
     fontSize: '16px'
+  },
+  autocompleteWrapper: {
+    position: 'relative',
+    width: '100%'
+  },
+  listaSugerencias: {
+    position: 'absolute',
+    top: 'calc(100% + 6px)',
+    left: 0,
+    right: 0,
+    backgroundColor: '#121212',
+    border: '1px solid rgba(255, 255, 255, 0.12)',
+    borderRadius: '16px',
+    boxShadow: '0 12px 30px rgba(0, 0, 0, 0.35)',
+    zIndex: 2500,
+    padding: '8px 0',
+    maxHeight: '260px',
+    overflowY: 'auto'
+  },
+  itemSugerencia: {
+    padding: '10px 14px',
+    cursor: 'pointer',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+    backgroundColor: 'transparent',
+    color: '#FFFFFF',
+    transition: 'background-color 0.2s ease'
+  },
+  itemSugerenciaUltimo: {
+    marginBottom: 0
   },
   selectorPopover: {
     position: 'absolute',
