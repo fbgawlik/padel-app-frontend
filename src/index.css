@@ -50,8 +50,10 @@
   }
 }
 
-body {
+html, body {
+  background-color: #0A0A0B;
   margin: 0;
+  padding: 0;
 }
 
 input[type="date"],

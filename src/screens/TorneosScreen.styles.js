@@ -139,9 +139,9 @@ export const styles = {
     textAlign: 'center', padding: '40px 20px'
   },
   fabButton: {
-    position: 'fixed', bottom: '104px', right: '24px',
+    position: 'fixed', bottom: '100px', right: '20px',
     width: '56px', height: '56px', borderRadius: '28px',
     backgroundColor: theme.colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    border: 'none', boxShadow: '0 4px 16px rgba(57, 255, 20, 0.4)', cursor: 'pointer', zIndex: 99
+    border: 'none', boxShadow: '0 4px 16px rgba(57, 255, 20, 0.4)', cursor: 'pointer', zIndex: 999
   }
 }

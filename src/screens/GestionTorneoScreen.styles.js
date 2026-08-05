@@ -92,7 +92,7 @@ export const styles = {
   llavesContainer: { minHeight: '260px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '20px', padding: '20px' },
   mensajePlaceholder: { textAlign: 'center' },
 
-  fabButton: { position: 'fixed', bottom: '104px', right: '24px', width: '56px', height: '56px', borderRadius: '28px', backgroundColor: theme.colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', boxShadow: '0 4px 16px rgba(57, 255, 20, 0.4)', cursor: 'pointer', zIndex: 99 },
+  
   centerContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' },
   spinner: { width: '36px', height: '36px', border: '3px solid rgba(57, 255, 20, 0.1)', borderTopColor: theme.colors.primary, borderRadius: '50%', animation: 'spin 1s linear infinite' }
 }
