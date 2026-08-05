@@ -1,16 +1,17 @@
 import { theme } from '../theme';
 
 export const styles = {
- contenedor: { 
-    paddingBottom: theme.spacing.bottomNavPadding,
+ contenedor: {
   display: 'flex',
-  justifyContent: 'center', // Centra la tarjeta horizontalmente
-  alignItems: 'center',     // Centra la tarjeta verticalmente      // Ajustado para el navegador móvil moderno
-  padding: '20px', 
-  color: '#fff', 
-  fontFamily: 'sans-serif',
+  flexDirection: 'column',
+  justifyContent: 'center',
+  alignItems: 'center',
+  minHeight: '100dvh',
+  padding: '20px',
   boxSizing: 'border-box',
-  backgroundColor: theme.colors.background // Fondo oscuro para que combine con el diseño premium
+  color: '#fff',
+  fontFamily: 'sans-serif',
+  backgroundColor: theme.colors.background
 },
   tarjetaLogin: {
     backgroundColor: theme.colors.cardBg,
