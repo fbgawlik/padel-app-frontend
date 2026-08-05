@@ -3,6 +3,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import API from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import { styles } from './GestionComplejo.styles';
 
 const GestionComplejo = () => {
   const { usuario } = useContext(AuthContext);
@@ -641,62 +642,6 @@ const GestionComplejo = () => {
 };
 
 // ESTILOS UNIFICADOS PREMIUM
-const styles = {
-  contenedorBase: { width: '100%', color: '#FFFFFF', fontFamily: 'system-ui, -apple-system, sans-serif', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', backgroundColor: '#0C0C0E', padding: '16px' },
-  panelAnchoMaximo: { width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column' },
-  headerClubContainer: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
-  headerClubLeft: { display: 'flex', alignItems: 'center', gap: '12px', flex: 1 },
-  avatarMiniClub: { width: '44px', height: '44px', borderRadius: '12px', backgroundColor: '#141416', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '20px', border: '1px solid rgba(255,255,255,0.06)' },
-  tituloClubName: { fontSize: '18px', fontWeight: '800', margin: 0, color: '#FFFFFF' },
-  subtituloUbicacion: { fontSize: '12px', color: '#8E8E93', margin: '2px 0 0 0' },
-  btnAjustesRedondo: { width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#141416', border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', color: '#FFFFFF', display: 'flex', justifyContent: 'center', alignItems: 'center' },
-  grillaMetricas: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '20px' },
-  tarjetaMetrica: { backgroundColor: '#141416', border: '1px solid rgba(255, 255, 255, 0.04)', borderRadius: '16px', padding: '12px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', cursor: 'pointer', transition: 'all 0.2s ease' },
-  tarjetaMetricaActiva: { border: '1px solid #39FF14', backgroundColor: '#19191C' },
-  metricaLabel: { fontSize: '11px', color: '#8E8E93', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.3px' },
-  metricaFilaValor: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: '8px' },
-  metricaNumero: { fontSize: '20px', fontWeight: '800', color: '#FFFFFF' },
-  badgeAlertaMinitab: { fontSize: '9px', backgroundColor: 'rgba(255, 69, 58, 0.15)', color: '#FF453A', padding: '2px 6px', borderRadius: '6px', fontWeight: '700' },
-  contenedorDesgloseMetrica: { backgroundColor: '#141416', border: '1px solid rgba(255,255,255,0.07)', borderRadius: '16px', padding: '16px', marginBottom: '16px' },
-  headerDesglose: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '8px' },
-  tituloDesglose: { fontSize: '13px', fontWeight: '700', color: '#39FF14', margin: 0 },
-  btnCerrarDesglose: { background: 'none', border: 'none', color: '#8E8E93', fontSize: '14px', cursor: 'pointer' },
-  subtituloCanchaDesglose: { fontSize: '12px', fontWeight: '700', color: '#FFFFFF', marginBottom: '6px', paddingLeft: '2px' },
-  itemReservaDesglose: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#1C1C1E', padding: '10px 12px', borderRadius: '10px', fontSize: '12px' },
-  horaReserva: { fontWeight: '700', color: '#39FF14', width: '100px' },
-  clienteReserva: { color: '#FFFFFF', flex: 1, fontWeight: '500' },
-  badgeEstadoReserva: { fontSize: '10px', fontWeight: '700', padding: '3px 8px', borderRadius: '6px' },
-  textoVacioDesglose: { fontSize: '11px', color: '#8E8E93', fontStyle: 'italic', textAlign: 'center', margin: '8px 0' },
-  barraTabsNavegacion: { display: 'flex', backgroundColor: '#141416', padding: '4px', borderRadius: '12px', gap: '4px', marginBottom: '16px' },
-  tabActivo: { flex: 1, backgroundColor: '#1C1C1E', color: '#FFFFFF', border: 'none', padding: '10px 4px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer' },
-  tabInactivo: { flex: 1, backgroundColor: 'transparent', color: '#8E8E93', border: 'none', padding: '10px 4px', fontSize: '12px', fontWeight: '600', cursor: 'pointer' },
-  bloqueContenidoDinamico: { width: '100%' },
-  layoutSeccionInterna: { display: 'flex', flexDirection: 'column', gap: '16px' },
-  tarjetaFormularioInterno: { backgroundColor: '#141416', borderRadius: '16px', padding: '16px', border: '1px solid rgba(255, 255, 255, 0.04)' },
-  tarjetaFormularioInternoCompleto: { backgroundColor: '#141416', borderRadius: '16px', padding: '20px', border: '1px solid rgba(255, 255, 255, 0.04)' },
-  tarjetaListaDatos: { backgroundColor: '#141416', borderRadius: '16px', padding: '16px', border: '1px solid rgba(255, 255, 255, 0.04)' },
-  tituloSeccionMini: { fontSize: '14px', fontWeight: '700', margin: '0 0 14px 0', color: '#E5E5EA' },
-  formulario: { display: 'flex', flexDirection: 'column', gap: '12px' },
-  input: { backgroundColor: '#1C1C1E', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '10px', padding: '12px', color: '#FFFFFF', fontSize: '13px', outline: 'none', width: '100%', boxSizing: 'border-box' },
-  filaInputsMitad: { display: 'flex', gap: '10px' },
-  selectInput: { flex: 1, backgroundColor: '#1C1C1E', border: '1px solid rgba(255, 255, 255, 0.06)', borderRadius: '10px', padding: '12px', color: '#FFFFFF', fontSize: '13px', outline: 'none' },
-  checkboxLabelContainer: { display: 'flex', alignItems: 'center', gap: '8px', color: '#8E8E93', fontSize: '12px', cursor: 'pointer', padding: '4px 0' },
-  checkboxInput: { accentColor: '#39FF14', width: '16px', height: '16px' },
-  checkboxInputBlue: { accentColor: '#00ccff', width: '16px', height: '16px' },
-  botonPrincipal: { backgroundColor: '#39FF14', color: '#000000', border: 'none', padding: '12px', borderRadius: '10px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.3px', marginTop: '4px' },
-  scrollerListaInterna: { display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '260px', overflowY: 'auto' },
-  itemFilaClub: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#1C1C1E', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)' },
-  nombreItemLista: { fontSize: '14px', fontWeight: '700', color: '#FFFFFF' },
-  detalleItemLista: { fontSize: '11px', color: '#8E8E93', marginTop: '4px' },
-  badgeEstadoActivo: { fontSize: '10px', color: '#39FF14', backgroundColor: 'rgba(57, 255, 20, 0.08)', padding: '4px 8px', borderRadius: '6px', fontWeight: '700' },
-  badgeTipoProducto: { fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' },
-  btnEliminarIcono: { backgroundColor: 'rgba(255, 69, 58, 0.1)', border: 'none', cursor: 'pointer', padding: '6px 10px', borderRadius: '8px' },
-  textoListaVacia: { fontSize: '12px', color: '#8E8E93', textAlign: 'center', fontStyle: 'italic', margin: '10px 0' },
-  contenedorLoading: { display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#0C0C0E' },
-  spinner: { width: '36px', height: '36px', border: '3px solid rgba(255, 255, 255, 0.05)', borderTop: '3px solid #39FF14', borderRadius: '50%' },
-  tarjetaCentralForm: { width: '100%', maxWidth: '400px', backgroundColor: '#141416', borderRadius: '24px', padding: '24px', border: '1px solid rgba(255,255,255,0.04)', alignSelf: 'center' },
-  alertaError: { backgroundColor: 'rgba(255,69,58,0.1)', color: '#FF453A', padding: '12px', borderRadius: '10px', fontSize: '12px', marginBottom: '14px', textAlign: 'center' },
-  botonWhatsappContacto: { textDecoration: 'none', backgroundColor: '#25D366', color: '#FFFFFF', padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', marginLeft: '8px', display: 'inline-block' }
-};
+;
 
 export default GestionComplejo;
