@@ -18,7 +18,8 @@ const GestionTorneoScreen = () => {
   const [diaSeleccionado, setDiaSeleccionado] = useState('7ago');
   const [categoriaFiltrada, setCategoriaFiltrada] = useState('');
   const [generoFiltrado, setGeneroFiltrado] = useState(''); // Estado para filtro de género
-  const [resultadoEdicion, setResultadoEdicion] = useState({});
+  const [resultados, setResultados] = useState({});
+  const [guardandoPartidoId, setGuardandoPartidoId] = useState(null);
   const [toast, setToast] = useState(null);
 
   const { data: torneo, isLoading, isError, error } = useQuery({
@@ -112,9 +113,35 @@ const GestionTorneoScreen = () => {
     mutationFn: async ({ partidoId, resultado }) => {
       return await torneoService.actualizarPartido(partidoId, resultado);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries(['torneoGestion', id]);
+    onMutate: async ({ partidoId }) => {
+      setGuardandoPartidoId(partidoId);
+    },
+    onSettled: () => {
+      setGuardandoPartidoId(null);
+    },
+    onSuccess: (data, variables) => {
+      const resultado = variables.resultado;
+      queryClient.setQueryData(['torneoGestion', id], (prevData) => {
+        if (!prevData) return prevData;
+        const partidosActualizados = (prevData.partidos || []).map((partido) => {
+          if (partido.id !== variables.partidoId) return partido;
+          return {
+            ...partido,
+            estado: 'finalizado',
+            resultado,
+            ...(data?.partido || {})
+          };
+        });
+        return {
+          ...prevData,
+          partidos: partidosActualizados
+        };
+      });
+      setResultados((prev) => ({ ...prev, [variables.partidoId]: '' }));
       mostrarToast('Resultado guardado correctamente.', 'success');
+      if (data?.faseAvanzada) {
+        queryClient.invalidateQueries(['torneoGestion', id]);
+      }
     },
     onError: (error) => {
       mostrarToast(error.response?.data?.error || 'Error al guardar resultado.', 'error');
@@ -122,11 +149,11 @@ const GestionTorneoScreen = () => {
   });
 
   const handleResultadoChange = (partidoId, value) => {
-    setResultadoEdicion(prev => ({ ...prev, [partidoId]: value }));
+    setResultados(prev => ({ ...prev, [partidoId]: value }));
   };
 
   const handleGuardarResultado = (partidoId) => {
-    const resultado = (resultadoEdicion[partidoId] || '').trim();
+    const resultado = (resultados[partidoId] || '').trim();
     if (!resultado) {
       mostrarToast('Ingresá un resultado válido.', 'error');
       return;
@@ -407,7 +434,7 @@ const GestionTorneoScreen = () => {
                       <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
                         <input
                           type="text"
-                          value={resultadoEdicion[partido.id] || ''}
+                          value={resultados[partido.id] || ''}
                           onChange={(e) => handleResultadoChange(partido.id, e.target.value)}
                           placeholder="Ej: 6-3 / 6-4 o W.O. P1"
                           style={styles.inputResultado}
@@ -415,10 +442,10 @@ const GestionTorneoScreen = () => {
                         <button
                           type="button"
                           onClick={() => handleGuardarResultado(partido.id)}
-                          disabled={resultadoMutation.isLoading}
-                          style={{ ...styles.btnPrimario, opacity: resultadoMutation.isLoading ? 0.6 : 1 }}
+                          disabled={guardandoPartidoId === partido.id}
+                          style={{ ...styles.btnPrimario, opacity: guardandoPartidoId === partido.id ? 0.6 : 1 }}
                         >
-                          {resultadoMutation.isLoading ? 'Guardando...' : 'Guardar resultado'}
+                          {guardandoPartidoId === partido.id ? 'Guardando...' : 'Guardar resultado'}
                         </button>
                       </div>
                     ) : (
