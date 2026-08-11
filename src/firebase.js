@@ -1,4 +1,3 @@
-// src/firebase.js
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
@@ -38,4 +37,11 @@ export const solicitarPermisoNotificaciones = async () => {
   } catch (error) {
     console.error("Error al configurar las notificaciones:", error);
   }
+};
+
+// --- AGREGAR ESTA FUNCIÓN AL FINAL ---
+export const onMessageListener = (callback) => {
+  return onMessage(messaging, (payload) => {
+    callback(payload);
+  });
 };
