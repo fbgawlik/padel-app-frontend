@@ -26,6 +26,12 @@ export const torneoService = {
     return response.data;
   },
 
+  // Alternar o actualizar el estado de pago de una inscripción
+  togglePagoInscripcion: async (inscripcionId, pagado) => {
+    const response = await API.patch(`/torneos/inscripcion/${inscripcionId}/pago`, { pagado });
+    return response.data;
+  },
+
   // Generar zonas y cuadros a partir de inscripciones
   generarZonas: async (torneoId, categoria) => {
     const response = await API.post('/torneos/generar-zonas', { torneoId, categoria });
@@ -35,6 +41,12 @@ export const torneoService = {
   // Actualizar el resultado de un partido en las llaves/zonas
   actualizarPartido: async (partidoId, resultado) => {
     const response = await API.put(`/torneos/partido/${partidoId}/resultado`, { resultado });
+    return response.data;
+  },
+
+  // Publicar resultados del torneo a los participantes
+  publicarResultados: async (torneoId) => {
+    const response = await API.post(`/torneos/${torneoId}/publicar-resultados`);
     return response.data;
   },
 

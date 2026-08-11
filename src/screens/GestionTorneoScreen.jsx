@@ -1,10 +1,11 @@
+// src/screens/GestionTorneoScreen.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { torneoService } from '../services/torneoService';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { AuthContext } from '../context/AuthContext';
 import { resolverUrlImagen } from '../services/imageHelper';
-import Toast from '../components/Toast'; // Aseguramos renderizado de feedback si lo requieres
+import Toast from '../components/Toast';
 import { styles } from './GestionTorneoScreen.styles';
 
 const GestionTorneoScreen = () => {
@@ -17,10 +18,13 @@ const GestionTorneoScreen = () => {
   const [busqueda, setBusqueda] = useState('');
   const [diaSeleccionado, setDiaSeleccionado] = useState('7ago');
   const [categoriaFiltrada, setCategoriaFiltrada] = useState('');
-  const [generoFiltrado, setGeneroFiltrado] = useState(''); // Estado para filtro de género
+  const [generoFiltrado, setGeneroFiltrado] = useState('');
   const [resultados, setResultados] = useState({});
   const [guardandoPartidoId, setGuardandoPartidoId] = useState(null);
   const [toast, setToast] = useState(null);
+
+  // Modal de Restricciones Horarias
+  const [inscripcionSeleccionada, setInscripcionSeleccionada] = useState(null);
 
   const { data: torneo, isLoading, isError, error } = useQuery({
     queryKey: ['torneoGestion', id],
@@ -54,7 +58,7 @@ const GestionTorneoScreen = () => {
     const coincideCategoria = !categoriaFiltrada || 
       (insc.categoria && insc.categoria.toLowerCase().includes(categoriaFiltrada.toLowerCase()));
 
-    // Filtrado por género (detecta si la categoría o la inscripción tiene Caballeros / Damas / Mixto)
+    // Filtrado por género
     let coincideGenero = true;
     if (generoFiltrado) {
       const catTexto = (insc.categoria || '').toLowerCase();
@@ -78,13 +82,42 @@ const GestionTorneoScreen = () => {
     setTimeout(() => setToast(null), 3500);
   };
 
+  // MUTACIÓN PARA CAMBIAR EL ESTADO DE PAGO
+  const togglePagoMutation = useMutation({
+    mutationFn: async ({ inscripcionId, pagado }) => {
+      return await torneoService.togglePagoInscripcion(inscripcionId, pagado);
+    },
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(['torneoGestion', id], (prevData) => {
+        if (!prevData) return prevData;
+        const inscripcionesActualizadas = (prevData.inscripciones || []).map((insc) => {
+          if (insc.id !== variables.inscripcionId) return insc;
+          return {
+            ...insc,
+            pagado: variables.pagado
+          };
+        });
+        return {
+          ...prevData,
+          inscripciones: inscripcionesActualizadas
+        };
+      });
+      mostrarToast(
+        variables.pagado ? 'Inscripción marcada como PAGADA' : 'Inscripción marcada como PENDIENTE',
+        variables.pagado ? 'success' : 'info'
+      );
+    },
+    onError: (error) => {
+      mostrarToast(error.response?.data?.error || 'Error al actualizar el pago.', 'error');
+    }
+  });
+
   // MUTACIÓN PARA PUBLICAR RESULTADOS
   const publicarResultadosMutation = useMutation({
     mutationFn: async () => {
       if (torneoService.publicarResultados) {
         return await torneoService.publicarResultados(id);
       }
-      // Mock fallback si el endpoint no existe aún
       return new Promise((res) => setTimeout(res, 800));
     },
     onSuccess: () => {
@@ -96,6 +129,7 @@ const GestionTorneoScreen = () => {
     }
   });
 
+  // MUTACIÓN PARA GENERAR ZONAS
   const generarZonasMutation = useMutation({
     mutationFn: async (categoria) => {
       return await torneoService.generarZonas(id, categoria);
@@ -109,6 +143,7 @@ const GestionTorneoScreen = () => {
     }
   });
 
+  // MUTACIÓN PARA GUARDAR RESULTADO DE UN PARTIDO
   const resultadoMutation = useMutation({
     mutationFn: async ({ partidoId, resultado }) => {
       return await torneoService.actualizarPartido(partidoId, resultado);
@@ -159,6 +194,15 @@ const GestionTorneoScreen = () => {
       return;
     }
     resultadoMutation.mutate({ partidoId, resultado });
+  };
+
+  const abriendoWhatsApp = (telefono) => {
+    if (!telefono) {
+      mostrarToast('Teléfono no disponible.', 'error');
+      return;
+    }
+    const numeroLimpio = telefono.replace(/\D/g, '');
+    window.open(`https://wa.me/${numeroLimpio}`, '_blank');
   };
 
   if (isLoading) return <div style={styles.centerContainer}><div style={styles.spinner}></div></div>;
@@ -257,7 +301,7 @@ const GestionTorneoScreen = () => {
               </div>
             </div>
 
-            {/* FILTROS DE CATEGORÍA Y GÉNERO FUNCIONALES */}
+            {/* FILTROS DE CATEGORÍA Y GÉNERO */}
             <div style={styles.filtersRow}>
               <select style={styles.selectInput} value={categoriaFiltrada} onChange={(e) => setCategoriaFiltrada(e.target.value)}>
                 <option value="">Categoría: Todas</option>
@@ -272,39 +316,102 @@ const GestionTorneoScreen = () => {
               </select>
             </div>
 
+            {/* LISTADO DE PAREJAS INSCRIPTAS */}
             <div style={styles.listContainer}>
               {inscriptosFiltrados.length === 0 ? (
                 <div style={styles.textoListaVacia}>No se encontraron inscriptos para los filtros seleccionados.</div>
               ) : (
-                inscriptosFiltrados.map(insc => (
-                  <div key={insc.id} style={{...styles.cardInscripto, borderColor: '#39FF14'}}>
-                    <div style={styles.avatarDoble}>
-                      <div style={{...styles.avatar, zIndex: 2, overflow: 'hidden'}}>
-                        {insc.usuario1?.imagenPerfil ? (
-                          <img src={resolverUrlImagen(insc.usuario1.imagenPerfil)} alt={insc.jugador1} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : (
-                          <div style={{ color: '#FFF', fontWeight: 800 }}>{(insc.jugador1 || 'J').charAt(0).toUpperCase()}</div>
-                        )}
+                inscriptosFiltrados.map(insc => {
+                  const tieneRestricciones = Boolean(
+                    (insc.restriccionHoraria && insc.restriccionHoraria.trim() !== "") ||
+                    (insc.bloquesRestringidos && insc.bloquesRestringidos !== "[]")
+                  );
+
+                  return (
+                    <div 
+                      key={insc.id} 
+                      style={{
+                        ...styles.cardInscripto, 
+                        borderColor: insc.pagado ? '#39FF14' : 'rgba(255,255,255,0.1)'
+                      }}
+                    >
+                      <div style={styles.avatarDoble}>
+                        <div style={{...styles.avatar, zIndex: 2, overflow: 'hidden'}}>
+                          {insc.usuario1?.imagenPerfil ? (
+                            <img src={resolverUrlImagen(insc.usuario1.imagenPerfil)} alt={insc.jugador1} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ color: '#FFF', fontWeight: 800 }}>{(insc.jugador1 || 'J').charAt(0).toUpperCase()}</div>
+                          )}
+                        </div>
+                        <div style={{...styles.avatar, zIndex: 1, marginLeft: '-10px', overflow: 'hidden'}}>
+                          {insc.usuario2?.imagenPerfil ? (
+                            <img src={resolverUrlImagen(insc.usuario2.imagenPerfil)} alt={insc.jugador2} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ color: '#FFF', fontWeight: 800 }}>{(insc.jugador2 || 'J').charAt(0).toUpperCase()}</div>
+                          )}
+                        </div>
                       </div>
-                      <div style={{...styles.avatar, zIndex: 1, marginLeft: '-10px', overflow: 'hidden'}}>
-                        {insc.usuario2?.imagenPerfil ? (
-                          <img src={resolverUrlImagen(insc.usuario2.imagenPerfil)} alt={insc.jugador2} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        ) : (
-                          <div style={{ color: '#FFF', fontWeight: 800 }}>{(insc.jugador2 || 'J').charAt(0).toUpperCase()}</div>
-                        )}
+
+                      <div style={styles.infoInscripto}>
+                        <h4 style={styles.nombreInscripto}>{`${insc.jugador1} / ${insc.jugador2}`}</h4>
+                        <span style={styles.catInscripto}>Categoría: {insc.categoria}</span>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                          <span style={{
+                            ...styles.badgePago,
+                            backgroundColor: insc.pagado ? 'rgba(57, 255, 20, 0.15)' : 'rgba(255, 69, 58, 0.15)',
+                            color: insc.pagado ? '#39FF14' : '#FF453A',
+                            border: `1px solid ${insc.pagado ? 'rgba(57, 255, 20, 0.3)' : 'rgba(255, 69, 58, 0.3)'}`
+                          }}>
+                            {insc.pagado ? '✓ PAGADO' : '✕ DEBE PAGO'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* ICONOS DE ACCIÓN */}
+                      <div style={styles.actionIcons}>
+                        {/* ICONO DE BOTÓN DE PAGO (BILLETE) */}
+                        <button 
+                          onClick={() => togglePagoMutation.mutate({ inscripcionId: insc.id, pagado: !insc.pagado })}
+                          disabled={togglePagoMutation.isLoading}
+                          title={insc.pagado ? 'Marcar como pendiente de pago' : 'Marcar como pagado'}
+                          style={{
+                            ...styles.iconActionBtn,
+                            backgroundColor: insc.pagado ? 'rgba(57, 255, 20, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                            borderColor: insc.pagado ? '#39FF14' : 'rgba(255, 255, 255, 0.1)',
+                          }}
+                        >
+                          💵
+                        </button>
+
+                        {/* ICONO DE WHATSAPP / CONTACTO */}
+                        <button 
+                          onClick={() => abriendoWhatsApp(insc.telefono1 || insc.telefono2)}
+                          title="Contactar por WhatsApp"
+                          style={{
+                            ...styles.iconActionBtn,
+                            backgroundColor: 'rgba(37, 211, 102, 0.15)',
+                            borderColor: 'rgba(37, 211, 102, 0.4)'
+                          }}
+                        >
+                          💬
+                        </button>
+
+                        {/* ICONO DE OJO (RESTRICCIONES) */}
+                        <button 
+                          onClick={() => setInscripcionSeleccionada(insc)}
+                          title={tieneRestricciones ? "Ver restricciones horarias" : "Sin restricciones"}
+                          style={{
+                            ...styles.iconActionBtn,
+                            backgroundColor: tieneRestricciones ? 'rgba(255, 159, 10, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                            borderColor: tieneRestricciones ? '#FF9F0A' : 'rgba(255, 255, 255, 0.1)',
+                          }}
+                        >
+                          👁️
+                        </button>
                       </div>
                     </div>
-                    <div style={styles.infoInscripto}>
-                      <h4 style={styles.nombreInscripto}>{`${insc.jugador1} / ${insc.jugador2}`}</h4>
-                      <span style={styles.catInscripto}>Categoría: {insc.categoria}</span>
-                      <span style={{...styles.estadoInscripto, color: '#39FF14'}}>Confirmado</span>
-                    </div>
-                    <div style={styles.actionIcons}>
-                      <button style={styles.iconBtn}>💬</button>
-                      <button style={styles.iconBtn}>👁️</button>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
@@ -319,7 +426,6 @@ const GestionTorneoScreen = () => {
                  {categoriasDisponibles.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                </select>
 
-               {/* BOTÓN CON DISEÑO MEJORADO E INTEGRADO AL TEMA */}
                <button 
                  onClick={() => generarZonasMutation.mutate(categoriaFiltrada)}
                  disabled={generarZonasMutation.isLoading || !categoriaFiltrada}
@@ -462,12 +568,81 @@ const GestionTorneoScreen = () => {
         )}
       </div>
 
-      {/* Botón flotante eliminado: solo se muestra en el listado principal de torneos */}
+      {/* ─── MODAL DE RESTRICCIONES HORARIAS & DATOS DE CONTACTO ─── */}
+      {inscripcionSeleccionada && (
+        <div style={styles.modalOverlay} onClick={() => setInscripcionSeleccionada(null)}>
+          <div style={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h3 style={styles.modalTitle}>Detalles de la Inscripción</h3>
+              <button style={styles.modalCloseBtn} onClick={() => setInscripcionSeleccionada(null)}>✕</button>
+            </div>
+
+            <div style={styles.modalBody}>
+              <div style={styles.modalSection}>
+                <span style={styles.modalLabel}>Pareja:</span>
+                <p style={styles.modalValue}>{inscripcionSeleccionada.jugador1} / {inscripcionSeleccionada.jugador2}</p>
+              </div>
+
+              <div style={styles.modalSection}>
+                <span style={styles.modalLabel}>Categoría:</span>
+                <p style={styles.modalValue}>{inscripcionSeleccionada.categoria}</p>
+              </div>
+
+              <div style={styles.modalSection}>
+                <span style={styles.modalLabel}>Estado de Pago:</span>
+                <span style={{
+                  ...styles.badgePago,
+                  backgroundColor: inscripcionSeleccionada.pagado ? 'rgba(57, 255, 20, 0.15)' : 'rgba(255, 69, 58, 0.15)',
+                  color: inscripcionSeleccionada.pagado ? '#39FF14' : '#FF453A',
+                  border: `1px solid ${inscripcionSeleccionada.pagado ? 'rgba(57, 255, 20, 0.3)' : 'rgba(255, 69, 58, 0.3)'}`,
+                  marginTop: '4px',
+                  display: 'inline-block'
+                }}>
+                  {inscripcionSeleccionada.pagado ? '✓ PAGADO' : '✕ PENDIENTE DE PAGO'}
+                </span>
+              </div>
+
+              <div style={styles.modalSection}>
+                <span style={styles.modalLabel}>Restricciones Horarias:</span>
+                <p style={styles.modalValueHighlight}>
+                  {inscripcionSeleccionada.restriccionHoraria && inscripcionSeleccionada.restriccionHoraria.trim() !== ""
+                    ? inscripcionSeleccionada.restriccionHoraria
+                    : 'Sin restricciones de horario indicadas.'}
+                </p>
+              </div>
+
+              <div style={styles.modalSection}>
+                <span style={styles.modalLabel}>Contactos WhatsApp:</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
+                  {inscripcionSeleccionada.telefono1 && (
+                    <button 
+                      onClick={() => abriendoWhatsApp(inscripcionSeleccionada.telefono1)}
+                      style={styles.btnWhatsappModal}
+                    >
+                      💬 Contactar a {inscripcionSeleccionada.jugador1} ({inscripcionSeleccionada.telefono1})
+                    </button>
+                  )}
+                  {inscripcionSeleccionada.telefono2 && (
+                    <button 
+                      onClick={() => abriendoWhatsApp(inscripcionSeleccionada.telefono2)}
+                      style={styles.btnWhatsappModal}
+                    >
+                      💬 Contactar a {inscripcionSeleccionada.jugador2} ({inscripcionSeleccionada.telefono2})
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <button style={styles.btnCerrarModal} onClick={() => setInscripcionSeleccionada(null)}>
+              Entendido
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
-
-// --- ESTILOS VISUALES MEJORADOS ---
-;
 
 export default GestionTorneoScreen;
