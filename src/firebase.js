@@ -1,6 +1,6 @@
 // src/firebase.js
 import { initializeApp } from "firebase/app";
-import { getMessaging, getToken } from "firebase/messaging";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBccqbPrbySmwUHsc27FxshnakI67opvU4",
@@ -23,16 +23,13 @@ export const solicitarPermisoNotificaciones = async () => {
       console.log("¡Permiso concedido para notificaciones!");
 
       const registration = await navigator.serviceWorker.register(
-        new URL('./components/sw.js', import.meta.url), // Tu ruta corregida
-        { type: 'module' }
+        '/firebase-messaging-sw.js'
       );
 
-      // 👇 AQUÍ PASAMOS LA CLAVE QUE ACABAS DE GENERAR 👇
-      const token = await getToken(messaging, { 
+      const token = await getToken(messaging, {
         serviceWorkerRegistration: registration,
-        vapidKey: "BNGGi8Ko99YSFDHm8WLY_UgAG0xIY2RjxhUbZ4kFYynFCpLIU01-vIS6gXajctwDEVyT9-fgf4ESOTc_srHPbKo" 
+        vapidKey: "BNGGi8Ko99YSFDHm8WLY_UgAG0xIY2RjxhUbZ4kFYynFCpLIU01-vIS6gXajctwDEVyT9-fgf4ESOTc_srHPbKo"
       });
-      
       return token;
       
     } else {

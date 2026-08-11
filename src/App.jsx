@@ -1,10 +1,9 @@
 // src/App.jsx
-import React, { useEffect } from 'react';
+import React from 'react';
 import { AuthProvider } from './context/AuthContext'; 
 import { NotificationProvider } from './context/NotificationContext'; // 1. <-- Importamos el nuevo Provider
 import AppRoutes from './routes/AppRoutes'; 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { solicitarPermisoNotificaciones } from './firebase'; 
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,18 +15,6 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  useEffect(() => {
-    const activarNotificaciones = async () => {
-      console.log("Solicitando permisos desde App.jsx...");
-      const token = await solicitarPermisoNotificaciones();
-      if (token) {
-        console.log("¡Tenemos el token listo!", token);
-      }
-    };
-
-    activarNotificaciones();
-  }, []); 
-
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
