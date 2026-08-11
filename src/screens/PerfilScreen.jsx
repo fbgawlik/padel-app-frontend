@@ -222,36 +222,16 @@ const PerfilScreen = () => {
 
           <div style={styles.grupo}>
             <label style={styles.label}>Categoría de Pádel</label>
-            {/* 🔥 REPARACIÓN AQUÍ: Mapeamos los valores exactos compuestos para evitar romper el Ranking */}
-            <select name="categoriaPadel" value={formData.categoriaPadel} onChange={handleChange} style={styles.select} required>
-              <option value="">Selecciona tu categoría</option>
-              
-              <optgroup label="Caballeros" style={styles.optgroup}>
-                <option value="1ra Caballeros">1ra Caballeros</option>
-                <option value="2da Caballeros">2da Caballeros</option>
-                <option value="3ra Caballeros">3ra Caballeros</option>
-                <option value="4ta Caballeros">4ta Caballeros</option>
-                <option value="5ta Caballeros">5ta Caballeros</option>
-                <option value="6ta Caballeros">6ta Caballeros</option>
-                <option value="7ma Caballeros">7ma Caballeros</option>
-                <option value="8va Caballeros">8va Caballeros</option>
-              </optgroup>
-
-              <optgroup label="Damas" style={styles.optgroup}>
-                <option value="1ra Damas">1ra Damas</option>
-                <option value="2da Damas">2da Damas</option>
-                <option value="3ra Damas">3ra Damas</option>
-                <option value="4ta Damas">4ta Damas</option>
-                <option value="5ta Damas">5ta Damas</option>
-                <option value="6ta Damas">6ta Damas</option>
-                <option value="7ma Damas">7ma Damas</option>
-                <option value="8va Damas">8va Damas</option>
-              </optgroup>
-
-              <optgroup label="Especiales" style={styles.optgroup}>
-                <option value="Suma">Suma</option>
-              </optgroup>
-            </select>
+            <input
+              type="text"
+              name="categoriaPadel"
+              value={formData.categoriaPadel || 'Sin categoría asignada'}
+              disabled
+              style={{ ...styles.input, ...styles.inputDisabled, cursor: 'not-allowed' }}
+            />
+            <p style={styles.helpText}>
+              Esta categoría no se puede cambiar desde aquí. Se actualiza automáticamente al alcanzar los puntos necesarios o desde administración.
+            </p>
           </div>
 
           <div style={styles.grupo}>
