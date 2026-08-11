@@ -105,9 +105,7 @@ const PerfilScreen = () => {
         data.append('imagenPortada', portadaArchivo);
       }
 
-      const res = await API.put('/usuarios/perfil', data, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await API.put('/usuarios/perfil', data);
 
       if (actualizarDatosUsuario) {
         actualizarDatosUsuario(res.data.usuario);
