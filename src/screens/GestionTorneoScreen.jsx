@@ -624,6 +624,8 @@ const GestionTorneoScreen = () => {
                 <span style={styles.modalLabel}>Restricciones Horarias:</span>
                 <p style={styles.modalValueHighlight}>
                   {obtenerTextoRestricciones(inscripcionSeleccionada)}
+                </p>
+              </div>
               <div style={styles.modalSection}>
                 <span style={styles.modalLabel}>Contactos WhatsApp:</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
