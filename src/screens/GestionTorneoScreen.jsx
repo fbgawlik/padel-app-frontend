@@ -77,6 +77,24 @@ const GestionTorneoScreen = () => {
   const partidosFiltrados = partidos.filter(partido => !categoriaFiltrada || partido.categoria === categoriaFiltrada);
   const zonasFiltradas = zonas.filter(zona => !categoriaFiltrada || zona.categoria === categoriaFiltrada);
 
+  const parseBloquesRestringidos = (bloquesString = '[]') => {
+    try {
+      const bloques = JSON.parse(bloquesString);
+      return Array.isArray(bloques) ? bloques : [];
+    } catch (e) {
+      return [];
+    }
+  };
+
+  const obtenerTextoRestricciones = (insc) => {
+    const textoLibre = insc.restriccionHoraria?.trim();
+    const bloques = parseBloquesRestringidos(insc.bloquesRestringidos);
+    const partes = [];
+    if (textoLibre) partes.push(textoLibre);
+    if (bloques.length > 0) partes.push(`Bloques restringidos: ${bloques.join(', ')}`);
+    return partes.length > 0 ? partes.join(' | ') : 'Sin restricciones de horario indicadas.';
+  };
+
   const mostrarToast = (mensaje, tipo = 'success') => {
     setToast({ mensaje, tipo });
     setTimeout(() => setToast(null), 3500);
@@ -605,12 +623,7 @@ const GestionTorneoScreen = () => {
               <div style={styles.modalSection}>
                 <span style={styles.modalLabel}>Restricciones Horarias:</span>
                 <p style={styles.modalValueHighlight}>
-                  {inscripcionSeleccionada.restriccionHoraria && inscripcionSeleccionada.restriccionHoraria.trim() !== ""
-                    ? inscripcionSeleccionada.restriccionHoraria
-                    : 'Sin restricciones de horario indicadas.'}
-                </p>
-              </div>
-
+                  {obtenerTextoRestricciones(inscripcionSeleccionada)}
               <div style={styles.modalSection}>
                 <span style={styles.modalLabel}>Contactos WhatsApp:</span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '6px' }}>
