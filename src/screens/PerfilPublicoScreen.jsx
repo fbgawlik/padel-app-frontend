@@ -104,7 +104,7 @@ const PerfilPublicoScreen = () => {
           <div style={styles.badgeCard}>
             <div style={{...styles.badgeIcono, color: '#FFD700', backgroundColor: 'rgba(255, 215, 0, 0.1)'}}>🏆</div>
             <span style={styles.badgeTitulo}>Ranking</span>
-            <span style={styles.badgeValor}>Nº 1</span>
+            <span style={styles.badgeValor}>{jugador.rankingPosition ? `Nº ${jugador.rankingPosition}` : '—'}</span>
           </div>
 
           {/* Card Categoría */}
@@ -143,12 +143,35 @@ const PerfilPublicoScreen = () => {
             {/* Record Extra Estético */}
             <div style={styles.cajaRecord}>
               <div style={styles.labelLadoTitle}>Rendimiento Circuito</div>
-              <div style={styles.valorRecordText}>W - L : <span style={{color: '#39FF14'}}>12 - 2</span></div>
+              <div style={styles.valorRecordText}>W - L : <span style={{color: '#39FF14'}}>{jugador.rendimientoCircuito || '0 - 0'}</span></div>
             </div>
           </div>
 
         </div>
 
+        {/* HISTORIAL DE PARTIDOS */}
+        <div style={{ marginTop: 18 }}>
+          <h3 style={styles.subtituloSeccion}>Historial Reciente</h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {jugador.historialPartidos && jugador.historialPartidos.length > 0 ? (
+              jugador.historialPartidos.map(h => (
+                <div key={h.id} style={{ padding: 12, background: 'rgba(22,22,24,0.6)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: 700 }}>{h.torneo?.nombre || 'Torneo' } • {h.fase}</div>
+                    <div style={{ color: '#8E8E93', fontSize: 13 }}>{h.fecha ? `${h.fecha} ${h.hora || ''}` : 'Fecha pendiente'}</div>
+                    <div style={{ marginTop: 6 }}>{h.rival ? h.rival.jugadores : 'Rival no disponible'}</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontWeight: 800 }}>{h.resultadoFinal}</div>
+                    <div style={{ color: '#8E8E93', fontSize: 12 }}>{h.resultado || ''}</div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ color: '#8E8E93' }}>No hay partidos registrados.</div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
