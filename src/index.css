@@ -89,15 +89,16 @@ input[type="time"]::-webkit-inner-spin-button {
 
 /* AQUÍ SE APLICÓ EL CAMBIO */
 #root {
-  width: 100%;             /* Ocupa todo el ancho en pantallas chicas */
-  max-width: 1126px;       /* No se deforma ni se estira de más en monitores grandes */
-  margin: 0 auto;          /* Centra toda la aplicación en la pantalla */
+  width: 100%;             
+  max-width: 1126px;       
+  margin: 0 auto;          
   text-align: center;
-  border-inline: 1px solid var(--border);
+  /* border-inline: 1px solid var(--border); */ /* 👈 Comenta o elimina esta línea */
   min-height: 100svh;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  overflow-x: hidden; /* 👈 Agrega esto para bloquear scroll lateral accidental */
 }
 
 h1,
