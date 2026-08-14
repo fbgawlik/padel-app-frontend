@@ -190,20 +190,24 @@ export const styles = {
     borderColor: theme.colors.primary
   },
   selectorOption: {
-    width: '100%',
+    minWidth: '78px',
     padding: '10px 14px',
     backgroundColor: '#1A1A1A',
     color: theme.colors.text,
     border: '1px solid rgba(255, 255, 255, 0.12)',
-    borderRadius: '12px',
-    textAlign: 'left',
+    borderRadius: '14px',
+    textAlign: 'center',
     cursor: 'pointer',
-    marginBottom: '8px'
+    flexShrink: 0,
+    whiteSpace: 'nowrap',
+    fontSize: '13px',
+    fontWeight: '600'
   },
   selectorOptionSelected: {
     backgroundColor: theme.colors.primary,
     color: '#000000',
-    borderColor: theme.colors.primary
+    borderColor: theme.colors.primary,
+    boxShadow: '0 8px 20px rgba(57, 255, 20, 0.18)'
   },
   botonModalHora: {
     padding: '0 12px',
@@ -266,19 +270,26 @@ export const styles = {
     marginBottom: '20px'
   },
   gridHorarios: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
+    display: 'flex',
+    overflowX: 'auto',
     gap: '10px',
-    marginBottom: '20px'
+    marginBottom: '20px',
+    paddingBottom: '8px',
+    WebkitOverflowScrolling: 'touch',
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none'
   },
   botonHoraGrid: {
-    padding: '12px 8px',
-    borderRadius: '12px',
+    minWidth: '82px',
+    padding: '12px 12px',
+    borderRadius: '14px',
     border: '1px solid rgba(255, 255, 255, 0.1)',
     fontWeight: '600',
     fontSize: '13px',
     cursor: 'pointer',
-    transition: 'all 0.2s'
+    transition: 'all 0.2s',
+    whiteSpace: 'nowrap',
+    flexShrink: 0
   },
   botonCerrarModal: {
     width: '100%',

@@ -57,6 +57,24 @@ const ReservarTurnoScreen = () => {
     return slots;
   };
 
+  const horarioMinimoDisponibleHoy = () => {
+    const hoy = new Date();
+    const fechaActual = obtenerFechaHoy();
+    if (fechaSeleccionada !== fechaActual) return null;
+
+    const proxHora = new Date(hoy);
+    proxHora.setMinutes(0, 0, 0);
+    proxHora.setHours(proxHora.getHours() + 1);
+
+    return `${String(proxHora.getHours()).padStart(2, '0')}:00`;
+  };
+
+  const esSlotPasado = (slot) => {
+    const horaMinima = horarioMinimoDisponibleHoy();
+    if (!horaMinima) return false;
+    return slot.inicio < horaMinima;
+  };
+
   useEffect(() => {
     const cargarDatos = async () => {
       try {
@@ -108,6 +126,8 @@ const ReservarTurnoScreen = () => {
   };
 
   const seleccionarSlotHorario = (slot) => {
+    if (esSlotPasado(slot) || comprobarSlotOcupado(slot.inicio, slot.fin)) return;
+
     if (!horaInicio) {
       setHoraInicio(slot.inicio);
       setHoraFin(slot.fin);
@@ -294,24 +314,29 @@ const ReservarTurnoScreen = () => {
         <div style={styles.grillaHorarios}>
           {generarSlotsHorarios().map(slot => {
             const ocupado = comprobarSlotOcupado(slot.inicio, slot.fin);
+            const pasado = esSlotPasado(slot);
             const seleccionado = horaInicio && horaFin && (slot.inicio >= horaInicio && slot.fin <= horaFin);
+            const inhabilitado = ocupado || pasado;
 
             return (
               <button
                 key={slot.inicio}
-                disabled={ocupado}
+                disabled={inhabilitado}
                 onClick={() => seleccionarSlotHorario(slot)}
                 style={{
                   ...styles.botonSlot,
                   ...(ocupado 
                     ? styles.slotOcupado 
-                    : seleccionado 
-                      ? styles.slotSeleccionado 
-                      : styles.slotDisponible)
+                    : pasado
+                      ? styles.slotPasado
+                      : seleccionado 
+                        ? styles.slotSeleccionado 
+                        : styles.slotDisponible)
                 }}
               >
                 <span style={styles.slotHoraTexto}>{slot.inicio}</span>
                 {ocupado && <span style={styles.textoOcupadoLabel}>Ocupado</span>}
+                {!ocupado && pasado && <span style={styles.textoOcupadoLabel}>Pasado</span>}
               </button>
             );
           })}

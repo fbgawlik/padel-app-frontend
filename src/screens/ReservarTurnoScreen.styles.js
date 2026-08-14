@@ -126,12 +126,17 @@ export const styles = {
     letterSpacing: '-0.5px'
   },
   grillaHorarios: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))',
-    gap: '10px'
+    display: 'flex',
+    overflowX: 'auto',
+    gap: '10px',
+    paddingBottom: '8px',
+    WebkitOverflowScrolling: 'touch',
+    scrollbarWidth: 'none',
+    msOverflowStyle: 'none'
   },
   botonSlot: {
-    padding: '18px 8px',
+    minWidth: '90px',
+    padding: '14px 12px',
     borderRadius: '18px',
     border: '1px solid',
     cursor: 'pointer',
@@ -140,23 +145,33 @@ export const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: '4px',
-    transition: 'all 0.15s ease'
+    transition: 'all 0.15s ease',
+    whiteSpace: 'nowrap',
+    flexShrink: 0
   },
   slotDisponible: {
     backgroundColor: '#121214',
-    borderColor: 'rgba(255,255,255,0.03)',
+    borderColor: 'rgba(255,255,255,0.06)',
     color: theme.colors.text
   },
   slotSeleccionado: {
     backgroundColor: 'rgba(57, 255, 20, 0.08)',
     borderColor: theme.colors.primary,
-    color: theme.colors.primary
+    color: theme.colors.primary,
+    boxShadow: '0 8px 20px rgba(57, 255, 20, 0.12)'
   },
   slotOcupado: {
-    backgroundColor: 'rgba(255,255,255,0.01)',
-    borderColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    borderColor: 'rgba(255,255,255,0.04)',
     color: '#3A3A3C',
     cursor: 'not-allowed'
+  },
+  slotPasado: {
+    backgroundColor: 'rgba(255, 255, 255, 0.01)',
+    borderColor: 'rgba(255,255,255,0.02)',
+    color: '#57575A',
+    cursor: 'not-allowed',
+    opacity: 0.75
   },
   slotHoraTexto: { 
     fontSize: '15px', 

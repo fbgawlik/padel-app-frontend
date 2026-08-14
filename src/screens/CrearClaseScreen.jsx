@@ -402,19 +402,21 @@ const CrearClaseScreen = () => {
 
               {mostrarSelectorHora && (
                 <div style={styles.selectorPopover}>
-                  {horasSugeridas.map((hora) => (
-                    <button
-                      key={hora}
-                      type="button"
-                      onClick={() => seleccionarHora(hora)}
-                      style={{
-                        ...styles.selectorOption,
-                        ...(nuevaClase.hora === hora ? styles.selectorOptionSelected : {})
-                      }}
-                    >
-                      {hora}
-                    </button>
-                  ))}
+                  <div style={{ display: 'flex', overflowX: 'auto', gap: '8px', paddingBottom: '6px', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {horasSugeridas.map((hora) => (
+                      <button
+                        key={hora}
+                        type="button"
+                        onClick={() => seleccionarHora(hora)}
+                        style={{
+                          ...styles.selectorOption,
+                          ...(nuevaClase.hora === hora ? styles.selectorOptionSelected : {})
+                        }}
+                      >
+                        {hora}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -488,6 +490,8 @@ const CrearClaseScreen = () => {
                     ...styles.botonHoraGrid,
                     backgroundColor: nuevaClase.hora === h ? '#39FF14' : 'rgba(255, 255, 255, 0.05)',
                     color: nuevaClase.hora === h ? '#000' : '#FFF',
+                    borderColor: nuevaClase.hora === h ? '#39FF14' : 'rgba(255, 255, 255, 0.1)',
+                    boxShadow: nuevaClase.hora === h ? '0 8px 18px rgba(57, 255, 20, 0.2)' : 'none',
                   }}
                 >
                   {h} hs
