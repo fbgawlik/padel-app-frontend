@@ -81,7 +81,7 @@ const TorneoDetalleScreen = () => {
     return (
       <div style={styles.centerContainer}>
         <div style={styles.alerta}>
-          <p style={{ color: 'var(--text-primary)', fontWeight: '700', margin: 0 }}>Torneo no encontrado o error de carga.</p>
+          <p style={{ color: '#FFF', fontWeight: '700', margin: 0 }}>Torneo no encontrado o error de carga.</p>
           <button onClick={() => navigate(-1)} style={styles.btnVolver}>Volver atrás</button>
         </div>
       </div>
@@ -132,7 +132,7 @@ const TorneoDetalleScreen = () => {
         <div style={styles.headerOverlay}>
           <div style={styles.topBar}>
             <button onClick={() => navigate(-1)} style={styles.backButton} type="button" aria-label="Volver">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </button>
@@ -394,7 +394,7 @@ const TorneoDetalleScreen = () => {
         )}
       </div>
 
-      <div style={styles.fixedActionContainer}>
+      <div style={styles.actionFooter}>
         {yaInscripto ? (
           <div style={styles.badgeInscripto}>✅ Ya estás inscripto en este torneo</div>
         ) : inscripcionesAbiertas ? (
