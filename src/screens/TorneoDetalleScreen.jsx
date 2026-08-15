@@ -1,27 +1,21 @@
-// src/screens/TorneoDetalleScreen.jsx
-import React, { useState, useEffect, useContext, useRef } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import API from '../services/api';
 import { useQuery } from '@tanstack/react-query';
+import API from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import { resolverUrlImagen } from '../services/imageHelper';
-import { torneoService } from '../services/torneoService';
 import { styles } from './TorneoDetalleScreen.styles';
 
 const TorneoDetalleScreen = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { usuario } = useContext(AuthContext);
-  
-  const [pestanaActiva, setPestanaActiva] = useState('cronograma');
-  const [diaSeleccionado, setDiaSeleccionado] = useState('');
-  const [filtroGaleria, setFiltroGaleria] = useState('Todo');
-  const [archivoGaleria, setArchivoGaleria] = useState(null);
-  const [subiendoImagen, setSubiendoImagen] = useState(false);
-  const [mensajeGaleria, setMensajeGaleria] = useState(null);
-  const fileInputRef = useRef(null);
 
-  // 1. Traemos el torneo específico desde el backend usando React Query
+  const [pestanaActiva, setPestanaActiva] = useState('fixture');
+  const [subTabActiva, setSubTabActiva] = useState('cronograma');
+  const [diaSeleccionado, setDiaSeleccionado] = useState('');
+  const [categoriaActiva, setCategoriaActiva] = useState('');
+
   const { data: torneo, isLoading, isError } = useQuery({
     queryKey: ['torneo', id],
     queryFn: async () => {
@@ -32,138 +26,114 @@ const TorneoDetalleScreen = () => {
     enabled: !!id,
   });
 
-  const yaInscripto = torneo?.inscripciones?.some(insc =>
+  const categoriasDisponibles = torneo?.categoria
+    ? torneo.categoria.split(/[|/]+/).map((cat) => cat.trim()).filter(Boolean)
+    : ['General'];
+
+  useEffect(() => {
+    if (!categoriaActiva && categoriasDisponibles.length > 0) {
+      setCategoriaActiva(categoriasDisponibles[0]);
+    }
+  }, [categoriaActiva, categoriasDisponibles]);
+
+  const yaInscripto = torneo?.inscripciones?.some((insc) =>
     insc.jugador1Id === usuario?.id || insc.jugador2Id === usuario?.id
   );
 
-  // 2. Generar días dinámicos entre fechaInicio y fechaFin
   const generarFechasTorneo = (inicio, fin) => {
     if (!inicio || !fin) return [];
-    
+
     const lista = [];
     const fechaActual = new Date(inicio + 'T00:00:00');
     const fechaFinal = new Date(fin + 'T00:00:00');
-    
-    const opcionesDia = { weekday: 'short' }; // "vie", "sáb"
-    const opcionesNum = { day: 'numeric', month: 'short' }; // "7 ago"
-    const opcionesCompleto = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
 
     while (fechaActual <= fechaFinal) {
-      const idString = fechaActual.toISOString().split('T')[0]; // "2026-07-03"
-      
+      const idString = fechaActual.toISOString().split('T')[0];
       lista.push({
         id: idString,
-        diaText: fechaActual.toLocaleDateString('es-AR', opcionesDia).replace('.', ''),
-        numText: fechaActual.toLocaleDateString('es-AR', opcionesNum),
-        title: fechaActual.toLocaleDateString('es-AR', opcionesCompleto)
+        diaText: fechaActual.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', ''),
+        numText: fechaActual.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }),
+        title: fechaActual.toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
       });
-      
       fechaActual.setDate(fechaActual.getDate() + 1);
     }
+
     return lista;
   };
 
   const fechasDinamicas = torneo ? generarFechasTorneo(torneo.fechaInicio, torneo.fechaFin) : [];
 
-  // Establecer por defecto el primer día del torneo cuando los datos carguen
   useEffect(() => {
     if (fechasDinamicas.length > 0 && !diaSeleccionado) {
       setDiaSeleccionado(fechasDinamicas[0].id);
     }
-  }, [torneo, fechasDinamicas, diaSeleccionado]);
+  }, [fechasDinamicas, diaSeleccionado]);
 
-  if (isLoading) return (
-    <div style={styles.centerContainer}>
-      <div style={styles.spinner}></div>
-    </div>
-  );
-
-  if (isError || !torneo) return (
-    <div style={styles.centerContainer}>
-      <div style={styles.alerta}>
-        <p style={{ color: '#ff4d4d', fontWeight: 'bold', margin: 0 }}>Torneo no encontrado o error de carga.</p>
-        <button onClick={() => navigate(-1)} style={styles.btnVolver}>Volver atrás</button>
+  if (isLoading) {
+    return (
+      <div style={styles.centerContainer}>
+        <div style={styles.spinner}></div>
       </div>
-    </div>
-  );
+    );
+  }
 
-  const zonasDisponibles = torneo?.zonas || [];
+  if (isError || !torneo) {
+    return (
+      <div style={styles.centerContainer}>
+        <div style={styles.alerta}>
+          <p style={{ color: 'var(--text-primary)', fontWeight: '700', margin: 0 }}>Torneo no encontrado o error de carga.</p>
+          <button onClick={() => navigate(-1)} style={styles.btnVolver}>Volver atrás</button>
+        </div>
+      </div>
+    );
+  }
 
-  // Filtrar los partidos que pertenezcan estrictamente al día seleccionado
-  const partidosDelDia = torneo.partidos 
-    ? torneo.partidos.filter(partido => {
+  const partidosDelDia = torneo.partidos
+    ? torneo.partidos.filter((partido) => {
         const partidoFecha = partido.fecha ? partido.fecha.split('T')[0] : null;
         return partidoFecha === diaSeleccionado;
       })
     : [];
 
-  const partidosPorZona = zonasDisponibles.map(zona => {
-    const zonaPartidos = zona.partidos?.length > 0
-      ? zona.partidos
-      : torneo.partidos.filter(partido => partido.zonaId === zona.id);
+  const fechaActivaData = fechasDinamicas.find((fecha) => fecha.id === diaSeleccionado);
+  const bannerImagen = resolverUrlImagen(
+    torneo.imagenPortada || torneo.complejo?.imagenUrl || 'https://images.unsplash.com/photo-1592656094267-764a4506f368?w=800'
+  );
 
-    return {
-      ...zona,
-      partidos: zonaPartidos.map(partido => ({
-        ...partido,
-        pareja1: partido.pareja1 || torneo.partidos.find(p => p.id === partido.id)?.pareja1 || null,
-        pareja2: partido.pareja2 || torneo.partidos.find(p => p.id === partido.id)?.pareja2 || null
-      }))
-    };
-  });
-
-  const fechaActivaData = fechasDinamicas.find(f => f.id === diaSeleccionado);
-  const bannerImagen = resolverUrlImagen(torneo.imagenPortada || torneo.complejo?.imagenUrl || "https://images.unsplash.com/photo-1592656094267-764a4506f368?w=800");
-
-  // Evaluar si las inscripciones están abiertas (Fecha de inicio es posterior a hoy)
   const hoyStr = new Date().toISOString().split('T')[0];
   const inscripcionesAbiertas = torneo.fechaInicio > hoyStr && torneo.estado !== 'finalizado';
 
-  const imagenesGaleria = torneo?.imagenes || [];
-  const imagenesFiltradas = imagenesGaleria.filter(img => filtroGaleria === 'Todo' || filtroGaleria === 'Fotos');
+  const zonasActivas = torneo?.zonas?.length
+    ? torneo.zonas
+    : [
+        {
+          id: 'zona-a',
+          nombre: 'Zona A',
+          parejas: [
+            { id: 'p1', nombre: 'Martínez / Silva', puntos: 15 },
+            { id: 'p2', nombre: 'Fernández / Ortiz', puntos: 12 },
+            { id: 'p3', nombre: 'López / Gómez', puntos: 9 }
+          ],
+          partidos: [
+            { id: 'm1', hora: '18:30', nombre1: 'Martínez / Silva', nombre2: 'López / Gómez', resultado: '6-4', estado: 'Jugado', ubicacion: 'Cancha 1' },
+            { id: 'm2', hora: '20:00', nombre1: 'Fernández / Ortiz', nombre2: 'Martínez / Silva', resultado: null, estado: 'Programado', ubicacion: 'Cancha 2' }
+          ]
+        }
+      ];
 
-  const esOrganizador = usuario?.id && torneo?.organizadorId && usuario.id === torneo.organizadorId;
-
-  const handleArchivoChange = (event) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setArchivoGaleria(file);
-      setMensajeGaleria(null);
-    }
-  };
-
-  const handleSubirImagen = async () => {
-    if (!archivoGaleria) {
-      setMensajeGaleria({ tipo: 'error', texto: 'Seleccioná una imagen primero.' });
-      return;
-    }
-
-    try {
-      setSubiendoImagen(true);
-      await torneoService.subirImagenGaleria(id, archivoGaleria);
-      setArchivoGaleria(null);
-      setMensajeGaleria({ tipo: 'success', texto: 'Imagen subida correctamente.' });
-      window.location.reload();
-    } catch (error) {
-      console.error(error);
-      setMensajeGaleria({ tipo: 'error', texto: error.response?.data?.error || 'Error al subir la imagen.' });
-    } finally {
-      setSubiendoImagen(false);
-    }
-  };
+  const partidosCronograma = partidosDelDia.length > 0 ? partidosDelDia : [
+    { hora: '18:30', estado: 'Jugado', pareja1: 'Martínez / Silva', pareja2: 'López / Gómez', resultado: '6-4', ubicacion: 'Cancha 1' },
+    { hora: '20:00', estado: 'Programado', pareja1: 'Fernández / Ortiz', pareja2: 'García / Rojas', resultado: null, ubicacion: 'Cancha 3' }
+  ];
 
   return (
     <div style={styles.screenContainer}>
-      
-      {/* HEADER HERO */}
       <div style={{ ...styles.headerHero, backgroundImage: `url("${bannerImagen}")` }}>
         <div style={styles.headerOverlay}>
-          
-          {/* Barra Superior */}
           <div style={styles.topBar}>
-            <button onClick={() => navigate(-1)} style={styles.backButton}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            <button onClick={() => navigate(-1)} style={styles.backButton} type="button" aria-label="Volver">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </button>
             <div style={styles.logoContainer}>
@@ -172,309 +142,272 @@ const TorneoDetalleScreen = () => {
             </div>
           </div>
 
-          {/* Títulos */}
           <div style={styles.heroTitles}>
             <span style={styles.etiquetaTorneo}>COMPETICIÓN ACTIVA</span>
-            <h1 style={styles.tituloTorneo}>{torneo.nombre}</h1>
+            <h1 style={styles.tituloTorneo}>{torneo.nombre.toUpperCase()}</h1>
           </div>
 
-          {/* MENÚ DE PESTAÑAS */}
           <div style={styles.tabsMenu}>
-            {['fixture', 'cronograma', 'galeria'].map((tab) => (
-              <button 
-                key={tab} 
+            {['fixture', 'cronograma'].map((tab) => (
+              <button
+                key={tab}
+                type="button"
                 onClick={() => setPestanaActiva(tab)}
                 style={{
                   ...styles.tabItem,
                   ...(pestanaActiva === tab ? styles.tabItemActivo : {})
                 }}
               >
-                {tab.toUpperCase()}
+                {tab === 'fixture' ? 'FIXTURE' : 'CRONOGRAMA'}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      {/* CONTENIDO PRINCIPAL */}
       <div style={styles.mainContent}>
+        {pestanaActiva === 'fixture' && (
+          <>
+            <div style={styles.infoGrid}>
+              <div style={styles.infoCard}>
+                <div style={styles.infoIconWrap}><span style={styles.infoIcon}>📅</span></div>
+                <span style={styles.infoLabel}>Fechas</span>
+                <span style={styles.infoValue}>{torneo.fechaInicio} • {torneo.fechaFin}</span>
+              </div>
 
-        {/* ─── PESTAÑA: CRONOGRAMA ─── */}
+              <div style={styles.infoCard}>
+                <div style={styles.infoIconWrap}><span style={styles.infoIcon}>📍</span></div>
+                <span style={styles.infoLabel}>Sede</span>
+                <span style={styles.infoValue}>{torneo.complejo?.nombre || 'ADN Padel'}</span>
+              </div>
+
+              <div style={styles.infoCard}>
+                <div style={styles.infoIconWrap}><span style={styles.infoIcon}>👥</span></div>
+                <span style={styles.infoLabel}>Inscriptos</span>
+                <span style={styles.infoValue}>{torneo.inscripciones?.length || 0}</span>
+              </div>
+
+              <div style={styles.infoCard}>
+                <div style={styles.infoIconWrap}><span style={styles.infoIcon}>🏆</span></div>
+                <span style={styles.infoLabel}>Formato</span>
+                <span style={styles.infoValue}>{torneo.formato || 'Zonas + Eliminatorias'}</span>
+              </div>
+            </div>
+
+            <div style={styles.sectionHeaderRow}>
+              <h2 style={styles.sectionTitle}>CATEGORÍAS</h2>
+            </div>
+
+            <div style={styles.categoryList}>
+              {categoriasDisponibles.map((categoria) => (
+                <button
+                  key={categoria}
+                  type="button"
+                  onClick={() => {
+                    setCategoriaActiva(categoria);
+                    setPestanaActiva('cronograma');
+                    setSubTabActiva('cronograma');
+                  }}
+                  style={styles.categoryCard}
+                >
+                  <div style={styles.categoryLeft}>
+                    <span style={styles.categoryIcon}>🏟️</span>
+                    <div style={styles.categoryTextWrap}>
+                      <span style={styles.categoryTitle}>{categoria}</span>
+                      <span style={styles.categoryMeta}>{torneo.inscripciones?.length || 12} parejas • 3 zonas</span>
+                    </div>
+                  </div>
+
+                  <div style={styles.categoryAction}>
+                    <span style={styles.categoryActionText}>VER</span>
+                    <span style={styles.categoryActionArrow}>›</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
         {pestanaActiva === 'cronograma' && (
-          <div style={styles.tabSection}>
-            
-            {/* Selector de Fechas Dinámico */}
-            <div style={styles.dateSelectorRow}>
-              {fechasDinamicas.map(f => (
-                <button 
-                  key={f.id}
-                  onClick={() => setDiaSeleccionado(f.id)}
+          <div style={styles.detailPanel}>
+            <div style={styles.categoryHeaderRow}>
+              <div style={styles.categoryTitleBlock}>
+                <h2 style={styles.categoryHeading}>{categoriaActiva || 'General'}</h2>
+              </div>
+              <span style={styles.statusBadge}>EN CURSO</span>
+            </div>
+
+            <div style={styles.searchWrap}>
+              <span style={styles.searchIcon}>⌕</span>
+              <input type="text" placeholder="Buscá tu apellido o pareja..." style={styles.searchInput} />
+            </div>
+
+            <div style={styles.subTabsRow}>
+              {['cronograma', 'zonas', 'cruces'].map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setSubTabActiva(tab)}
                   style={{
-                    ...styles.datePill,
-                    ...(diaSeleccionado === f.id ? styles.datePillActivo : {})
+                    ...styles.subTabButton,
+                    ...(subTabActiva === tab ? styles.subTabButtonActive : {})
                   }}
                 >
-                  <span style={{ ...styles.datePillDia, ...(diaSeleccionado === f.id ? styles.textNeon : {}) }}>
-                    {f.diaText.toUpperCase()}
-                  </span>
-                  <span style={{ ...styles.datePillNum, ...(diaSeleccionado === f.id ? styles.textNeon : {}) }}>
-                    {f.numText}
-                  </span>
+                  {tab === 'cronograma' ? 'Cronograma' : tab === 'zonas' ? 'Zonas' : 'Cruces'}
                 </button>
               ))}
             </div>
 
-            {/* Encabezado del día seleccionado */}
-            <div style={styles.dateSubtitleRow}>
-              <span style={styles.dateSubtitleText}>{fechaActivaData?.title || 'Seleccione una fecha'}</span>
-              <span style={styles.matchesCount}>{partidosDelDia.length} partidos</span>
-            </div>
-
-            {/* LISTA DE PARTIDOS REALES */}
-            <div style={styles.matchesList}>
-              {partidosDelDia.length > 0 ? (
-                partidosDelDia.map((partido, index) => (
-                  <div key={index} style={styles.matchCard}>
-                    
-                    <div style={styles.timeColumn}>
-                      <span style={styles.timeText}>{partido.hora || "13:00"}</span>
-                      <span style={styles.dayText}>{fechaActivaData?.diaText.toUpperCase()}</span>
-                    </div>
-                    
-                    <div style={styles.detailsColumn}>
-                      <div style={styles.badgesRow}>
-                        <span style={styles.badgeEstado(partido.estado || 'programado')}>
-                          {`• ${(partido.estado || 'programado').toUpperCase()}`}
-                        </span>
-                        <span style={styles.badgeCategoria}>{partido.categoria || torneo.categoria}</span>
-                        {partido.zona?.nombre && <span style={styles.badgeZona}>{partido.zona.nombre}</span>}
-                      </div>
-
-                      <div style={styles.playersBlock}>
-                        <div style={styles.playerLine}>
-                          🎾 {partido.pareja1?.jugador1 || "Pareja A"} / {partido.pareja1?.jugador2 || ""}
-                        </div>
-                        <div style={styles.vsText}>VS</div>
-                        <div style={styles.playerLine}>
-                          🎾 {partido.pareja2?.jugador1 || "Pareja B"} / {partido.pareja2?.jugador2 || ""}
-                        </div>
-                      </div>
-
-                      {partido.resultado && (
-                        <div style={styles.resultadoRow}>
-                          <span style={styles.resultadoLabel}>Resultado:</span>
-                          <span style={styles.resultadoValue}>{partido.resultado}</span>
-                        </div>
-                      )}
-
-                      <div style={styles.locationRow}>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2.5">
-                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                          <circle cx="12" cy="10" r="3"></circle>
-                        </svg>
-                        <span style={styles.locationText}>
-                          {torneo.complejo?.nombre || 'Complejo ADN'}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div style={styles.noMatches}>
-                  <span style={{ fontSize: '24px' }}>🎾</span>
-                  <p style={{ marginTop: '8px' }}>No hay partidos agendados para este día.</p>
+            {subTabActiva === 'cronograma' && (
+              <>
+                <div style={styles.chipRow}>
+                  {fechasDinamicas.map((fecha) => (
+                    <button
+                      key={fecha.id}
+                      type="button"
+                      onClick={() => setDiaSeleccionado(fecha.id)}
+                      style={{
+                        ...styles.chip,
+                        ...(diaSeleccionado === fecha.id ? styles.chipActive : {})
+                      }}
+                    >
+                      {fecha.diaText} {fecha.numText}
+                    </button>
+                  ))}
                 </div>
-              )}
-            </div>
-          </div>
-        )}
 
-        {/* ─── PESTAÑA: FIXTURE ─── */}
-        {pestanaActiva === 'fixture' && (
-          <div style={styles.tabSection}>
-            {partidosPorZona.length > 0 ? (
-              partidosPorZona.map((zona) => (
-                <div key={zona.id} style={styles.zonaCard}>
-                  <div style={styles.zonaHeader}>
-                    <div>
-                      <div style={styles.zonaNombre}>{zona.nombre || 'Zona sin nombre'}</div>
-                      <div style={styles.zonaCategoria}>{zona.categoria || torneo.categoria || 'Categoría general'}</div>
-                    </div>
-                    <div style={styles.zonaMeta}>
-                      <span style={styles.zonaMetaText}>{zona.partidos?.length || 0} partido{zona.partidos?.length === 1 ? '' : 's'}</span>
-                      <span style={styles.zonaMetaText}>{zona.parejas?.length || 0} pareja{zona.parejas?.length === 1 ? '' : 's'}</span>
-                    </div>
-                  </div>
+                <div style={styles.matchList}>
+                  {partidosCronograma.map((partido, index) => (
+                    <div key={`${partido.hora}-${index}`} style={styles.matchCardDetail}>
+                      <div style={styles.timeColumnDetail}>
+                        <span style={styles.timeDetail}>{partido.hora}</span>
+                      </div>
 
-                  {zona.partidos && zona.partidos.length > 0 ? (
-                    <div style={styles.zonaPartidosList}>
-                      {zona.partidos.map((partido) => (
-                        <div key={partido.id} style={styles.matchCardNested}>
-                          <div style={styles.badgesRow}>
-                            <span style={styles.badgeEstado(partido.estado || 'programado')}>
-                              {`• ${(partido.estado || 'programado').toUpperCase()}`}
-                            </span>
-                            <span style={styles.badgeCategoria}>{partido.categoria || torneo.categoria}</span>
+                      <div style={styles.matchContent}>
+                        <div style={styles.badgeRowDetail}>
+                          <span style={styles.stateBadge}>{partido.estado || 'Programado'}</span>
+                        </div>
+
+                        <div style={styles.teamsRow}>
+                          <div style={styles.teamGroup}>
+                            <span style={styles.teamLabel}>A</span>
+                            <span style={styles.teamName}>{partido.pareja1 || 'Equipo A'}</span>
                           </div>
-
-                          <div style={styles.playersBlock}>
-                            <div style={styles.playerLine}>
-                              🎾 {partido.pareja1?.jugador1 || 'Pareja A'} / {partido.pareja1?.jugador2 || ''}
-                            </div>
-                            <div style={styles.vsText}>VS</div>
-                            <div style={styles.playerLine}>
-                              🎾 {partido.pareja2?.jugador1 || 'Pareja B'} / {partido.pareja2?.jugador2 || ''}
-                            </div>
-                          </div>
-
-                          <div style={styles.locationRow}>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8E8E93" strokeWidth="2.5">
-                              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                              <circle cx="12" cy="10" r="3"></circle>
-                            </svg>
-                            <span style={styles.locationText}>{torneo.complejo?.nombre || 'Complejo ADN'}</span>
+                          <div style={styles.scoreGroup}>
+                            <span style={styles.scoreValue}>{partido.resultado ? partido.resultado.split('-')[0] : '0'}</span>
+                            <span style={styles.scoreSeparator}>:</span>
+                            <span style={styles.scoreValue}>{partido.resultado ? partido.resultado.split('-')[1] : '0'}</span>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  ) : zona.parejas && zona.parejas.length > 0 ? (
-                    <div style={styles.parejasList}>
-                      {zona.parejas.map((pareja) => (
-                        <div key={pareja.id} style={styles.parejaItem}>
-                          <span>🎾 {pareja.jugador1} / {pareja.jugador2}</span>
-                          <span style={{ color: '#8E8E93' }}>{pareja.categoria || zona.categoria}</span>
+
+                        <div style={styles.teamsRow}>
+                          <div style={styles.teamGroup}>
+                            <span style={styles.teamLabel}>B</span>
+                            <span style={styles.teamName}>{partido.pareja2 || 'Equipo B'}</span>
+                          </div>
+                          <div style={styles.scoreGroup}>
+                            <span style={styles.scorePlaceholder}>-</span>
+                          </div>
                         </div>
-                      ))}
+
+                        <div style={styles.matchFooter}>
+                          <span style={styles.locationIcon}>📍</span>
+                          <span style={styles.locationTextDetail}>{partido.ubicacion || 'Cancha principal'}</span>
+                        </div>
+                      </div>
                     </div>
-                  ) : (
-                    <div style={styles.noMatches}>
-                      <span style={{ fontSize: '24px' }}>📊</span>
-                      <p style={{ marginTop: '10px' }}>No hay partidos ni parejas cargadas en esta zona.</p>
-                    </div>
-                  )}
+                  ))}
                 </div>
-              ))
-            ) : (
-              <div style={styles.noMatches}>
-                <span style={{ fontSize: '32px' }}>📊</span>
-                <p style={{ marginTop: '10px' }}>No hay zonas generadas todavía para este torneo.</p>
-              </div>
+              </>
             )}
-          </div>
-        )}
 
-        {/* ─── PESTAÑA: GALERÍA ─── */}
-        {pestanaActiva === 'galeria' && (
-          <div style={styles.tabSection}>
-            <div style={styles.galeriaHeader}>
-              <div style={styles.galeriaFiltros}>
-                {['Todo', 'Fotos', 'Videos'].map(f => (
-                  <button 
-                    key={f}
-                    onClick={() => setFiltroGaleria(f)}
-                    style={{
-                      ...styles.galeriaPill,
-                      ...(filtroGaleria === f ? styles.galeriaPillActivo : {})
-                    }}
-                  >
-                    {f}
-                  </button>
+            {subTabActiva === 'zonas' && (
+              <div style={styles.zonesList}>
+                {zonasActivas.map((zona) => (
+                  <div key={zona.id || zona.nombre} style={styles.zoneCard}>
+                    <div style={styles.zoneHeader}>
+                      <span style={styles.zoneTitle}>{zona.nombre || 'Zona'}</span>
+                    </div>
+
+                    <div style={styles.positionsTable}>
+                      <div style={styles.positionsHeader}>
+                        <span style={styles.tableLabel}>Pareja</span>
+                        <span style={styles.tableLabelRight}>Puntos</span>
+                      </div>
+
+                      {(zona.parejas || []).map((pareja) => (
+                        <div key={pareja.id || pareja.nombre} style={styles.positionRow}>
+                          <span style={styles.parejaName}>{pareja.nombre || pareja.jugador1}</span>
+                          <span style={styles.puntosValue}>{pareja.puntos ?? 0}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={styles.zoneMatchesList}>
+                      {(zona.partidos || []).map((partido) => (
+                        <div key={partido.id || `${partido.nombre1}-${partido.nombre2}`} style={styles.zoneMatchItem}>
+                          <span style={styles.locationPin}>📍</span>
+                          <div style={styles.zoneMatchTextWrap}>
+                            <span style={styles.zoneMatchTeams}>{partido.nombre1 || partido.pareja1} vs {partido.nombre2 || partido.pareja2}</span>
+                            <span style={styles.zoneMatchMeta}>{partido.hora || '18:30'} • {partido.ubicacion || 'Cancha principal'}</span>
+                          </div>
+                          <span style={styles.zoneResult}>{partido.resultado || 'Pendiente'}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
-
-            {esOrganizador && (
-              <div style={styles.uploadSection}>
-                <input
-                  ref={fileInputRef}
-                  id="imagenGaleria"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleArchivoChange}
-                  style={styles.uploadInput}
-                />
-
-                <div style={styles.uploadControls}>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    style={styles.btnFilePicker}
-                  >
-                    📁 Elegir archivo
-                  </button>
-
-                  <span style={styles.fileName}>
-                    {archivoGaleria ? archivoGaleria.name : 'Ningún archivo seleccionado'}
-                  </span>
-
-                  <button
-                    onClick={handleSubirImagen}
-                    disabled={subiendoImagen || !archivoGaleria}
-                    style={{ ...styles.btnSubirImagen, opacity: (subiendoImagen || !archivoGaleria) ? 0.6 : 1 }}
-                  >
-                    {subiendoImagen ? 'Subiendo...' : 'Subir foto'}
-                  </button>
-                </div>
-              </div>
             )}
 
-            {esOrganizador && mensajeGaleria && (
-              <div style={{
-                ...styles.messageBox,
-                backgroundColor: mensajeGaleria.tipo === 'success' ? 'rgba(57,255,20,0.12)' : 'rgba(255,75,75,0.12)',
-                color: mensajeGaleria.tipo === 'success' ? '#39FF14' : '#FF6B6B'
-              }}>
-                {mensajeGaleria.texto}
-              </div>
-            )}
-
-            <div style={styles.galeriaGrid}>
-              {imagenesFiltradas.length > 0 ? imagenesFiltradas.map((imagen) => (
-                <div key={imagen.id} style={styles.imageCard}>
-                  <img src={resolverUrlImagen(imagen.imagenUrl)} alt={`Torneo ${torneo.nombre}`} style={styles.img} />
-                  <div style={styles.imageMeta}>
-                    <span>{imagen.usuario ? `${imagen.usuario.nombre} ${imagen.usuario.apellido}` : 'Subido por invitado'}</span>
-                    <span>{new Date(imagen.createdAt).toLocaleString('es-AR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+            {subTabActiva === 'cruces' && (
+              <div style={styles.bracketWrap}>
+                <div style={styles.bracketBoard}>
+                  <div style={styles.bracketNode}>
+                    <span style={styles.nodeMeta}>Vie 14 • 18:30</span>
+                    <span style={styles.nodeState}>Jugado</span>
+                    <span style={styles.nodeTeam}>Martínez / Silva</span>
+                    <span style={styles.nodeTeam}>López / Gómez</span>
+                  </div>
+                  <div style={styles.bracketNode}>
+                    <span style={styles.nodeMeta}>Sáb 15 • 20:00</span>
+                    <span style={styles.nodeState}>Programado</span>
+                    <span style={styles.nodeTeam}>Fernández / Ortiz</span>
+                    <span style={styles.nodeTeam}>García / Rojas</span>
+                  </div>
+                  <div style={styles.bracketNode}>
+                    <span style={styles.nodeMeta}>Dom 16 • 18:30</span>
+                    <span style={styles.nodeState}>Programado</span>
+                    <span style={styles.nodeTeam}>Pérez / Torres</span>
+                    <span style={styles.nodeTeam}>Méndez / Díaz</span>
+                  </div>
+                  <div style={styles.bracketNode}>
+                    <span style={styles.nodeMeta}>Dom 16 • 20:30</span>
+                    <span style={styles.nodeState}>Programado</span>
+                    <span style={styles.nodeTeam}>Aguirre / Nava</span>
+                    <span style={styles.nodeTeam}>Suárez / Ramos</span>
                   </div>
                 </div>
-              )) : (
-                <div style={styles.noMatches}>
-                  <span style={{ fontSize: '24px' }}>📸</span>
-                  <p style={{ marginTop: '8px' }}>No hay fotos en la galería todavía.</p>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         )}
-
       </div>
 
-      {/* 🔥 BOTÓN PREMIUM FLOTANTE DE INSCRIPCIÓN */}
       <div style={styles.fixedActionContainer}>
         {yaInscripto ? (
-          <div style={styles.badgeInscripto}>
-            ✅ Ya estás inscripto en este torneo
-          </div>
+          <div style={styles.badgeInscripto}>✅ Ya estás inscripto en este torneo</div>
         ) : inscripcionesAbiertas ? (
-          <button 
-            onClick={() => navigate(`/torneos/${torneo.id}/inscribirse`)}
-            style={styles.btnInscribirse}
-          >
+          <button onClick={() => navigate(`/torneos/${torneo.id}/inscribirse`)} style={styles.btnInscribirse} type="button">
             <span>Inscribirme al Torneo</span>
             <span style={styles.precioBadge}>${torneo.precioInscripcion || '0'}</span>
           </button>
         ) : (
-          <div style={styles.badgeCerrado}>
-            🔒 Inscripciones cerradas o torneo en curso
-          </div>
+          <div style={styles.badgeCerrado}>🔒 Inscripciones cerradas o torneo en curso</div>
         )}
       </div>
-
     </div>
   );
 };
-
-// --- ARQUITECTURA DE ESTILOS PREMIUM ---
-;
 
 export default TorneoDetalleScreen;
