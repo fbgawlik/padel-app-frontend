@@ -28,7 +28,7 @@ const TorneoDetalleScreen = () => {
 
   const categoriasDisponibles = torneo?.categoria
     ? torneo.categoria.split(/[|/]+/).map((cat) => cat.trim()).filter(Boolean)
-    : ['General'];
+    : [];
 
   useEffect(() => {
     if (!categoriaActiva && categoriasDisponibles.length > 0) {
@@ -36,8 +36,8 @@ const TorneoDetalleScreen = () => {
     }
   }, [categoriaActiva, categoriasDisponibles]);
 
-  const yaInscripto = torneo?.inscripciones?.some((insc) =>
-    insc.jugador1Id === usuario?.id || insc.jugador2Id === usuario?.id
+  const yaInscripto = torneo?.inscripciones?.some(
+    (insc) => insc.jugador1Id === usuario?.id || insc.jugador2Id === usuario?.id
   );
 
   const generarFechasTorneo = (inicio, fin) => {
@@ -88,6 +88,7 @@ const TorneoDetalleScreen = () => {
     );
   }
 
+  // Filtrado de partidos según la respuesta de la API
   const partidosDelDia = torneo.partidos
     ? torneo.partidos.filter((partido) => {
         const partidoFecha = partido.fecha ? partido.fecha.split('T')[0] : null;
@@ -95,40 +96,20 @@ const TorneoDetalleScreen = () => {
       })
     : [];
 
-  const fechaActivaData = fechasDinamicas.find((fecha) => fecha.id === diaSeleccionado);
   const bannerImagen = resolverUrlImagen(
-    torneo.imagenPortada || torneo.complejo?.imagenUrl || 'https://images.unsplash.com/photo-1592656094267-764a4506f368?w=800'
+    torneo.imagenPortada || torneo.complejo?.imagenUrl
   );
 
   const hoyStr = new Date().toISOString().split('T')[0];
   const inscripcionesAbiertas = torneo.fechaInicio > hoyStr && torneo.estado !== 'finalizado';
 
-  const zonasActivas = torneo?.zonas?.length
-    ? torneo.zonas
-    : [
-        {
-          id: 'zona-a',
-          nombre: 'Zona A',
-          parejas: [
-            { id: 'p1', nombre: 'Martínez / Silva', puntos: 15 },
-            { id: 'p2', nombre: 'Fernández / Ortiz', puntos: 12 },
-            { id: 'p3', nombre: 'López / Gómez', puntos: 9 }
-          ],
-          partidos: [
-            { id: 'm1', hora: '18:30', nombre1: 'Martínez / Silva', nombre2: 'López / Gómez', resultado: '6-4', estado: 'Jugado', ubicacion: 'Cancha 1' },
-            { id: 'm2', hora: '20:00', nombre1: 'Fernández / Ortiz', nombre2: 'Martínez / Silva', resultado: null, estado: 'Programado', ubicacion: 'Cancha 2' }
-          ]
-        }
-      ];
-
-  const partidosCronograma = partidosDelDia.length > 0 ? partidosDelDia : [
-    { hora: '18:30', estado: 'Jugado', pareja1: 'Martínez / Silva', pareja2: 'López / Gómez', resultado: '6-4', ubicacion: 'Cancha 1' },
-    { hora: '20:00', estado: 'Programado', pareja1: 'Fernández / Ortiz', pareja2: 'García / Rojas', resultado: null, ubicacion: 'Cancha 3' }
-  ];
+  // Datos reales obtenidos de la API
+  const zonasActivas = torneo.zonas || [];
+  const crucesActivos = torneo.cruces || [];
 
   return (
     <div style={styles.screenContainer}>
-      <div style={{ ...styles.headerHero, backgroundImage: `url("${bannerImagen}")` }}>
+      <div style={{ ...styles.headerHero, backgroundImage: bannerImagen ? `url("${bannerImagen}")` : 'none', backgroundColor: '#121214' }}>
         <div style={styles.headerOverlay}>
           <div style={styles.topBar}>
             <button onClick={() => navigate(-1)} style={styles.backButton} type="button" aria-label="Volver">
@@ -143,8 +124,8 @@ const TorneoDetalleScreen = () => {
           </div>
 
           <div style={styles.heroTitles}>
-            <span style={styles.etiquetaTorneo}>COMPETICIÓN ACTIVA</span>
-            <h1 style={styles.tituloTorneo}>{torneo.nombre.toUpperCase()}</h1>
+            <span style={styles.etiquetaTorneo}>{torneo.estado ? torneo.estado.toUpperCase() : 'COMPETICIÓN'}</span>
+            <h1 style={styles.tituloTorneo}>{torneo.nombre?.toUpperCase()}</h1>
           </div>
 
           <div style={styles.tabsMenu}>
@@ -178,7 +159,7 @@ const TorneoDetalleScreen = () => {
               <div style={styles.infoCard}>
                 <div style={styles.infoIconWrap}><span style={styles.infoIcon}>📍</span></div>
                 <span style={styles.infoLabel}>Sede</span>
-                <span style={styles.infoValue}>{torneo.complejo?.nombre || 'ADN Padel'}</span>
+                <span style={styles.infoValue}>{torneo.complejo?.nombre || 'Sin sede asignada'}</span>
               </div>
 
               <div style={styles.infoCard}>
@@ -190,7 +171,7 @@ const TorneoDetalleScreen = () => {
               <div style={styles.infoCard}>
                 <div style={styles.infoIconWrap}><span style={styles.infoIcon}>🏆</span></div>
                 <span style={styles.infoLabel}>Formato</span>
-                <span style={styles.infoValue}>{torneo.formato || 'Zonas + Eliminatorias'}</span>
+                <span style={styles.infoValue}>{torneo.formato || 'No especificado'}</span>
               </div>
             </div>
 
@@ -199,31 +180,36 @@ const TorneoDetalleScreen = () => {
             </div>
 
             <div style={styles.categoryList}>
-              {categoriasDisponibles.map((categoria) => (
-                <button
-                  key={categoria}
-                  type="button"
-                  onClick={() => {
-                    setCategoriaActiva(categoria);
-                    setPestanaActiva('cronograma');
-                    setSubTabActiva('cronograma');
-                  }}
-                  style={styles.categoryCard}
-                >
-                  <div style={styles.categoryLeft}>
-                    <span style={styles.categoryIcon}>🏟️</span>
-                    <div style={styles.categoryTextWrap}>
-                      <span style={styles.categoryTitle}>{categoria}</span>
-                      <span style={styles.categoryMeta}>{torneo.inscripciones?.length || 12} parejas • 3 zonas</span>
+              {categoriasDisponibles.length > 0 ? (
+                categoriasDisponibles.map((categoria) => (
+                  <button
+                    key={categoria}
+                    type="button"
+                    onClick={() => {
+                      setCategoriaActiva(categoria);
+                      setPestanaActiva('cronograma');
+                      setSubTabActiva('cronograma');
+                    }}
+                    style={styles.categoryCard}
+                  >
+                    <div style={styles.categoryLeft}>
+                      <span style={styles.categoryIcon}>🏟️</span>
+                      <div style={styles.categoryTextWrap}>
+                        <span style={styles.categoryTitle}>{categoria}</span>
+                      </div>
                     </div>
-                  </div>
 
-                  <div style={styles.categoryAction}>
-                    <span style={styles.categoryActionText}>VER</span>
-                    <span style={styles.categoryActionArrow}>›</span>
-                  </div>
-                </button>
-              ))}
+                    <div style={styles.categoryAction}>
+                      <span style={styles.categoryActionText}>VER</span>
+                      <span style={styles.categoryActionArrow}>›</span>
+                    </div>
+                  </button>
+                ))
+              ) : (
+                <div style={styles.emptyStateContainer}>
+                  <p>No hay categorías registradas en este torneo.</p>
+                </div>
+              )}
             </div>
           </>
         )}
@@ -234,7 +220,7 @@ const TorneoDetalleScreen = () => {
               <div style={styles.categoryTitleBlock}>
                 <h2 style={styles.categoryHeading}>{categoriaActiva || 'General'}</h2>
               </div>
-              <span style={styles.statusBadge}>EN CURSO</span>
+              <span style={styles.statusBadge}>{torneo.estado ? torneo.estado.toUpperCase() : 'EN CURSO'}</span>
             </div>
 
             <div style={styles.searchWrap}>
@@ -260,134 +246,141 @@ const TorneoDetalleScreen = () => {
 
             {subTabActiva === 'cronograma' && (
               <>
-                <div style={styles.chipRow}>
-                  {fechasDinamicas.map((fecha) => (
-                    <button
-                      key={fecha.id}
-                      type="button"
-                      onClick={() => setDiaSeleccionado(fecha.id)}
-                      style={{
-                        ...styles.chip,
-                        ...(diaSeleccionado === fecha.id ? styles.chipActive : {})
-                      }}
-                    >
-                      {fecha.diaText} {fecha.numText}
-                    </button>
-                  ))}
-                </div>
+                {fechasDinamicas.length > 0 && (
+                  <div style={styles.chipRow}>
+                    {fechasDinamicas.map((fecha) => (
+                      <button
+                        key={fecha.id}
+                        type="button"
+                        onClick={() => setDiaSeleccionado(fecha.id)}
+                        style={{
+                          ...styles.chip,
+                          ...(diaSeleccionado === fecha.id ? styles.chipActive : {})
+                        }}
+                      >
+                        {fecha.diaText} {fecha.numText}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
                 <div style={styles.matchList}>
-                  {partidosCronograma.map((partido, index) => (
-                    <div key={`${partido.hora}-${index}`} style={styles.matchCardDetail}>
-                      <div style={styles.timeColumnDetail}>
-                        <span style={styles.timeDetail}>{partido.hora}</span>
+                  {partidosDelDia.length > 0 ? (
+                    partidosDelDia.map((partido, index) => (
+                      <div key={partido.id || `${partido.hora}-${index}`} style={styles.matchCardDetail}>
+                        <div style={styles.timeColumnDetail}>
+                          <span style={styles.timeDetail}>{partido.hora || '--:--'}</span>
+                        </div>
+
+                        <div style={styles.matchContent}>
+                          <div style={styles.badgeRowDetail}>
+                            <span style={styles.stateBadge}>{partido.estado || 'Programado'}</span>
+                          </div>
+
+                          <div style={styles.teamsRow}>
+                            <div style={styles.teamGroup}>
+                              <span style={styles.teamLabel}>A</span>
+                              <span style={styles.teamName}>{partido.pareja1 || partido.nombre1 || 'Sin definir'}</span>
+                            </div>
+                            <div style={styles.scoreGroup}>
+                              <span style={styles.scoreValue}>{partido.resultado ? partido.resultado.split('-')[0] : '-'}</span>
+                              <span style={styles.scoreSeparator}>:</span>
+                              <span style={styles.scoreValue}>{partido.resultado ? partido.resultado.split('-')[1] : '-'}</span>
+                            </div>
+                          </div>
+
+                          <div style={styles.teamsRow}>
+                            <div style={styles.teamGroup}>
+                              <span style={styles.teamLabel}>B</span>
+                              <span style={styles.teamName}>{partido.pareja2 || partido.nombre2 || 'Sin definir'}</span>
+                            </div>
+                          </div>
+
+                          <div style={styles.matchFooter}>
+                            <span style={styles.locationIcon}>📍</span>
+                            <span style={styles.locationTextDetail}>{partido.ubicacion || 'Sin cancha asignada'}</span>
+                          </div>
+                        </div>
                       </div>
-
-                      <div style={styles.matchContent}>
-                        <div style={styles.badgeRowDetail}>
-                          <span style={styles.stateBadge}>{partido.estado || 'Programado'}</span>
-                        </div>
-
-                        <div style={styles.teamsRow}>
-                          <div style={styles.teamGroup}>
-                            <span style={styles.teamLabel}>A</span>
-                            <span style={styles.teamName}>{partido.pareja1 || 'Equipo A'}</span>
-                          </div>
-                          <div style={styles.scoreGroup}>
-                            <span style={styles.scoreValue}>{partido.resultado ? partido.resultado.split('-')[0] : '0'}</span>
-                            <span style={styles.scoreSeparator}>:</span>
-                            <span style={styles.scoreValue}>{partido.resultado ? partido.resultado.split('-')[1] : '0'}</span>
-                          </div>
-                        </div>
-
-                        <div style={styles.teamsRow}>
-                          <div style={styles.teamGroup}>
-                            <span style={styles.teamLabel}>B</span>
-                            <span style={styles.teamName}>{partido.pareja2 || 'Equipo B'}</span>
-                          </div>
-                          <div style={styles.scoreGroup}>
-                            <span style={styles.scorePlaceholder}>-</span>
-                          </div>
-                        </div>
-
-                        <div style={styles.matchFooter}>
-                          <span style={styles.locationIcon}>📍</span>
-                          <span style={styles.locationTextDetail}>{partido.ubicacion || 'Cancha principal'}</span>
-                        </div>
-                      </div>
+                    ))
+                  ) : (
+                    <div style={styles.emptyStateContainer}>
+                      <p>No hay partidos programados para este día.</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </>
             )}
 
             {subTabActiva === 'zonas' && (
               <div style={styles.zonesList}>
-                {zonasActivas.map((zona) => (
-                  <div key={zona.id || zona.nombre} style={styles.zoneCard}>
-                    <div style={styles.zoneHeader}>
-                      <span style={styles.zoneTitle}>{zona.nombre || 'Zona'}</span>
-                    </div>
-
-                    <div style={styles.positionsTable}>
-                      <div style={styles.positionsHeader}>
-                        <span style={styles.tableLabel}>Pareja</span>
-                        <span style={styles.tableLabelRight}>Puntos</span>
+                {zonasActivas.length > 0 ? (
+                  zonasActivas.map((zona) => (
+                    <div key={zona.id || zona.nombre} style={styles.zoneCard}>
+                      <div style={styles.zoneHeader}>
+                        <span style={styles.zoneTitle}>{zona.nombre}</span>
                       </div>
 
-                      {(zona.parejas || []).map((pareja) => (
-                        <div key={pareja.id || pareja.nombre} style={styles.positionRow}>
-                          <span style={styles.parejaName}>{pareja.nombre || pareja.jugador1}</span>
-                          <span style={styles.puntosValue}>{pareja.puntos ?? 0}</span>
+                      <div style={styles.positionsTable}>
+                        <div style={styles.positionsHeader}>
+                          <span style={styles.tableLabel}>Pareja</span>
+                          <span style={styles.tableLabelRight}>Puntos</span>
                         </div>
-                      ))}
-                    </div>
 
-                    <div style={styles.zoneMatchesList}>
-                      {(zona.partidos || []).map((partido) => (
-                        <div key={partido.id || `${partido.nombre1}-${partido.nombre2}`} style={styles.zoneMatchItem}>
-                          <span style={styles.locationPin}>📍</span>
-                          <div style={styles.zoneMatchTextWrap}>
-                            <span style={styles.zoneMatchTeams}>{partido.nombre1 || partido.pareja1} vs {partido.nombre2 || partido.pareja2}</span>
-                            <span style={styles.zoneMatchMeta}>{partido.hora || '18:30'} • {partido.ubicacion || 'Cancha principal'}</span>
+                        {(zona.parejas || []).map((pareja) => (
+                          <div key={pareja.id || pareja.nombre} style={styles.positionRow}>
+                            <span style={styles.parejaName}>{pareja.nombre || `${pareja.jugador1} / ${pareja.jugador2}`}</span>
+                            <span style={styles.puntosValue}>{pareja.puntos ?? 0}</span>
                           </div>
-                          <span style={styles.zoneResult}>{partido.resultado || 'Pendiente'}</span>
+                        ))}
+                      </div>
+
+                      {zona.partidos?.length > 0 && (
+                        <div style={styles.zoneMatchesList}>
+                          {zona.partidos.map((partido) => (
+                            <div key={partido.id || `${partido.nombre1}-${partido.nombre2}`} style={styles.zoneMatchItem}>
+                              <span style={styles.locationPin}>📍</span>
+                              <div style={styles.zoneMatchTextWrap}>
+                                <span style={styles.zoneMatchTeams}>
+                                  {partido.nombre1 || partido.pareja1} vs {partido.nombre2 || partido.pareja2}
+                                </span>
+                                <span style={styles.zoneMatchMeta}>
+                                  {partido.hora || ''} {partido.ubicacion ? `• ${partido.ubicacion}` : ''}
+                                </span>
+                              </div>
+                              <span style={styles.zoneResult}>{partido.resultado || 'Pendiente'}</span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
+                  ))
+                ) : (
+                  <div style={styles.emptyStateContainer}>
+                    <p>No hay zonas configuradas para este torneo.</p>
                   </div>
-                ))}
+                )}
               </div>
             )}
 
             {subTabActiva === 'cruces' && (
               <div style={styles.bracketWrap}>
-                <div style={styles.bracketBoard}>
-                  <div style={styles.bracketNode}>
-                    <span style={styles.nodeMeta}>Vie 14 • 18:30</span>
-                    <span style={styles.nodeState}>Jugado</span>
-                    <span style={styles.nodeTeam}>Martínez / Silva</span>
-                    <span style={styles.nodeTeam}>López / Gómez</span>
+                {crucesActivos.length > 0 ? (
+                  <div style={styles.bracketBoard}>
+                    {crucesActivos.map((cruce) => (
+                      <div key={cruce.id} style={styles.bracketNode}>
+                        <span style={styles.nodeMeta}>{cruce.fechaHora || 'Por definir'}</span>
+                        <span style={styles.nodeState}>{cruce.estado || 'Programado'}</span>
+                        <span style={styles.nodeTeam}>{cruce.pareja1 || 'TBD'}</span>
+                        <span style={styles.nodeTeam}>{cruce.pareja2 || 'TBD'}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div style={styles.bracketNode}>
-                    <span style={styles.nodeMeta}>Sáb 15 • 20:00</span>
-                    <span style={styles.nodeState}>Programado</span>
-                    <span style={styles.nodeTeam}>Fernández / Ortiz</span>
-                    <span style={styles.nodeTeam}>García / Rojas</span>
+                ) : (
+                  <div style={styles.emptyStateContainer}>
+                    <p>Los cruces de eliminatoria aún no están disponibles.</p>
                   </div>
-                  <div style={styles.bracketNode}>
-                    <span style={styles.nodeMeta}>Dom 16 • 18:30</span>
-                    <span style={styles.nodeState}>Programado</span>
-                    <span style={styles.nodeTeam}>Pérez / Torres</span>
-                    <span style={styles.nodeTeam}>Méndez / Díaz</span>
-                  </div>
-                  <div style={styles.bracketNode}>
-                    <span style={styles.nodeMeta}>Dom 16 • 20:30</span>
-                    <span style={styles.nodeState}>Programado</span>
-                    <span style={styles.nodeTeam}>Aguirre / Nava</span>
-                    <span style={styles.nodeTeam}>Suárez / Ramos</span>
-                  </div>
-                </div>
+                )}
               </div>
             )}
           </div>
