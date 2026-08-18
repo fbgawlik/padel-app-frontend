@@ -171,7 +171,7 @@ const TorneoDetalleScreen = () => {
               <div style={styles.infoCard}>
                 <div style={styles.infoIconWrap}><span style={styles.infoIcon}>🏆</span></div>
                 <span style={styles.infoLabel}>Formato</span>
-                <span style={styles.infoValue}>{torneo.formato || 'No especificado'}</span>
+                <span style={styles.infoValue}>{torneo.formato || 'Zonas/Eliminatorias'}</span>
               </div>
             </div>
 
