@@ -2,13 +2,13 @@ import { initializeApp } from "firebase/app";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBccqbPrbySmwUHsc27FxshnakI67opvU4",
+  apiKey: "AIzaSyBCCqRPhbySnmUHsCC72sthnaXl67npVO4",
   authDomain: "adn-padel-app.firebaseapp.com",
   projectId: "adn-padel-app",
   storageBucket: "adn-padel-app.firebasestorage.app",
   messagingSenderId: "313304050994",
-  appId: "1:313304050994:web:951c0d29f8a96d18e8bb8b",
-  measurementId: "G-1D2YDF7WMW"
+  appId: "1:313304058994:web:951c0692f8a96d106886eb",
+  measurementId: "G-1DZR0F7WHN"
 };
 
 const app = initializeApp(firebaseConfig);
