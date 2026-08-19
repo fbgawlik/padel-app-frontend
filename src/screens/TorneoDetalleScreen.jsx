@@ -33,7 +33,7 @@ const TorneoDetalleScreen = () => {
   });
 
   // Verificar si el usuario logueado es el organizador o admin
-  const esOrganizador = usuario?.rol === 'ADMIN' || usuario?.id === torneo?.organizadorId;
+  const esOrganizador = usuario?.rol === 'admin_complejo' || usuario?.id === torneo?.organizadorId;
 
   // Manejador para subida múltiple o individual de fotos
 const handleSubirFotos = async (e) => {
