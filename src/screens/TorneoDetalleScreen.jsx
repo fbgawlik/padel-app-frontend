@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import API from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import { resolverUrlImagen } from '../services/imageHelper';
@@ -9,12 +9,18 @@ import { styles } from './TorneoDetalleScreen.styles';
 const TorneoDetalleScreen = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { usuario } = useContext(AuthContext);
 
+  // 'fixture' | 'cronograma' | 'fotos'
   const [pestanaActiva, setPestanaActiva] = useState('fixture');
   const [subTabActiva, setSubTabActiva] = useState('cronograma');
   const [diaSeleccionado, setDiaSeleccionado] = useState('');
   const [categoriaActiva, setCategoriaActiva] = useState('');
+
+  // Estados para la carga y visualización de fotos
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
+  const [fotoSeleccionadaModal, setFotoSeleccionadaModal] = useState(null);
 
   const { data: torneo, isLoading, isError } = useQuery({
     queryKey: ['torneo', id],
@@ -25,6 +31,37 @@ const TorneoDetalleScreen = () => {
     staleTime: 1000 * 60 * 5,
     enabled: !!id,
   });
+
+  // Verificar si el usuario logueado es el organizador o admin
+  const esOrganizador = usuario?.rol === 'ADMIN' || usuario?.id === torneo?.organizadorId;
+
+  // Manejador para subida múltiple o individual de fotos
+  const handleSubirFotos = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    try {
+      setSubiendoFoto(true);
+      const formData = new FormData();
+
+      files.forEach((file) => {
+        formData.append('fotos', file);
+      });
+
+      // Endpoint backend para adjuntar fotos al torneo
+      await API.post(`/torneos/${id}/fotos`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      // Refrescar caché del torneo
+      queryClient.invalidateQueries({ queryKey: ['torneo', id] });
+    } catch (error) {
+      console.error('Error al subir fotos:', error);
+      alert('Hubo un error al subir las fotos.');
+    } finally {
+      setSubiendoFoto(false);
+    }
+  };
 
   const categoriasDisponibles = torneo?.categoria
     ? torneo.categoria.split(/[|/]+/).map((cat) => cat.trim()).filter(Boolean)
@@ -42,7 +79,6 @@ const TorneoDetalleScreen = () => {
 
   const generarFechasTorneo = (inicio, fin) => {
     if (!inicio || !fin) return [];
-
     const lista = [];
     const fechaActual = new Date(inicio + 'T00:00:00');
     const fechaFinal = new Date(fin + 'T00:00:00');
@@ -57,7 +93,6 @@ const TorneoDetalleScreen = () => {
       });
       fechaActual.setDate(fechaActual.getDate() + 1);
     }
-
     return lista;
   };
 
@@ -88,7 +123,6 @@ const TorneoDetalleScreen = () => {
     );
   }
 
-  // Filtrado de partidos según la respuesta de la API
   const partidosDelDia = torneo.partidos
     ? torneo.partidos.filter((partido) => {
         const partidoFecha = partido.fecha ? partido.fecha.split('T')[0] : null;
@@ -103,9 +137,9 @@ const TorneoDetalleScreen = () => {
   const hoyStr = new Date().toISOString().split('T')[0];
   const inscripcionesAbiertas = torneo.fechaInicio > hoyStr && torneo.estado !== 'finalizado';
 
-  // Datos reales obtenidos de la API
   const zonasActivas = torneo.zonas || [];
   const crucesActivos = torneo.cruces || [];
+  const fotosTorneo = torneo.fotos || []; // Array de imágenes devueltas por la API
 
   return (
     <div style={styles.screenContainer}>
@@ -128,8 +162,9 @@ const TorneoDetalleScreen = () => {
             <h1 style={styles.tituloTorneo}>{torneo.nombre?.toUpperCase()}</h1>
           </div>
 
+          {/* Menú de pestañas actualizado con "FOTOS" */}
           <div style={styles.tabsMenu}>
-            {['fixture', 'cronograma'].map((tab) => (
+            {['fixture', 'cronograma', 'fotos'].map((tab) => (
               <button
                 key={tab}
                 type="button"
@@ -139,7 +174,7 @@ const TorneoDetalleScreen = () => {
                   ...(pestanaActiva === tab ? styles.tabItemActivo : {})
                 }}
               >
-                {tab === 'fixture' ? 'FIXTURE' : 'CRONOGRAMA'}
+                {tab === 'fixture' ? 'FIXTURE' : tab === 'cronograma' ? 'CRONOGRAMA' : 'FOTOS 📸'}
               </button>
             ))}
           </div>
@@ -147,6 +182,7 @@ const TorneoDetalleScreen = () => {
       </div>
 
       <div style={styles.mainContent}>
+        {/* Pestaña FIXTURE */}
         {pestanaActiva === 'fixture' && (
           <>
             <div style={styles.infoGrid}>
@@ -155,19 +191,16 @@ const TorneoDetalleScreen = () => {
                 <span style={styles.infoLabel}>Fechas</span>
                 <span style={styles.infoValue}>{torneo.fechaInicio} • {torneo.fechaFin}</span>
               </div>
-
               <div style={styles.infoCard}>
                 <div style={styles.infoIconWrap}><span style={styles.infoIcon}>📍</span></div>
                 <span style={styles.infoLabel}>Sede</span>
                 <span style={styles.infoValue}>{torneo.complejo?.nombre || 'Sin sede asignada'}</span>
               </div>
-
               <div style={styles.infoCard}>
                 <div style={styles.infoIconWrap}><span style={styles.infoIcon}>👥</span></div>
                 <span style={styles.infoLabel}>Inscriptos</span>
                 <span style={styles.infoValue}>{torneo.inscripciones?.length || 0}</span>
               </div>
-
               <div style={styles.infoCard}>
                 <div style={styles.infoIconWrap}><span style={styles.infoIcon}>🏆</span></div>
                 <span style={styles.infoLabel}>Formato</span>
@@ -198,7 +231,6 @@ const TorneoDetalleScreen = () => {
                         <span style={styles.categoryTitle}>{categoria}</span>
                       </div>
                     </div>
-
                     <div style={styles.categoryAction}>
                       <span style={styles.categoryActionText}>VER</span>
                       <span style={styles.categoryActionArrow}>›</span>
@@ -214,6 +246,7 @@ const TorneoDetalleScreen = () => {
           </>
         )}
 
+        {/* Pestaña CRONOGRAMA */}
         {pestanaActiva === 'cronograma' && (
           <div style={styles.detailPanel}>
             <div style={styles.categoryHeaderRow}>
@@ -271,12 +304,10 @@ const TorneoDetalleScreen = () => {
                         <div style={styles.timeColumnDetail}>
                           <span style={styles.timeDetail}>{partido.hora || '--:--'}</span>
                         </div>
-
                         <div style={styles.matchContent}>
                           <div style={styles.badgeRowDetail}>
                             <span style={styles.stateBadge}>{partido.estado || 'Programado'}</span>
                           </div>
-
                           <div style={styles.teamsRow}>
                             <div style={styles.teamGroup}>
                               <span style={styles.teamLabel}>A</span>
@@ -288,14 +319,12 @@ const TorneoDetalleScreen = () => {
                               <span style={styles.scoreValue}>{partido.resultado ? partido.resultado.split('-')[1] : '-'}</span>
                             </div>
                           </div>
-
                           <div style={styles.teamsRow}>
                             <div style={styles.teamGroup}>
                               <span style={styles.teamLabel}>B</span>
                               <span style={styles.teamName}>{partido.pareja2 || partido.nombre2 || 'Sin definir'}</span>
                             </div>
                           </div>
-
                           <div style={styles.matchFooter}>
                             <span style={styles.locationIcon}>📍</span>
                             <span style={styles.locationTextDetail}>{partido.ubicacion || 'Sin cancha asignada'}</span>
@@ -320,13 +349,11 @@ const TorneoDetalleScreen = () => {
                       <div style={styles.zoneHeader}>
                         <span style={styles.zoneTitle}>{zona.nombre}</span>
                       </div>
-
                       <div style={styles.positionsTable}>
                         <div style={styles.positionsHeader}>
                           <span style={styles.tableLabel}>Pareja</span>
                           <span style={styles.tableLabelRight}>Puntos</span>
                         </div>
-
                         {(zona.parejas || []).map((pareja) => (
                           <div key={pareja.id || pareja.nombre} style={styles.positionRow}>
                             <span style={styles.parejaName}>{pareja.nombre || `${pareja.jugador1} / ${pareja.jugador2}`}</span>
@@ -334,25 +361,6 @@ const TorneoDetalleScreen = () => {
                           </div>
                         ))}
                       </div>
-
-                      {zona.partidos?.length > 0 && (
-                        <div style={styles.zoneMatchesList}>
-                          {zona.partidos.map((partido) => (
-                            <div key={partido.id || `${partido.nombre1}-${partido.nombre2}`} style={styles.zoneMatchItem}>
-                              <span style={styles.locationPin}>📍</span>
-                              <div style={styles.zoneMatchTextWrap}>
-                                <span style={styles.zoneMatchTeams}>
-                                  {partido.nombre1 || partido.pareja1} vs {partido.nombre2 || partido.pareja2}
-                                </span>
-                                <span style={styles.zoneMatchMeta}>
-                                  {partido.hora || ''} {partido.ubicacion ? `• ${partido.ubicacion}` : ''}
-                                </span>
-                              </div>
-                              <span style={styles.zoneResult}>{partido.resultado || 'Pendiente'}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   ))
                 ) : (
@@ -385,8 +393,75 @@ const TorneoDetalleScreen = () => {
             )}
           </div>
         )}
+
+        {/* Nueva Pestaña FOTOS */}
+        {pestanaActiva === 'fotos' && (
+          <div style={styles.galleryContainer}>
+            {/* Si es organizador o admin, muestra el botón dropzone de carga */}
+            {esOrganizador && (
+              <label style={styles.uploadBox}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                <span style={styles.uploadBoxText}>
+                  {subiendoFoto ? 'Subiendo fotos...' : 'Subir Fotos del Torneo'}
+                </span>
+                <span style={styles.uploadSubtext}>Podés seleccionar varias imágenes a la vez</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleSubirFotos}
+                  disabled={subiendoFoto}
+                  style={{ display: 'none' }}
+                />
+              </label>
+            )}
+
+            {/* Grilla de imágenes */}
+            {fotosTorneo.length > 0 ? (
+              <div style={styles.photoGrid}>
+                {fotosTorneo.map((foto, idx) => {
+                  const urlFoto = resolverUrlImagen(foto.url || foto);
+                  return (
+                    <div
+                      key={foto.id || idx}
+                      style={styles.photoCard}
+                      onClick={() => setFotoSeleccionadaModal(urlFoto)}
+                    >
+                      <img src={urlFoto} alt={`Foto torneo ${idx + 1}`} style={styles.photoImage} />
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={styles.emptyStateContainer}>
+                <p>Aún no hay fotos cargadas para este torneo.</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
+      {/* Lightbox / Modal para ver la foto ampliada */}
+      {fotoSeleccionadaModal && (
+        <div style={styles.modalOverlay} onClick={() => setFotoSeleccionadaModal(null)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              style={styles.modalCloseBtn}
+              onClick={() => setFotoSeleccionadaModal(null)}
+            >
+              ✕
+            </button>
+            <img src={fotoSeleccionadaModal} alt="Foto ampliada" style={styles.modalImage} />
+          </div>
+        </div>
+      )}
+
+      {/* Footer con el botón de inscripción */}
       <div style={styles.actionFooter}>
         {yaInscripto ? (
           <div style={styles.badgeInscripto}>✅ Ya estás inscripto en este torneo</div>
