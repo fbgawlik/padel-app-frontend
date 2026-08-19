@@ -13,8 +13,6 @@ const BLOQUES_HORARIOS = [
   { id: 'SAB_08_12', label: 'Sábado: Mañana (08:00 a 12:00)' },
   { id: 'SAB_12_16', label: 'Sábado: Siesta (12:00 a 16:00)' },
   { id: 'SAB_16_20', label: 'Sábado: Tarde (16:00 a 20:00)' },
-  { id: 'SAB_20_00', label: 'Sábado: Noche (20:00 a 00:00)' },
-  { id: 'DOM_08_12', label: 'Domingo: Mañana (08:00 a 12:00)' },
 ];
 
 const TorneoInscripcionScreen = () => {
