@@ -36,32 +36,32 @@ const TorneoDetalleScreen = () => {
   const esOrganizador = usuario?.rol === 'ADMIN' || usuario?.id === torneo?.organizadorId;
 
   // Manejador para subida múltiple o individual de fotos
-  const handleSubirFotos = async (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
+const handleSubirFotos = async (e) => {
+  const files = Array.from(e.target.files);
+  if (!files.length) return;
 
-    try {
-      setSubiendoFoto(true);
-      const formData = new FormData();
+  try {
+    setSubiendoFoto(true);
+    const formData = new FormData();
 
-      files.forEach((file) => {
-        formData.append('fotos', file);
-      });
+    files.forEach((file) => {
+      formData.append('fotos', file); // Mismo nombre que lee el middleware
+    });
 
-      // Endpoint backend para adjuntar fotos al torneo
-      await API.post(`/torneos/${id}/fotos`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+    // Endpoint alineado con torneoRoutes.js
+    await API.post(`/torneos/${id}/galeria`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
 
-      // Refrescar caché del torneo
-      queryClient.invalidateQueries({ queryKey: ['torneo', id] });
-    } catch (error) {
-      console.error('Error al subir fotos:', error);
-      alert('Hubo un error al subir las fotos.');
-    } finally {
-      setSubiendoFoto(false);
-    }
-  };
+    // Refrescar los datos del torneo en React Query
+    queryClient.invalidateQueries({ queryKey: ['torneo', id] });
+  } catch (error) {
+    console.error('Error al subir fotos:', error);
+    alert('Hubo un error al subir las fotos.');
+  } finally {
+    setSubiendoFoto(false);
+  }
+};
 
   const categoriasDisponibles = torneo?.categoria
     ? torneo.categoria.split(/[|/]+/).map((cat) => cat.trim()).filter(Boolean)
@@ -139,7 +139,7 @@ const TorneoDetalleScreen = () => {
 
   const zonasActivas = torneo.zonas || [];
   const crucesActivos = torneo.cruces || [];
-  const fotosTorneo = torneo.fotos || []; // Array de imágenes devueltas por la API
+  const fotosTorneo = torneo?.imagenes || [];// Array de imágenes devueltas por la API
 
   return (
     <div style={styles.screenContainer}>
@@ -396,53 +396,52 @@ const TorneoDetalleScreen = () => {
 
         {/* Nueva Pestaña FOTOS */}
         {pestanaActiva === 'fotos' && (
-          <div style={styles.galleryContainer}>
-            {/* Si es organizador o admin, muestra el botón dropzone de carga */}
-            {esOrganizador && (
-              <label style={styles.uploadBox}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="17 8 12 3 7 8"></polyline>
-                  <line x1="12" y1="3" x2="12" y2="15"></line>
-                </svg>
-                <span style={styles.uploadBoxText}>
-                  {subiendoFoto ? 'Subiendo fotos...' : 'Subir Fotos del Torneo'}
-                </span>
-                <span style={styles.uploadSubtext}>Podés seleccionar varias imágenes a la vez</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleSubirFotos}
-                  disabled={subiendoFoto}
-                  style={{ display: 'none' }}
-                />
-              </label>
-            )}
+  <div style={styles.galleryContainer}>
+    {esOrganizador && (
+      <label style={styles.uploadBox}>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <span style={styles.uploadBoxText}>
+          {subiendoFoto ? 'Subiendo fotos...' : 'Subir Fotos del Torneo'}
+        </span>
+        <span style={styles.uploadSubtext}>Podés seleccionar varias imágenes a la vez</span>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={handleSubirFotos}
+          disabled={subiendoFoto}
+          style={{ display: 'none' }}
+        />
+      </label>
+    )}
 
-            {/* Grilla de imágenes */}
-            {fotosTorneo.length > 0 ? (
-              <div style={styles.photoGrid}>
-                {fotosTorneo.map((foto, idx) => {
-                  const urlFoto = resolverUrlImagen(foto.url || foto);
-                  return (
-                    <div
-                      key={foto.id || idx}
-                      style={styles.photoCard}
-                      onClick={() => setFotoSeleccionadaModal(urlFoto)}
-                    >
-                      <img src={urlFoto} alt={`Foto torneo ${idx + 1}`} style={styles.photoImage} />
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div style={styles.emptyStateContainer}>
-                <p>Aún no hay fotos cargadas para este torneo.</p>
-              </div>
-            )}
-          </div>
-        )}
+    {fotosTorneo.length > 0 ? (
+      <div style={styles.photoGrid}>
+        {fotosTorneo.map((foto, idx) => {
+          const urlFoto = resolverUrlImagen(foto.imagenUrl || foto.url || foto);
+          return (
+            <div
+              key={foto.id || idx}
+              style={styles.photoCard}
+              onClick={() => setFotoSeleccionadaModal(urlFoto)}
+            >
+              <img src={urlFoto} alt={`Foto torneo ${idx + 1}`} style={styles.photoImage} />
+            </div>
+          );
+        })}
+      </div>
+    ) : (
+      <div style={styles.emptyStateContainer}>
+        <p>Aún no hay fotos cargadas para este torneo.</p>
+      </div>
+    )}
+  </div>
+)}
+  
       </div>
 
       {/* Lightbox / Modal para ver la foto ampliada */}
