@@ -1,3 +1,4 @@
+// src/context/NotificationContext.jsx
 import React, { createContext, useState, useCallback, useContext, useEffect } from 'react';
 import Toast from '../components/Toast';
 import { AuthContext } from './AuthContext';

@@ -6,6 +6,7 @@ import { AuthContext } from '../context/AuthContext';
 // Importación de Pantallas y Componentes
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen'; 
+import VerificarCuentaScreen from '../screens/VerificarCuentaScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import GestionComplejo from '../screens/GestionComplejo';
 import ReservarTurnoScreen from '../screens/ReservarTurnoScreen';
@@ -52,6 +53,10 @@ const AppRoutes = () => {
         <Route 
           path="/register" 
           element={!usuario ? <RegisterScreen /> : <Navigate to="/dashboard" />} 
+        />
+        <Route 
+          path="/verificar-cuenta" 
+          element={!usuario ? <VerificarCuentaScreen /> : <Navigate to="/dashboard" />} 
         />
 
         {/* 🔒 RUTAS PRIVADAS */}

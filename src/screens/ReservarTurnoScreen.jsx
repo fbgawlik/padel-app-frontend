@@ -431,6 +431,4 @@ const ReservarTurnoScreen = () => {
   );
 };
 
-;
-
 export default ReservarTurnoScreen;

@@ -2,8 +2,7 @@ import { theme } from '../theme';
 
 export const styles = {
   contenedor: { 
-    paddingBottom: theme.spacing.bottomNavPadding,
-    padding: '16px 20px', 
+    padding: '16px 20px 32px 20px', 
     boxSizing: 'border-box',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   },

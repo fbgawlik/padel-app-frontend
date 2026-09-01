@@ -102,6 +102,4 @@ const BuscadorClubesScreen = () => {
   );
 };
 
-;
-
 export default BuscadorClubesScreen;

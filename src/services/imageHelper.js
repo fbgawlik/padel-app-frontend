@@ -1,4 +1,5 @@
-const BACKEND_URL = (import.meta.env.VITE_API_URL || 'https://padel-api-backend-production.up.railway.app').replace(/\/$/, '');
+// src/services/imageHelper.js
+const BACKEND_URL = (import.meta.env.VITE_API_URL ?? 'https://padel-api-backend-production.up.railway.app').replace(/\/$/, '');
 
 export const resolverUrlImagen = (ruta) => {
   if (!ruta) return null;

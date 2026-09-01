@@ -1,8 +1,9 @@
+// src/screens/RankingScreen.styles.js
 import { theme } from '../theme';
 
 export const styles = {
   contenedor: {
-    paddingBottom: theme.spacing.bottomNavPadding,
+    paddingBottom: '32px',
     width: '100%',
     color: theme.colors.text,
     fontFamily: 'system-ui, sans-serif',

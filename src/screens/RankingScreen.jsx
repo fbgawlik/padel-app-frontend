@@ -161,17 +161,6 @@ const RankingScreen = () => {
 };
 
 // --- ARQUITECTURA DE ESTILOS ADN PÁDEL ---
-;
-
-if (typeof document !== 'undefined') {
-  const estiloAnimacion = document.createElement('style');
-  estiloAnimacion.innerHTML = `
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-  `;
-  document.head.appendChild(estiloAnimacion);
-}
+// (Las animaciones como @keyframes spin ahora viven en index.css de forma global)
 
 export default RankingScreen;

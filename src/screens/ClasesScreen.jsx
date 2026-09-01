@@ -78,7 +78,6 @@ const ClasesScreen = () => {
       ].join('|');
 
       const fecha = clase.fecha || '';
-      const profesor = clase.profesor || {};
       const existing = grupos.get(key);
 
       if (!existing) {
@@ -111,7 +110,7 @@ const ClasesScreen = () => {
 
   return (
     <div style={styles.contenedor}>
-      {/* ─── HEADER SECTION (IGUAL A LA IMAGEN) ─── */}
+      {/* ─── HEADER SECTION ─── */}
       <div style={styles.headerSeccion}>
         <h1 style={styles.tituloPrincipal}>Tus Clases de Pádel</h1>
         <div style={styles.searchBarWrapper}>
@@ -160,7 +159,7 @@ const ClasesScreen = () => {
             return (
               <div key={clase.id} style={styles.tarjetaClase}>
                 
-                {/* ─── LAYOUT DE TARJETA A 3 COLUMNAS (IGUAL A LA IMAGEN) ─── */}
+                {/* ─── LAYOUT DE TARJETA A 3 COLUMNAS ─── */}
                 <div style={styles.cuerpoTarjetaRediseñado}>
                   
                   {/* Columna 1: Avatar */}
@@ -237,8 +236,5 @@ const ClasesScreen = () => {
     </div>
   );
 };
-
-// ESTILOS REDISEÑADOS PARA MATCHEAR LA IMAGEN
-;
 
 export default ClasesScreen;

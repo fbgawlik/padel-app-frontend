@@ -1,7 +1,7 @@
 import { theme } from '../theme';
 
 export const styles = {
-  contenedor: { width: '100%', boxSizing: 'border-box', paddingBottom: theme.spacing.bottomNavPadding },
+  contenedor: { width: '100%', boxSizing: 'border-box', padding: '0 20px 32px 20px' },
   botonVolver: { 
     display: 'flex', alignItems: 'center', backgroundColor: 'transparent', 
     color: '#8A8A8A', border: 'none', cursor: 'pointer', marginBottom: '24px', 
@@ -11,7 +11,7 @@ export const styles = {
   tituloClub: { fontSize: '32px', margin: '0 0 8px 0', fontWeight: '800', letterSpacing: '-0.5px', color: '#fff' },
   infoClub: { color: '#8A8A8A', fontSize: '15px', margin: 0 },
   
-  grillaProductos: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '24px' },
+  grillaProductos: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '16px' },
   
   tarjetaProducto: { 
     backgroundColor: '#121212', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)', 
@@ -26,7 +26,7 @@ export const styles = {
   },
   
   infoProductoContainer: { padding: '0 20px 20px 20px', display: 'flex', flexDirection: 'column', flex: 1 },
-  nombreProducto: { color: '#fff', fontSize: '18px', fontWeight: '700', margin: '0 0 8px 0', letterSpacing: '-0.3px' },
+  nombreProducto: { color: '#fff', fontSize: '16px', fontWeight: '700', margin: '0 0 8px 0', letterSpacing: '-0.3px', overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' },
   precioProducto: { color: '#EAEAEA', fontSize: '20px', fontWeight: '800', marginBottom: '16px' },
   
   stockContenedor: { marginTop: 'auto', marginBottom: '20px' },

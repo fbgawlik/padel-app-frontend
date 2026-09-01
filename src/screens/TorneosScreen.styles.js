@@ -2,8 +2,7 @@ import { theme } from '../theme';
 
 export const styles = {
   screenContainer: {
-    paddingBottom: theme.spacing.bottomNavPadding,
-    padding: '24px 20px 100px 20px',
+    padding: '24px 20px 40px 20px', // el espacio del nav inferior lo aporta el Layout
     backgroundColor: 'transparent',
     width: '100%',
     boxSizing: 'border-box'
@@ -91,16 +90,22 @@ export const styles = {
     textTransform: 'uppercase', letterSpacing: '0.3px'
   },
   gridDetails: {
-    display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '18px'
+    /* 2 columnas + wrap: con textos largos de categorías la fila se adapta
+       sin desbordarse (antes 3 columnas rígidas que cortaban la info) */
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: '12px',
+    marginBottom: '18px'
   },
   gridItem: {
-    display: 'flex', flexDirection: 'column', gap: '4px'
+    display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0
   },
   gridLabel: {
     color: '#8E8E93', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase'
   },
   gridValue: {
-    color: '#FFF', fontSize: '13px', fontWeight: '700'
+    color: '#FFF', fontSize: '13px', fontWeight: '700',
+    overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis', maxWidth: '100%'
   },
   cardFooter: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -139,9 +144,9 @@ export const styles = {
     textAlign: 'center', padding: '40px 20px'
   },
   fabButton: {
-    position: 'fixed', bottom: '100px', right: '24px',
+    position: 'fixed', bottom: '104px', right: '20px',
     width: '56px', height: '56px', borderRadius: '28px',
     backgroundColor: theme.colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    border: 'none', boxShadow: '0 4px 16px rgba(57, 255, 20, 0.4)', cursor: 'pointer', zIndex: 999
+    border: 'none', boxShadow: '0 4px 16px rgba(57, 255, 20, 0.4)', cursor: 'pointer', zIndex: 900
   }
 }

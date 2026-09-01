@@ -2,9 +2,7 @@ import { theme } from '../theme';
 
 export const styles = {
   contenedor: { 
-    paddingBottom: theme.spacing.bottomNavPadding,
-    width: '100%', 
-    padding: '0 16px', 
+    padding: '0 16px 32px 16px', 
     boxSizing: 'border-box' 
   },
   header: {

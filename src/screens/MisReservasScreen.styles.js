@@ -2,8 +2,7 @@ import { theme } from '../theme';
 
 export const styles = {
   pantallaContainer: {
-    paddingBottom: theme.spacing.bottomNavPadding,
-    padding: '16px 20px',
+    padding: '16px 20px 32px 20px',
     boxSizing: 'border-box',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   },
@@ -104,7 +103,7 @@ export const styles = {
     fontWeight: '700',
     color: theme.colors.text,
     margin: '0 0 6px 0',
-    paddingRight: '110px',
+    paddingRight: '110px', /* FIX: evita que el título quede tapado por el badge flotante */
     letterSpacing: '-0.3px'
   },
   subtituloTarjeta: {

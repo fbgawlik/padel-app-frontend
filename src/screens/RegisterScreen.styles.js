@@ -1,26 +1,29 @@
+// src/screens/RegisterScreen.styles.js
 import { theme } from '../theme';
 
 export const styles = {
   contenedor: { 
-    paddingBottom: theme.spacing.bottomNavPadding,
-    width: '100%',         // Ajustado para el navegador móvil moderno
-    backgroundColor: theme.colors.background, // Fondo general para fundirse con la tarjeta
-    color: '#fff', 
-    fontFamily: 'sans-serif',
-    boxSizing: 'border-box',
     display: 'flex',
+    flexDirection: 'column',
     justifyContent: 'center',
-    alignItems: 'center',       // Centra la tarjeta verticalmente
-    padding: '20px'             // Padding en todos los lados (importante para móviles)
+    alignItems: 'center',
+    width: '100%',
+    minHeight: '100dvh',
+    backgroundColor: theme.colors.background,
+    color: '#fff', 
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    boxSizing: 'border-box',
+    padding: '24px 20px',
   },
   tarjetaRegister: {
-    backgroundColor: theme.colors.background, 
+    backgroundColor: theme.colors.cardBg,
     width: '100%',
     maxWidth: '420px',
-    padding: '32px 24px',       // Un poco más de aire interno
+    padding: '32px 24px',
     boxSizing: 'border-box',
-    borderRadius: '16px',       // Suaviza los bordes para estilo App
-    boxShadow: '0 10px 30px rgba(0,0,0,0.5)' // Sutil sombra para separarlo del fondo
+    borderRadius: '16px',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
   },
   contenedorLogo: {
     textAlign: 'center',
@@ -48,12 +51,12 @@ export const styles = {
   filaDoble: {
     display: 'flex',
     gap: '14px',
-    // En pantallas MUY chicas (ej. iPhone SE), podrías necesitar que esto sea flex-direction: column. 
-    // Como usas estilos en línea, dejémoslo en row pero asegurándonos que los inputs tengan un ancho mínimo de 100%.
+    // En pantallas MUY chicas (ej. iPhone SE), los inputs tienen ancho mínimo
   },
   grupoInput: {
     display: 'flex',
     flexDirection: 'column',
+    gap: '6px',
     flex: 1,
     position: 'relative' 
   },
@@ -61,8 +64,7 @@ export const styles = {
     color: '#8E8E93',
     fontSize: '13px',
     fontWeight: '700',
-    marginBottom: '8px',
-    textAlign: 'left' // Cambiado a 'left' (o 'center' si lo prefieres, pero left suele ser mejor en móviles)
+    textAlign: 'left',
   },
   input: {
     backgroundColor: '#161618',
@@ -75,7 +77,7 @@ export const styles = {
     outline: 'none',
     width: '100%',
     boxSizing: 'border-box',
-    textAlign: 'left', // Cambiado a 'left' para mejorar usabilidad móvil
+    textAlign: 'left',
   },
   customSelectTrigger: {
     backgroundColor: '#161618',
@@ -93,9 +95,15 @@ export const styles = {
     boxSizing: 'border-box',
     width: '100%',
   },
+  ayudaPassword: {
+    color: '#6E6E73',
+    fontSize: '11px',
+    fontWeight: '500',
+    letterSpacing: '0.1px',
+  },
   flecha: {
     fontSize: '10px',
-    color: '#8E8E93'
+    color: '#8E8E93',
   },
   opcionesContenedor: {
     position: 'absolute',
@@ -107,7 +115,7 @@ export const styles = {
     borderRadius: '12px',
     zIndex: 100,
     overflow: 'hidden',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
+    boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
   },
   opcionesContenedorMax: {
     position: 'absolute',
@@ -120,12 +128,12 @@ export const styles = {
     zIndex: 100,
     maxHeight: '200px', 
     overflowY: 'auto',   
-    boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
+    boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
   },
   opcion: {
     padding: '14px',
     fontSize: '14px',
-    textAlign: 'left', // Cambiado a 'left'
+    textAlign: 'left',
     cursor: 'pointer',
     borderBottom: '1px solid rgba(255, 255, 255, 0.04)',
     color: theme.colors.text,
@@ -137,7 +145,7 @@ export const styles = {
     border: 'none',
     borderRadius: '14px',
     height: '52px',
-    fontSize: '16px', // Un poco más grande para el tap
+    fontSize: '16px',
     fontWeight: '800',
     cursor: 'pointer',
     marginTop: '12px',
@@ -168,4 +176,4 @@ export const styles = {
     fontWeight: '700',
     marginLeft: '5px',
   },
-}
+};

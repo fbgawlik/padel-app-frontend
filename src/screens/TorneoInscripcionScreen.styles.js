@@ -2,7 +2,6 @@ import { theme } from '../theme';
 
 export const styles = {
   screenContainer: {
-    paddingBottom: theme.spacing.bottomNavPadding,
     backgroundColor: theme.colors.background,
     width: '100%',
     color: theme.colors.text,
@@ -24,7 +23,7 @@ export const styles = {
     borderRadius: '12px'
   },
   logoText: { color: '#FFF', fontWeight: '800', fontSize: '15px', letterSpacing: '1px' },
-  mainContent: { padding: '24px 20px 100px 20px', maxWidth: '480px', margin: '0 auto' },
+  mainContent: { padding: '24px 20px 48px 20px', maxWidth: '480px', margin: '0 auto' },
   torneoCard: {
     backgroundColor: 'rgba(22, 22, 24, 0.7)',
     border: '1px solid rgba(255,255,255,0.05)',

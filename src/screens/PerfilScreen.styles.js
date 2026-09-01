@@ -1,12 +1,13 @@
+// src/screens/PerfilScreen.styles.js
 import { theme } from '../theme';
 
 export const styles = {
-  container: { backgroundColor: theme.colors.background, padding: '40px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'system-ui, sans-serif', paddingBottom: theme.spacing.bottomNavPadding },
+  container: { backgroundColor: theme.colors.background, padding: '32px 16px', display: 'flex', justifyContent: 'center', fontFamily: 'system-ui, sans-serif' },
   tarjeta: { width: '100%', maxWidth: '700px', backgroundColor: '#141416', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.5)', position: 'relative' },
   bannerPortada: { width: '100%', height: '160px', backgroundColor: '#1F1F23', position: 'relative', overflow: 'hidden', cursor: 'pointer' },
   imagenPortadaImg: { width: '100%', height: '100%', objectFit: 'cover' },
   bannerVacio: { width: '100%', height: '100%', background: 'linear-gradient(135deg, #1f1f23 0%, #2c2c35 100%)' },
-  portadaOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)', color: '#FFF', fontSize: '12px', fontWeight: '700', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s', ':hover': { opacity: 1 } },
+  portadaOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', color: '#FFF', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
   badgePuntos: { position: 'absolute', top: '20px', right: '20px', backgroundColor: 'rgba(57, 255, 20, 0.15)', border: '1px solid #39FF14', padding: '6px 14px', borderRadius: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 4px 12px rgba(57, 255, 20, 0.2)', zIndex: 3 },
   puntosNumero: { color: theme.colors.primary, fontSize: '16px', fontWeight: '800', lineHeight: '1' },
   puntosLabel: { color: '#FFF', fontSize: '9px', fontWeight: '700', marginTop: '2px', letterSpacing: '0.5px' },

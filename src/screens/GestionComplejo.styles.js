@@ -1,7 +1,7 @@
 import { theme } from '../theme';
 
 export const styles = {
-  contenedorBase: { width: '100%', color: theme.colors.text, fontFamily: 'system-ui, -apple-system, sans-serif', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', backgroundColor: theme.colors.background, padding: '16px', paddingBottom: theme.spacing.bottomNavPadding },
+  contenedorBase: { width: '100%', color: theme.colors.text, fontFamily: 'system-ui, -apple-system, sans-serif', boxSizing: 'border-box', display: 'flex', justifyContent: 'center', backgroundColor: theme.colors.background, padding: '16px 16px 32px 16px' },
   panelAnchoMaximo: { width: '100%', maxWidth: '440px', display: 'flex', flexDirection: 'column' },
   headerClubContainer: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' },
   headerClubLeft: { display: 'flex', alignItems: 'center', gap: '12px', flex: 1 },

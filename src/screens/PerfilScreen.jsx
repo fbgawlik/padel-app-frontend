@@ -144,6 +144,7 @@ const PerfilScreen = () => {
         
         {/* BANNER DE PORTADA INTERACTIVO */}
         <div 
+          className="bloque-hoverable"
           style={styles.bannerPortada} 
           onClick={() => portadaInputRef.current.click()}
           title="Hacé clic para cambiar tu foto de portada"
@@ -156,7 +157,11 @@ const PerfilScreen = () => {
             <div style={styles.bannerVacio}></div>
           )}
           
-          <div style={styles.portadaOverlay}>CAMBIAR PORTADA</div>
+          {/* 🛠️ El hover antes nunca se veía (:hover inline no funciona en React).
+             Ahora usa las clases .bloque-hoverable / .overlay-hoverable de index.css. */}
+          <div style={styles.portadaOverlay} className="overlay-hoverable">
+            <span>📷 CAMBIAR PORTADA</span>
+          </div>
 
           <input 
             type="file" 
@@ -269,8 +274,5 @@ const PerfilScreen = () => {
     </div>
   );
 };
-
-// ESTILOS MODERNOS (Conservados y optimizados)
-;
 
 export default PerfilScreen;

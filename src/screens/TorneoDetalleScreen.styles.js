@@ -8,7 +8,7 @@ const textSecondary = '#8E8E93';
 
 export const styles = {
   screenContainer: {
-    paddingBottom: theme.spacing.bottomNavPadding,
+    paddingBottom: '32px',
     backgroundColor: 'transparent',
     width: '100%',
     boxSizing: 'border-box',
@@ -443,4 +443,116 @@ export const styles = {
     justifyContent: 'center',
   },
 
-  };
+  /* ══════════════════════════════════════════════════════════
+     PESTAÑA FOTOS · Galería del torneo + Lightbox
+     (Estilos que faltaban y dejaban la galería sin formato)
+     ══════════════════════════════════════════════════════════ */
+  galleryContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '20px',
+  },
+
+  /* Zona de subida (también sirve como <label for=file>) */
+  uploadBox: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    minHeight: '140px',
+    border: '2px dashed rgba(57, 255, 20, 0.3)',
+    borderRadius: '18px',
+    backgroundColor: 'rgba(57, 255, 20, 0.02)',
+    cursor: 'pointer',
+    padding: '20px',
+    textAlign: 'center',
+    transition: 'border-color 0.2s ease, background-color 0.2s ease',
+    outline: 'none',
+  },
+  uploadBoxText: {
+    color: theme.colors.text,
+    fontSize: '15px',
+    fontWeight: '800',
+    letterSpacing: '-0.2px',
+  },
+  uploadSubtext: {
+    color: textSecondary,
+    fontSize: '12px',
+    fontWeight: '500',
+  },
+
+  /* Grilla de fotos: 2 columnas en móvil, 3 en pantallas más anchas */
+  photoGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+    gap: '12px',
+  },
+  photoCard: {
+    position: 'relative',
+    borderRadius: '16px',
+    overflow: 'hidden',
+    border: `1px solid ${borderSubtle}`,
+    backgroundColor: surfaceSolid,
+    cursor: 'zoom-in',
+    aspectRatio: '1 / 1',
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
+  },
+  photoImage: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    display: 'block',
+    transition: 'transform 0.25s ease',
+  },
+
+  /* Lightbox / modal ampliado */
+  modalOverlay: {
+    position: 'fixed',
+    inset: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    backdropFilter: 'blur(10px)',
+    WebkitBackdropFilter: 'blur(10px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 3000,
+    padding: '20px',
+    animation: 'fadeIn 0.2s ease',
+  },
+  modalContent: {
+    position: 'relative',
+    maxWidth: '100%',
+    maxHeight: '100%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalCloseBtn: {
+    position: 'absolute',
+    top: '-14px',
+    right: '-14px',
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    border: `1px solid ${borderDefault}`,
+    backgroundColor: surfaceSolid,
+    color: theme.colors.text,
+    fontSize: '16px',
+    fontWeight: '800',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 6px 20px rgba(0, 0, 0, 0.6)',
+    zIndex: 2,
+  },
+  modalImage: {
+    maxWidth: 'min(92vw, 640px)',
+    maxHeight: '80vh',
+    objectFit: 'contain',
+    borderRadius: '16px',
+    boxShadow: '0 24px 80px rgba(0, 0, 0, 0.8)',
+  },
+
+};

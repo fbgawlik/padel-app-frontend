@@ -3,11 +3,11 @@ import { theme } from '../theme';
 
 export const styles = {
   screenContainer: {
-    paddingBottom: theme.spacing.bottomNavPadding,
     backgroundColor: theme.colors.background, 
     width: '100%', 
     color: '#FFF', 
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    paddingBottom: '32px'
   },
   header: { display: 'flex', padding: '20px', gap: '16px', alignItems: 'flex-start', background: 'linear-gradient(180deg, rgba(30,50,40,0.4) 0%, rgba(10,10,11,1) 100%)' },
   backButton: { background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', padding: '10px', borderRadius: '12px', display: 'flex', outline: 'none' },

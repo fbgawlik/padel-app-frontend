@@ -176,7 +176,7 @@ const TorneosScreen = () => {
                   <div style={styles.gridDetails}>
                     <div style={styles.gridItem}>
                       <span style={styles.gridLabel}>Categorías</span>
-                      <span style={styles.gridValue} className="truncate">{torneo.categoria || 'Varias'}</span>
+                      <span style={styles.gridValue} title={torneo.categoria}>{torneo.categoria || 'Varias'}</span>
                     </div>
                     <div style={styles.gridItem}>
                       <span style={styles.gridLabel}>Cupo Máx.</span>
@@ -258,7 +258,5 @@ const TorneosScreen = () => {
     </div>
   );
 };
-
-;
 
 export default TorneosScreen;

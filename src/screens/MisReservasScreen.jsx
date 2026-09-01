@@ -239,6 +239,4 @@ const MisReservasScreen = () => {
   );
 };
 
-;
-
 export default MisReservasScreen;

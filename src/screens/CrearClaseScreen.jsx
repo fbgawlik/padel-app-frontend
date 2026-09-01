@@ -513,6 +513,4 @@ const CrearClaseScreen = () => {
   );
 };
 
-;
-
 export default CrearClaseScreen;

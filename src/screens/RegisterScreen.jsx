@@ -66,6 +66,13 @@ const RegisterScreen = () => {
     }));
   };
 
+  const validarPasswordCliente = (password) => {
+    if (password.length < 8) return 'La contraseña debe tener al menos 8 caracteres.';
+    if (!/[a-zA-Z]/.test(password)) return 'La contraseña debe incluir al menos una letra.';
+    if (!/\d/.test(password)) return 'La contraseña debe incluir al menos un número.';
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorLocal('');
@@ -78,10 +85,27 @@ const RegisterScreen = () => {
       return;
     }
 
+    // 🛡️ Validación de fortaleza de contraseña (la misma regla que el backend)
+    const errorPassword = validarPasswordCliente(password);
+    if (errorPassword) {
+      setErrorLocal(errorPassword);
+      setCargando(false);
+      return;
+    }
+
     try {
-      await API.post('/auth/register', formData);
-      mostrarNotificacion('¡Usuario registrado con éxito! Ya podés iniciar sesión.', 'success');
-      navigate('/login'); 
+      const res = await API.post('/auth/register', formData);
+
+      // ✉️ El registro ahora requiere verificación por email:
+      // enviamos al usuario a la pantalla de verificación con su email.
+      mostrarNotificacion(res.data.message || '¡Te registramos! Verificá tu cuenta con el código que te enviamos.', 'success');
+      navigate('/verificar-cuenta', {
+        state: {
+          email: res.data.email || formData.email,
+          // 🧪 Solo presente cuando el backend corre en modo dev (sin SMTP configurado)
+          codigoDev: res.data.codigoDev,
+        },
+      });
     } catch (error) {
       console.error("Error al registrar:", error);
       const mensajeError = error.response?.data?.error || "Ocurrió un error al registrar el usuario.";
@@ -154,7 +178,12 @@ const RegisterScreen = () => {
               placeholder="••••••••"
               style={styles.input}
               disabled={cargando}
+              autoComplete="new-password"
+              required
             />
+            <span style={styles.ayudaPassword}>
+              Mínimo 8 caracteres, con al menos una letra y un número.
+            </span>
           </div>
 
           <div style={styles.grupoInput}>
@@ -246,5 +275,4 @@ const RegisterScreen = () => {
   );
 };
 
-;
 export default RegisterScreen;

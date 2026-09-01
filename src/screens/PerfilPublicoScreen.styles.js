@@ -2,14 +2,14 @@ import { theme } from '../theme';
 
 export const styles = {
   contenedorBase: {
-    paddingBottom: theme.spacing.bottomNavPadding,
     width: '100%',
     color: theme.colors.text,
     fontFamily: 'system-ui, sans-serif',
     boxSizing: 'border-box',
     display: 'flex',
     justifyContent: 'center',
-    backgroundColor: theme.colors.background
+    backgroundColor: theme.colors.background,
+    paddingBottom: '32px'
   },
   tarjetaContenido: {
     width: '100%',
@@ -149,7 +149,7 @@ export const styles = {
   subtituloSeccion: {
     fontSize: '15px',
     fontWeight: '700',
-    color: theme.colors.text,       // 🔥 Cambiamos de gris a BLANCO o un gris muy claro (#E5E5EA) para que se lea perfecto
+    color: theme.colors.text, // 🔥 Cambiamos de gris a BLANCO para que se lea perfecto
     margin: '0 0 10px 0'
   },
   bloqueInfoDetalle: {

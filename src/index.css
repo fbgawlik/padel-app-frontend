@@ -1,42 +1,97 @@
+/* ══════════════════════════════════════════════════════════════
+   ADN PÁDEL · Estilos globales
+   Tema dark + acentos neón (verde #39FF14 / cian #00E5FF)
+   ══════════════════════════════════════════════════════════════ */
+
 :root {
-  --bg-background: Canvas;
-  --bg-surface: Canvas;
-  --bg-elevated: ButtonFace;
-  --bg-strong: AccentColor;
-  --text-primary: CanvasText;
-  --text-secondary: GrayText;
-  --text-muted: color-mix(in srgb, CanvasText 68%, transparent 32%);
-  --border-default: ButtonBorder;
-  --border-strong: AccentColor;
-  --brand-primary: AccentColor;
-  --brand-soft: color-mix(in srgb, AccentColor 14%, transparent);
-  --shadow-soft: 0 4px 12px color-mix(in srgb, AccentColor 14%, transparent);
+  /* Colores del sistema (alineados con src/theme/index.js) */
+  --bg-background: #0A0A0B;
+  --bg-surface: #161618;
+  --bg-surface-2: #121214;
+  --bg-elevated: #1C1C1E;
+  --text-primary: #FFFFFF;
+  --text-secondary: #A0A0A5;
+  --text-muted: #8E8E93;
+  --border-default: rgba(255, 255, 255, 0.08);
+  --brand-primary: #39FF14;
+  --brand-secondary: #00E5FF;
+  --danger: #FF453A;
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
+  color-scheme: dark;
   color: var(--text-primary);
   background: var(--bg-background);
+
+  font-family: var(--sans);
+  /* 16px base: respeta el diseño mobile-first de la app (antes 18px) */
+  font-size: 16px;
+  line-height: 145%;
+  letter-spacing: 0.1px;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* 🛡️ Prevención de zoom automático en iOS al enfocar inputs (< 16px) */
+  -webkit-text-size-adjust: 100%;
+
+  /* Barra de estado / tema móvil */
+  supported-color-schemes: dark;
 
   @media (max-width: 1024px) {
     font-size: 16px;
   }
 }
 
-html, body {
+html,
+body {
   background-color: var(--bg-background);
   margin: 0;
   padding: 0;
+  min-height: 100%;
 }
 
+/* El shell de la app es mobile-first (max 500px centrado en desktop).
+   Sin text-align global (rompía labels, listas y filas de datos). */
+#root {
+  width: 100%;
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow-x: hidden; /* bloquea scroll lateral accidental */
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--sans);
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+h1 { font-size: 28px; letter-spacing: -0.6px; }
+h2 { font-size: 20px; letter-spacing: -0.3px; }
+h3 { font-size: 16px; letter-spacing: -0.2px; }
+h4 { font-size: 14px; letter-spacing: -0.1px; }
+
+p {
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+
+/* ── Inputs nativos de fecha/hora (tema dark) ── */
 input[type="date"],
 input[type="time"],
 input[type="datetime-local"],
@@ -44,12 +99,16 @@ input[type="month"],
 input[type="week"] {
   background-color: #141416;
   color: #ffffff;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
   padding: 12px 14px;
   font-size: 14px;
+  font-family: inherit;
   outline: none;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  box-sizing: border-box;
+  width: 100%;
+  color-scheme: dark;
 }
 
 input[type="date"]:focus,
@@ -57,71 +116,134 @@ input[type="time"]:focus,
 input[type="datetime-local"]:focus,
 input[type="month"]:focus,
 input[type="week"]:focus {
-  border-color: #39FF14;
-  box-shadow: 0 0 0 4px rgba(57,255,20,0.12);
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 4px rgba(57, 255, 20, 0.12);
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-clear-button,
 input[type="time"]::-webkit-inner-spin-button {
   filter: invert(1) brightness(2);
   cursor: pointer;
 }
 
-/* AQUÍ SE APLICÓ EL CAMBIO */
-#root {
-  width: 100%;             
-  max-width: 1126px;       
-  margin: 0 auto;          
-  text-align: center;
-  /* border-inline: 1px solid var(--border); */ /* 👈 Comenta o elimina esta línea */
-  min-height: 100svh;
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  overflow-x: hidden; /* 👈 Agrega esto para bloquear scroll lateral accidental */
+/* ── Listas de opciones de <select> (antes se veían blancas) ── */
+select option,
+select optgroup {
+  background-color: #1C1C1E;
+  color: #FFFFFF;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+select optgroup {
+  font-weight: 700;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
+/* ── Placeholders legibles ── */
+input::placeholder,
+textarea::placeholder {
+  color: #6E6E73;
+  opacity: 1;
+}
+
+/* ── Scrollbars discretos en listas con scroll ── */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* Ocultar scrollbar manteniendo el scroll (contenedores horizontales) */
+.sin-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.sin-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Truncado de texto de 1 línea ── */
+.texto-truncado {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ── Overlay hover de imágenes de portada ── */
+.overlay-hoverable {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.bloque-hoverable:hover .overlay-hoverable,
+.bloque-hoverable:focus-within .overlay-hoverable {
+  opacity: 1;
+}
+
+/* ── Enfoque accesible para elementos interactivos ── */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid rgba(57, 255, 20, 0.7);
+  outline-offset: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   Animaciones compartidas (antes solo las definía RankingScreen,
+   el resto de pantallas dependía de que esa se hubiera visitado)
+   ══════════════════════════════════════════════════════════════ */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(60px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes pulseExito {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(57, 255, 20, 0.35); }
+  50% { box-shadow: 0 0 0 18px rgba(57, 255, 20, 0); }
+}
+
+/* ── Utilidades de accesibilidad ── */
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Impresión limpia (por si se imprime una tabla de posiciones) ── */
+@media print {
+  body {
+    background: #fff;
+    color: #000;
   }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
 }

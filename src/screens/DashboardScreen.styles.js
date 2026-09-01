@@ -1,9 +1,12 @@
+// src/screens/DashboardScreen.styles.js
 import { theme } from '../theme';
 
 export const styles = {
   contenedorPadre: { 
-    paddingBottom: theme.spacing.bottomNavPadding,
-    padding: '24px 16px', 
+    /* El espacio inferior para la barra de navegación lo aporta el Layout.
+       (Antes había un paddingBottom que era pisado por este shorthand y
+       generaba comportamientos distintos según la pantalla.) */
+    padding: '16px 16px 32px 16px', 
     backgroundColor: 'transparent', 
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
   },
@@ -129,7 +132,7 @@ export const styles = {
     height: '48px',
     borderRadius: '16px',
     objectFit: 'cover',
-    border: '1px solid rgba(255, 255, 255, 0.1)'
+    border: '1px solid rgba(255,255,255,0.1)'
   },
   botonAccionPrimario: {
     width: '100%',
@@ -166,7 +169,7 @@ export const styles = {
     height: '48px',
     borderRadius: '16px',
     objectFit: 'cover',
-    border: '1px solid rgba(255, 255, 255, 0.05)'
+    border: '1px solid rgba(255,255,255,0.05)'
   },
   textoVacio: { color: '#8E8E93', fontSize: '14px', margin: '8px 0' },
   loadingContainer: { display: 'flex', justifyContent: 'center', padding: '40px' },

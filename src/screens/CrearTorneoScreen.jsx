@@ -452,7 +452,4 @@ const CrearTorneoScreen = () => {
   );
 };
 
-// ─── ESTILOS PREMIUM ───
-;
-
 export default CrearTorneoScreen;

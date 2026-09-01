@@ -2,10 +2,9 @@ import { theme } from '../theme';
 
 export const styles = {
   container: {
-    paddingBottom: theme.spacing.bottomNavPadding,
     backgroundColor: theme.colors.background,
     color: '#FFF',
-    paddingBottom: '120px', 
+    paddingBottom: '32px',
   },
   header: {
     padding: '24px 20px',

@@ -1,13 +1,15 @@
 // src/screens/LoginScreen.jsx
 import React, { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // ✨ Importación correcta de Link
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { styles } from './LoginScreen.styles';
 
 const LoginScreen = () => {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const location = useLocation();
+  // Si viene desde la verificación de cuenta, pre-cargamos el email
+  const [email, setEmail] = useState(location.state?.email || '');
   const [password, setPassword] = useState('');
   const [errorLocal, setErrorLocal] = useState('');
   const [cargando, setCargando] = useState(false);
@@ -26,6 +28,14 @@ const LoginScreen = () => {
     const resultado = await login(email, password);
     
     if (!resultado.exito) {
+      // 🔒 La cuenta existe pero no está verificada → vamos a la pantalla de verificación
+      if (resultado.requiereVerificacion) {
+        navigate('/verificar-cuenta', {
+          state: { email: resultado.email || email },
+        });
+        setCargando(false);
+        return;
+      }
       setErrorLocal(resultado.error);
     } else {
       navigate('/dashboard'); 
@@ -55,6 +65,8 @@ const LoginScreen = () => {
               placeholder="ejemplo@correo.com"
               style={styles.input}
               disabled={cargando}
+              autoComplete="email"
+              required
             />
           </div>
 
@@ -67,6 +79,8 @@ const LoginScreen = () => {
               placeholder="••••••••"
               style={styles.input}
               disabled={cargando}
+              autoComplete="current-password"
+              required
             />
           </div>
 
@@ -87,8 +101,5 @@ const LoginScreen = () => {
     </div>
   );
 };
-
-// Objeto de estilos completo y restaurado al 100%
-;
 
 export default LoginScreen;

@@ -1,25 +1,27 @@
+// src/screens/LoginScreen.styles.js
 import { theme } from '../theme';
 
 export const styles = {
- contenedor: {
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-  alignItems: 'center',
-  minHeight: '100dvh',
-  padding: '20px',
-  boxSizing: 'border-box',
-  color: '#fff',
-  fontFamily: 'sans-serif',
-  backgroundColor: theme.colors.background
-},
+  contenedor: {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: '100dvh',
+    padding: '20px',
+    boxSizing: 'border-box',
+    color: '#fff',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    backgroundColor: theme.colors.background,
+  },
   tarjetaLogin: {
     backgroundColor: theme.colors.cardBg,
-    border: '1px solid #333',
-    borderRadius: '12px',
-    padding: '40px',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '16px',
+    padding: '40px 28px',
     width: '100%',
     maxWidth: '400px',
+    boxSizing: 'border-box',
     boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
   },
   contenedorLogo: {
@@ -64,6 +66,8 @@ export const styles = {
     fontSize: '15px',
     outline: 'none',
     transition: 'border-color 0.2s',
+    width: '100%',
+    boxSizing: 'border-box',
   },
   botonIngresar: {
     backgroundColor: theme.colors.primary,
@@ -100,6 +104,6 @@ export const styles = {
     textDecoration: 'none',
     fontWeight: '700',
     marginLeft: '5px',
-    transition: 'color 0.2s'
+    transition: 'color 0.2s',
   },
-}
+};

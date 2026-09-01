@@ -163,6 +163,4 @@ const TiendaScreen = () => {
   );
 };
 
-;
-
 export default TiendaScreen;

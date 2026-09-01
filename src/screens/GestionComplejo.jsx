@@ -641,7 +641,4 @@ const GestionComplejo = () => {
   );
 };
 
-// ESTILOS UNIFICADOS PREMIUM
-;
-
 export default GestionComplejo;

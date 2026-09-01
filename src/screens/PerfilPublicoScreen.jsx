@@ -177,6 +177,4 @@ const PerfilPublicoScreen = () => {
   );
 };
 
-// ARQUITECTURA DE DISEÑO DARK ADN PADEL
-;
 export default PerfilPublicoScreen;

@@ -395,7 +395,4 @@ const TorneoInscripcionScreen = () => {
   );
 };
 
-// --- ARQUITECTURA DE ESTILOS PREMIUM (ADN PÁDEL STYLE) ---
-;
-
 export default TorneoInscripcionScreen;
