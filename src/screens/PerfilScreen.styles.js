@@ -8,7 +8,7 @@ export const styles = {
   imagenPortadaImg: { width: '100%', height: '100%', objectFit: 'cover' },
   bannerVacio: { width: '100%', height: '100%', background: 'linear-gradient(135deg, #1f1f23 0%, #2c2c35 100%)' },
   portadaOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', color: '#FFF', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
-  badgePuntos: { position: 'absolute', top: '20px', right: '20px', backgroundColor: 'rgba(57, 255, 20, 0.15)', border: '1px solid #39FF14', padding: '6px 14px', borderRadius: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 4px 12px rgba(57, 255, 20, 0.2)', zIndex: 3 },
+  badgePuntos: { position: 'absolute', top: '20px', right: '20px', backgroundColor: 'rgba(190, 242, 100, 0.15)', border: '1px solid #BEF264', padding: '6px 14px', borderRadius: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 4px 12px rgba(190, 242, 100, 0.2)', zIndex: 3 },
   puntosNumero: { color: theme.colors.primary, fontSize: '16px', fontWeight: '800', lineHeight: '1' },
   puntosLabel: { color: '#FFF', fontSize: '9px', fontWeight: '700', marginTop: '2px', letterSpacing: '0.5px' },
   avatarSeccion: { display: 'flex', justifyContent: 'center', marginTop: '-60px', marginBottom: '15px', position: 'relative', zIndex: '2' },
@@ -27,8 +27,8 @@ export const styles = {
   optgroup: { backgroundColor: '#141416', color: theme.colors.primary, fontWeight: '700' },
   textarea: { backgroundColor: '#1A1A1E', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '14px', color: '#FFF', fontSize: '14px', outline: 'none', minHeight: '90px', resize: 'vertical', fontFamily: 'inherit' },
   contenedorBotones: { padding: '20px 30px 40px 30px', display: 'flex', flexDirection: 'column', gap: '12px' },
-  botonGuardar: { backgroundColor: theme.colors.primary, color: '#000', border: 'none', padding: '16px', borderRadius: '14px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 15px rgba(57, 255, 20, 0.3)', transition: 'transform 0.2s' },
+  botonGuardar: { backgroundColor: theme.colors.primary, color: '#000', border: 'none', padding: '16px', borderRadius: '14px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 15px rgba(190, 242, 100, 0.3)', transition: 'transform 0.2s' },
   botonLogout: { backgroundColor: 'transparent', color: '#FF453A', border: '1px solid rgba(255, 69, 58, 0.2)', padding: '14px', borderRadius: '14px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
   error: { margin: '0 30px 20px 30px', padding: '12px', backgroundColor: 'rgba(255,69,58,0.1)', border: '1px solid #FF453A', color: '#FF453A', borderRadius: '10px', fontSize: '13px', textAlign: 'center' },
-  exito: { margin: '0 30px 20px 30px', padding: '12px', backgroundColor: 'rgba(57,255,20,0.1)', border: '1px solid #39FF14', color: theme.colors.primary, borderRadius: '10px', fontSize: '13px', textAlign: 'center' }
+  exito: { margin: '0 30px 20px 30px', padding: '12px', backgroundColor: 'rgba(190, 242, 100,0.1)', border: '1px solid #BEF264', color: theme.colors.primary, borderRadius: '10px', fontSize: '13px', textAlign: 'center' }
 }

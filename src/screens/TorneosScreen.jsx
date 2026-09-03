@@ -119,9 +119,9 @@ const TorneosScreen = () => {
         {torneosFiltrados.length > 0 ? (
           torneosFiltrados.map((torneo) => {
             const hoy = new Date().toISOString().split('T')[0];
-            let estado = { texto: 'Inscripciones Abiertas', color: '#39FF14' };
+            let estado = { texto: 'Inscripciones Abiertas', color: '#BEF264' };
             if (torneo.fechaInicio <= hoy && torneo.fechaFin >= hoy) {
-              estado = { texto: 'En Curso 🎾', color: '#00E5FF' };
+              estado = { texto: 'En Curso 🎾', color: '#34D399' };
             } else if (torneo.fechaFin < hoy) {
               estado = { texto: 'Finalizado', color: '#8E8E93' };
             }
@@ -143,7 +143,7 @@ const TorneosScreen = () => {
                       onError={(e) => {
                         e.target.onerror = null; 
                         e.target.style.display = 'none';
-                        e.target.parentNode.innerHTML = `<div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%); display: flex; align-items: center; justify-content: center; color: #39FF14; font-weight: 700; font-size: 16px;">🏆 ${torneo.nombre}</div>`;
+                        e.target.parentNode.innerHTML = `<div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%); display: flex; align-items: center; justify-content: center; color: #BEF264; font-weight: 700; font-size: 16px;">🏆 ${torneo.nombre}</div>`;
                       }}
                     />
                   ) : (
@@ -184,7 +184,7 @@ const TorneosScreen = () => {
                     </div>
                     <div style={styles.gridItem}>
                       <span style={styles.gridLabel}>Inscripción</span>
-                      <span style={{...styles.gridValue, color: '#39FF14'}}>
+                      <span style={{...styles.gridValue, color: '#BEF264'}}>
                         ${torneo.precioInscripcion || torneo.precio || '0'}
                       </span>
                     </div>

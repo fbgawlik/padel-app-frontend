@@ -205,7 +205,7 @@ export const styles = {
     backgroundColor: theme.colors.primary,
     color: '#000000',
     borderColor: theme.colors.primary,
-    boxShadow: '0 8px 20px rgba(57, 255, 20, 0.18)'
+    boxShadow: '0 8px 20px rgba(190, 242, 100, 0.18)'
   },
   botonModalHora: {
     padding: '0 12px',
@@ -227,7 +227,7 @@ export const styles = {
     fontSize: '15px',
     cursor: 'pointer', 
     marginTop: '12px',
-    boxShadow: '0 0 15px rgba(57, 255, 20, 0.3)',
+    boxShadow: '0 0 15px rgba(190, 242, 100, 0.3)',
     transition: 'transform 0.1s ease'
   },
 

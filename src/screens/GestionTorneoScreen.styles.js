@@ -14,7 +14,7 @@ export const styles = {
   headerInfo: { flex: 1, display: 'flex', flexDirection: 'column' },
   logoRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' },
   logoText: { color: '#FFF', fontWeight: '800', fontSize: '14px', letterSpacing: '1px' },
-  btnPublicar: { backgroundColor: 'transparent', border: '1px solid #39FF14', color: theme.colors.primary, padding: '6px 12px', borderRadius: '8px', fontSize: '10px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s ease', letterSpacing: '0.5px' },
+  btnPublicar: { backgroundColor: 'transparent', border: '1px solid #BEF264', color: theme.colors.primary, padding: '6px 12px', borderRadius: '8px', fontSize: '10px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s ease', letterSpacing: '0.5px' },
   tituloSecundario: { fontSize: '20px', color: '#FFF', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' },
   tituloPrincipal: { fontSize: '26px', color: '#FFF', fontWeight: '900', margin: '4px 0 12px 0', letterSpacing: '-0.5px' },
   organizadorRow: { display: 'flex', alignItems: 'center', gap: '8px' },
@@ -44,7 +44,7 @@ export const styles = {
     borderRadius: '14px', 
     fontWeight: '800', 
     fontSize: '13px',
-    boxShadow: '0 4px 14px rgba(57, 255, 20, 0.25)',
+    boxShadow: '0 4px 14px rgba(190, 242, 100, 0.25)',
     transition: 'all 0.2s ease',
     whiteSpace: 'nowrap'
   },
@@ -120,7 +120,7 @@ export const styles = {
   mensajePlaceholder: { textAlign: 'center' },
 
   centerContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' },
-  spinner: { width: '36px', height: '36px', border: '3px solid rgba(57, 255, 20, 0.1)', borderTopColor: theme.colors.primary, borderRadius: '50%', animation: 'spin 1s linear infinite' },
+  spinner: { width: '36px', height: '36px', border: '3px solid rgba(190, 242, 100, 0.1)', borderTopColor: theme.colors.primary, borderRadius: '50%', animation: 'spin 1s linear infinite' },
 
   /* ─── ESTILOS PARA EL MODAL DE RESTRICCIONES ─── */
   modalOverlay: {
@@ -181,7 +181,7 @@ export const styles = {
     cursor: 'pointer'
   },
   btnCerrarModal: {
-    backgroundColor: '#39FF14',
+    backgroundColor: '#BEF264',
     color: '#0A0A0B',
     border: 'none',
     padding: '14px',

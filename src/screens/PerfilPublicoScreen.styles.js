@@ -217,7 +217,7 @@ export const styles = {
     width: '36px',
     height: '36px',
     border: '3px solid rgba(255, 255, 255, 0.05)',
-    borderTop: '3px solid #39FF14',
+    borderTop: '3px solid #BEF264',
     borderRadius: '50%',
     animation: 'spin 1s linear infinite'
   },

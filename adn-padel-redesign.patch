@@ -1,0 +1,3433 @@
+diff --git a/src/components/BottomNavigation.jsx b/src/components/BottomNavigation.jsx
+index 7e9610f..5843a77 100644
+--- a/src/components/BottomNavigation.jsx
++++ b/src/components/BottomNavigation.jsx
+@@ -1,9 +1,18 @@
+ // src/components/BottomNavigation.jsx
++// ───────────────────────────────────────────────────────────
++// Refactor v2: indicador animado con transición CSS (sin
++// dependencias extra), 5to tab "Torneos" agregado, touch
++// targets ≥48px, usa tokens del theme en lugar de hex
++// hardcodeados.
++// ───────────────────────────────────────────────────────────
+ import React, { useContext } from 'react';
+ import { useNavigate, useLocation } from 'react-router-dom';
++import { theme } from '../theme';
++
++const stroke = (activo) => (activo ? theme.colors.primary : theme.colors.textSecondary);
+ 
+ const IconoInicio = ({ activo }) => (
+-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={activo ? '#39FF14' : '#A0A0A5'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
++  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={stroke(activo)} strokeWidth={activo ? 2.4 : 2.2} strokeLinecap="round" strokeLinejoin="round">
+     <path d="M3 10.5 12 3l9 7.5" />
+     <path d="M5 9.5V21h14V9.5" />
+     <path d="M9.5 21v-6h5v6" />
+@@ -11,25 +20,32 @@ const IconoInicio = ({ activo }) => (
+ );
+ 
+ const IconoBuscar = ({ activo }) => (
+-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={activo ? '#39FF14' : '#A0A0A5'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
++  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={stroke(activo)} strokeWidth={activo ? 2.4 : 2.2} strokeLinecap="round" strokeLinejoin="round">
+     <circle cx="11" cy="11" r="7" />
+     <line x1="21" y1="21" x2="16.2" y2="16.2" />
+   </svg>
+ );
+ 
++const IconoTorneos = ({ activo }) => (
++  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={stroke(activo)} strokeWidth={activo ? 2.4 : 2.2} strokeLinecap="round" strokeLinejoin="round">
++    <path d="M6 9a6 6 0 0 0 12 0V4H6z" />
++    <path d="M6 5H4v2a3 3 0 0 0 3 3M18 5h2v2a3 3 0 0 1-3 3" />
++    <path d="M12 15v4M9 21h6M10 19h4" />
++  </svg>
++);
++
+ const IconoTurnos = ({ activo }) => (
+-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={activo ? '#39FF14' : '#A0A0A5'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
++  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={stroke(activo)} strokeWidth={activo ? 2.4 : 2.2} strokeLinecap="round" strokeLinejoin="round">
+     <rect x="3" y="4.5" width="18" height="17" rx="3" />
+     <line x1="3" y1="9.5" x2="21" y2="9.5" />
+     <line x1="8" y1="2.5" x2="8" y2="6.5" />
+     <line x1="16" y1="2.5" x2="16" y2="6.5" />
+-    {/* Pelotita de pádel dentro del calendario */}
+     <circle cx="12" cy="15" r="2.6" />
+   </svg>
+ );
+ 
+ const IconoPerfil = ({ activo }) => (
+-  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={activo ? '#39FF14' : '#A0A0A5'} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
++  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={stroke(activo)} strokeWidth={activo ? 2.4 : 2.2} strokeLinecap="round" strokeLinejoin="round">
+     <circle cx="12" cy="8" r="4" />
+     <path d="M4.5 21c1.2-3.8 4-5.5 7.5-5.5s6.3 1.7 7.5 5.5" />
+   </svg>
+@@ -42,38 +58,45 @@ const BottomNavigation = () => {
+   const tabs = [
+     { nombre: 'Inicio', ruta: '/dashboard', Icono: IconoInicio },
+     { nombre: 'Buscar', ruta: '/turnos', Icono: IconoBuscar },
++    { nombre: 'Torneos', ruta: '/torneos', Icono: IconoTorneos },
+     { nombre: 'Mis Turnos', ruta: '/mis-reservas', Icono: IconoTurnos },
+     { nombre: 'Perfil', ruta: '/perfil', Icono: IconoPerfil },
+   ];
+ 
++  const isActive = (ruta) => {
++    if (ruta === '/torneos') return location.pathname.startsWith('/torneos');
++    if (ruta === '/turnos') return location.pathname.startsWith('/turnos') || location.pathname.startsWith('/reservar');
++    return location.pathname === ruta;
++  };
++
+   return (
+     <nav style={styles.navContainer} aria-label="Navegación principal">
+       <div style={styles.navBar}>
+         {tabs.map((tab) => {
+-          const isActive = location.pathname === tab.ruta;
++          const active = isActive(tab.ruta);
+           const Icono = tab.Icono;
+           return (
+             <button
+               key={tab.ruta}
+               onClick={() => navigate(tab.ruta)}
+               aria-label={tab.nombre}
+-              aria-current={isActive ? 'page' : undefined}
+-              style={{
+-                ...styles.tabButton,
+-                backgroundColor: isActive ? 'rgba(57, 255, 20, 0.10)' : 'transparent',
+-                flex: isActive ? 1.6 : 1,
+-              }}
++              aria-current={active ? 'page' : undefined}
++              style={styles.tabButton}
+             >
++              {active && (
++                <span style={styles.activePill} />
++              )}
+               <span
+                 style={{
+                   ...styles.icon,
+-                  filter: isActive ? 'drop-shadow(0 0 6px rgba(57, 255, 20, 0.55))' : 'none',
++                  filter: active ? `drop-shadow(0 0 6px ${theme.colors.primaryGlow})` : 'none',
+                 }}
+               >
+-                <Icono activo={isActive} />
++                <Icono activo={active} />
++              </span>
++              <span style={{ ...styles.label, color: active ? theme.colors.primary : theme.colors.textMuted }}>
++                {tab.nombre}
+               </span>
+-
+-              {isActive && <span style={styles.label}>{tab.nombre}</span>}
+             </button>
+           );
+         })}
+@@ -89,59 +112,72 @@ const styles = {
+     left: 0,
+     right: 0,
+     height: '68px',
+-    backgroundColor: 'transparent',
+     display: 'flex',
+     justifyContent: 'center',
+     alignItems: 'center',
+     padding: '0 16px',
+     zIndex: 1000,
+-    pointerEvents: 'none', // el contenedor no bloquea clicks, solo la barra
++    pointerEvents: 'none',
+   },
+   navBar: {
+     width: '100%',
+-    maxWidth: '420px',
++    maxWidth: '440px',
+     height: '100%',
+-    backgroundColor: 'rgba(18, 18, 20, 0.88)',
++    backgroundColor: theme.colors.cardBg,
+     backdropFilter: 'blur(30px)',
+     WebkitBackdropFilter: 'blur(30px)',
+     borderRadius: '32px',
+-    border: '1px solid rgba(255, 255, 255, 0.06)',
++    border: `1px solid ${theme.colors.border}`,
+     display: 'flex',
+     justifyContent: 'space-between',
+     alignItems: 'center',
+-    padding: '0 10px',
+-    boxShadow: '0px 12px 40px rgba(0, 0, 0, 0.6)',
+-    pointerEvents: 'auto', // la barra sí captura los clicks
++    padding: '6px',
++    boxShadow: theme.shadows.nav,
++    pointerEvents: 'auto',
+     boxSizing: 'border-box',
+   },
+   tabButton: {
++    flex: 1,
+     background: 'none',
+     border: 'none',
+     display: 'flex',
+-    flexDirection: 'row',
++    flexDirection: 'column',
+     alignItems: 'center',
+     justifyContent: 'center',
+-    height: '48px',
+-    borderRadius: '24px',
++    gap: '3px',
++    height: '56px',
++    minWidth: '48px',
++    borderRadius: '26px',
+     cursor: 'pointer',
+-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+-    gap: '7px',
+-    padding: '0 8px',
++    position: 'relative',
+     WebkitTapHighlightColor: 'transparent',
++    padding: '0 4px',
++  },
++  activePill: {
++    position: 'absolute',
++    inset: '4px',
++    borderRadius: '24px',
++    backgroundColor: theme.colors.primarySoft,
++    boxShadow: `inset 0 0 0 1px ${theme.colors.primaryGlow}`,
++    animation: 'fadeIn 0.25s ease',
+   },
+   icon: {
+     display: 'flex',
+     alignItems: 'center',
+     justifyContent: 'center',
++    position: 'relative',
++    zIndex: 2,
+     transition: 'transform 0.2s ease',
+   },
+   label: {
+-    fontSize: '12px',
++    fontSize: '10px',
+     fontWeight: '700',
+-    color: '#39FF14',
+     letterSpacing: '-0.2px',
+     whiteSpace: 'nowrap',
++    position: 'relative',
++    zIndex: 2,
++    lineHeight: 1,
+   },
+ };
+ 
+-export default BottomNavigation;
+\ No newline at end of file
++export default BottomNavigation;
+diff --git a/src/components/Layout.jsx b/src/components/Layout.jsx
+index 0e8679e..a03e226 100644
+--- a/src/components/Layout.jsx
++++ b/src/components/Layout.jsx
+@@ -1,21 +1,24 @@
+ // src/components/Layout.jsx
++// ───────────────────────────────────────────────────────────
++// Refactor v2: ambient glow con tokens del theme (lima +
++// esmeralda), sin hex hardcodeados.
++// ───────────────────────────────────────────────────────────
+ import React from 'react';
+ import { Outlet } from 'react-router-dom';
+ import BottomNavigation from './BottomNavigation';
++import { theme } from '../theme';
+ 
+ const Layout = () => {
+   return (
+     <div style={styles.appContainer}>
+-      {/* ─── DETALLES ESTÉTICOS DE BRILLO / AMBIENT GLOW ─── */}
++      {/* ─── LUCES DE AMBIENTE (GLOWS) ─── */}
+       <div style={styles.glowTopLeft} />
+       <div style={styles.glowBottomRight} />
+ 
+-      {/* Contenedor del contenido de las pantallas */}
+       <main style={styles.mainContent}>
+         <Outlet />
+       </main>
+ 
+-      {/* Barra de navegación inferior */}
+       <BottomNavigation />
+     </div>
+   );
+@@ -23,27 +26,26 @@ const Layout = () => {
+ 
+ const styles = {
+   appContainer: {
+-    backgroundColor: '#0A0A0B',
+-    minHeight: '100dvh', // min (no height fija): el contenido nunca se corta
++    backgroundColor: theme.colors.background,
++    minHeight: '100dvh',
+     width: '100%',
+-    color: '#ffffff',
++    color: theme.colors.text,
+     display: 'flex',
+     flexDirection: 'column',
+     alignItems: 'stretch',
+-    justifyContent: 'flex-start', // el contenido fluye desde arriba (antes 'center' podía comprimir)
++    justifyContent: 'flex-start',
+     position: 'relative',
+-    overflowX: 'hidden', // solo horizontal: el scroll vertical vive en el documento
++    overflowX: 'hidden',
+   },
+-  /* ─── LUCES DE AMBIENTE (GLOWS) ─── */
+   glowTopLeft: {
+     position: 'absolute',
+     top: '-150px',
+     left: 'calc(50% - 300px)',
+     width: '300px',
+     height: '300px',
+-    backgroundColor: '#CCFF00',
++    backgroundColor: theme.colors.primary,
+     borderRadius: '50%',
+-    opacity: '0.06',
++    opacity: '0.07',
+     filter: 'blur(90px)',
+     pointerEvents: 'none',
+     zIndex: 1,
+@@ -54,20 +56,18 @@ const styles = {
+     right: 'calc(50% - 250px)',
+     width: '250px',
+     height: '250px',
+-    backgroundColor: '#00E5FF',
++    backgroundColor: theme.colors.secondaryGlow,
+     borderRadius: '50%',
+-    opacity: '0.04',
++    opacity: '0.05',
+     filter: 'blur(80px)',
+     pointerEvents: 'none',
+     zIndex: 1,
+   },
+-  /* ─── CONTENIDO PRINCIPAL ─── */
+   mainContent: {
+     width: '100%',
+     maxWidth: '500px',
+     margin: '0 auto',
+     flex: 1,
+-    // Espacio inferior reservado para la barra de navegación fija (64px + 24px de margen)
+     paddingBottom: '112px',
+     paddingTop: '8px',
+     boxSizing: 'border-box',
+@@ -76,4 +76,4 @@ const styles = {
+   },
+ };
+ 
+-export default Layout;
+\ No newline at end of file
++export default Layout;
+diff --git a/src/components/Toast.jsx b/src/components/Toast.jsx
+index 2b7b3e6..a75d2b4 100644
+--- a/src/components/Toast.jsx
++++ b/src/components/Toast.jsx
+@@ -1,26 +1,27 @@
+ // src/components/Toast.jsx
++// ───────────────────────────────────────────────────────────
++// Refactor v2: usa tokens del theme. Mantiene la misma API
++// (mensaje, tipo, onClose) para no romper los usos existentes.
++// ───────────────────────────────────────────────────────────
+ import React, { useEffect, useState } from 'react';
++import { theme } from '../theme';
+ 
+ const Toast = ({ mensaje, tipo, onClose }) => {
+   const [visible, setVisible] = useState(false);
+ 
+-  // Animación de entrada y salida
+   useEffect(() => {
+     requestAnimationFrame(() => setVisible(true));
+-
+     const timer = setTimeout(() => {
+       setVisible(false);
+-      setTimeout(onClose, 300); // Espera a que termine la animación para desmontar
++      setTimeout(onClose, 300);
+     }, 3000);
+-
+     return () => clearTimeout(timer);
+   }, [onClose]);
+ 
+-  // Definir colores según el tipo de notificación
+   const colores = {
+-    success: '#39FF14', // Verde neón
+-    error: '#FF3333',   // Rojo para errores
+-    info: '#00E5FF'     // Cian para información
++    success: theme.colors.primary,
++    error: theme.colors.danger,
++    info: theme.colors.secondaryGlow,
+   };
+ 
+   const colorActivo = colores[tipo] || colores.info;
+@@ -31,11 +32,10 @@ const Toast = ({ mensaje, tipo, onClose }) => {
+       aria-live="polite"
+       style={{
+         ...styles.toastContainer,
+-        // Combinamos SIEMPRE el centrado horizontal con la animación vertical
+         transform: `translateX(-50%) translateY(${visible ? '0' : '-24px'})`,
+         opacity: visible ? 1 : 0,
+         borderLeft: `4px solid ${colorActivo}`,
+-        boxShadow: `0px 4px 15px ${colorActivo}20`, // Brillo sutil del color
++        boxShadow: `0px 4px 15px ${colorActivo}20`,
+       }}
+     >
+       <div style={{ ...styles.iconContainer, color: colorActivo }}>
+@@ -57,11 +57,11 @@ const styles = {
+     alignItems: 'center',
+     gap: '12px',
+     padding: '12px 20px',
+-    backgroundColor: 'rgba(18, 18, 20, 0.92)',
++    backgroundColor: theme.colors.cardBg,
+     backdropFilter: 'blur(16px)',
+     WebkitBackdropFilter: 'blur(16px)',
+-    borderRadius: '12px',
+-    border: '1px solid rgba(255, 255, 255, 0.08)',
++    borderRadius: theme.borderRadius.md,
++    border: `1px solid ${theme.colors.border}`,
+     zIndex: 9999,
+     minWidth: '0',
+     maxWidth: 'min(90vw, 420px)',
+@@ -82,9 +82,9 @@ const styles = {
+   mensaje: {
+     fontSize: '14px',
+     fontWeight: '500',
+-    color: '#FFFFFF',
++    color: theme.colors.text,
+     letterSpacing: '-0.2px',
+   },
+ };
+ 
+-export default Toast;
+\ No newline at end of file
++export default Toast;
+diff --git a/src/index.css b/src/index.css
+index e52fc46..fe428b1 100644
+--- a/src/index.css
++++ b/src/index.css
+@@ -1,22 +1,40 @@
+ /* ══════════════════════════════════════════════════════════════
+-   ADN PÁDEL · Estilos globales
+-   Tema dark + acentos neón (verde #39FF14 / cian #00E5FF)
++   ADN PÁDEL · Estilos globales (refactor v2)
++   Tema dark + acento lima refinado (#BEF264) + esmeralda (#34D399)
++   Se eliminó el cian intruso (#00E5FF) que rompía la coherencia.
++   Tokens alineados con src/theme/index.js
+    ══════════════════════════════════════════════════════════════ */
+ 
+ :root {
+-  /* Colores del sistema (alineados con src/theme/index.js) */
+-  --bg-background: #0A0A0B;
+-  --bg-surface: #161618;
+-  --bg-surface-2: #121214;
+-  --bg-elevated: #1C1C1E;
++  /* ── Superficies (negros con tinte verde) ── */
++  --bg-background: #0B0F0D;
++  --bg-surface: #141A17;
++  --bg-surface-2: #101512;
++  --bg-elevated: #1A211D;
++
++  /* ── Texto ── */
+   --text-primary: #FFFFFF;
+-  --text-secondary: #A0A0A5;
+-  --text-muted: #8E8E93;
++  --text-secondary: #A7B0A9;
++  --text-muted: #7A847E;
++
++  /* ── Bordes ── */
+   --border-default: rgba(255, 255, 255, 0.08);
+-  --brand-primary: #39FF14;
+-  --brand-secondary: #00E5FF;
++  --border-strong: rgba(255, 255, 255, 0.14);
++
++  /* ── Marca ── */
++  --brand-primary: #BEF264;
++  --brand-primary-deep: #84CC16;
++  --brand-primary-soft: rgba(190, 242, 100, 0.12);
++  --brand-primary-glow: rgba(190, 242, 100, 0.55);
++  --brand-secondary: #34D399;
++  --brand-secondary-soft: rgba(52, 211, 153, 0.12);
++
++  /* ── Estado ── */
+   --danger: #FF453A;
++  --danger-soft: rgba(255, 69, 58, 0.12);
++  --warning: #FBBF24;
+ 
++  /* ── Tipografía ── */
+   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+ 
+   color-scheme: dark;
+@@ -24,7 +42,6 @@
+   background: var(--bg-background);
+ 
+   font-family: var(--sans);
+-  /* 16px base: respeta el diseño mobile-first de la app (antes 18px) */
+   font-size: 16px;
+   line-height: 145%;
+   letter-spacing: 0.1px;
+@@ -36,13 +53,7 @@
+ 
+   /* 🛡️ Prevención de zoom automático en iOS al enfocar inputs (< 16px) */
+   -webkit-text-size-adjust: 100%;
+-
+-  /* Barra de estado / tema móvil */
+   supported-color-schemes: dark;
+-
+-  @media (max-width: 1024px) {
+-    font-size: 16px;
+-  }
+ }
+ 
+ html,
+@@ -53,8 +64,6 @@ body {
+   min-height: 100%;
+ }
+ 
+-/* El shell de la app es mobile-first (max 500px centrado en desktop).
+-   Sin text-align global (rompía labels, listas y filas de datos). */
+ #root {
+   width: 100%;
+   margin: 0 auto;
+@@ -62,7 +71,7 @@ body {
+   display: flex;
+   flex-direction: column;
+   box-sizing: border-box;
+-  overflow-x: hidden; /* bloquea scroll lateral accidental */
++  overflow-x: hidden;
+ }
+ 
+ h1, h2, h3, h4 {
+@@ -77,19 +86,9 @@ h2 { font-size: 20px; letter-spacing: -0.3px; }
+ h3 { font-size: 16px; letter-spacing: -0.2px; }
+ h4 { font-size: 14px; letter-spacing: -0.1px; }
+ 
+-p {
+-  margin: 0;
+-}
+-
+-button {
+-  font-family: inherit;
+-}
+-
+-input,
+-textarea,
+-select {
+-  font-family: inherit;
+-}
++p { margin: 0; }
++button { font-family: inherit; }
++input, textarea, select { font-family: inherit; }
+ 
+ /* ── Inputs nativos de fecha/hora (tema dark) ── */
+ input[type="date"],
+@@ -97,9 +96,9 @@ input[type="time"],
+ input[type="datetime-local"],
+ input[type="month"],
+ input[type="week"] {
+-  background-color: #141416;
++  background-color: var(--bg-surface);
+   color: #ffffff;
+-  border: 1px solid rgba(255, 255, 255, 0.12);
++  border: 1px solid var(--border-default);
+   border-radius: 12px;
+   padding: 12px 14px;
+   font-size: 14px;
+@@ -117,7 +116,7 @@ input[type="datetime-local"]:focus,
+ input[type="month"]:focus,
+ input[type="week"]:focus {
+   border-color: var(--brand-primary);
+-  box-shadow: 0 0 0 4px rgba(57, 255, 20, 0.12);
++  box-shadow: 0 0 0 4px var(--brand-primary-soft);
+ }
+ 
+ input[type="date"]::-webkit-calendar-picker-indicator,
+@@ -128,84 +127,52 @@ input[type="time"]::-webkit-inner-spin-button {
+   cursor: pointer;
+ }
+ 
+-/* ── Listas de opciones de <select> (antes se veían blancas) ── */
+ select option,
+ select optgroup {
+-  background-color: #1C1C1E;
++  background-color: var(--bg-elevated);
+   color: #FFFFFF;
+ }
++select optgroup { font-weight: 700; }
+ 
+-select optgroup {
+-  font-weight: 700;
+-}
+-
+-/* ── Placeholders legibles ── */
+ input::placeholder,
+ textarea::placeholder {
+-  color: #6E6E73;
++  color: #6E736E;
+   opacity: 1;
+ }
+ 
+-/* ── Scrollbars discretos en listas con scroll ── */
+-*::-webkit-scrollbar {
+-  width: 6px;
+-  height: 6px;
+-}
+-
+-*::-webkit-scrollbar-track {
+-  background: transparent;
+-}
+-
+-*::-webkit-scrollbar-thumb {
+-  background: rgba(255, 255, 255, 0.12);
+-  border-radius: 999px;
+-}
++/* ── Scrollbars discretos ── */
++*::-webkit-scrollbar { width: 6px; height: 6px; }
++*::-webkit-scrollbar-track { background: transparent; }
++*::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 999px; }
++*::-webkit-scrollbar-thumb:hover { background: var(--brand-primary-soft); }
+ 
+-*::-webkit-scrollbar-thumb:hover {
+-  background: rgba(255, 255, 255, 0.22);
+-}
+-
+-/* Ocultar scrollbar manteniendo el scroll (contenedores horizontales) */
+-.sin-scrollbar {
+-  scrollbar-width: none;
+-  -ms-overflow-style: none;
+-}
+-.sin-scrollbar::-webkit-scrollbar {
+-  display: none;
+-}
++.sin-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
++.sin-scrollbar::-webkit-scrollbar { display: none; }
+ 
+-/* ── Truncado de texto de 1 línea ── */
+ .texto-truncado {
+   display: block;
+   overflow: hidden;
+   white-space: nowrap;
++  text-rendering: optimizeLegibility;
+   text-overflow: ellipsis;
+   max-width: 100%;
+ }
+ 
+-/* ── Overlay hover de imágenes de portada ── */
+-.overlay-hoverable {
+-  opacity: 0;
+-  transition: opacity 0.2s ease;
+-}
++.overlay-hoverable { opacity: 0; transition: opacity 0.2s ease; }
+ .bloque-hoverable:hover .overlay-hoverable,
+-.bloque-hoverable:focus-within .overlay-hoverable {
+-  opacity: 1;
+-}
++.bloque-hoverable:focus-within .overlay-hoverable { opacity: 1; }
+ 
+-/* ── Enfoque accesible para elementos interactivos ── */
+ a:focus-visible,
+ button:focus-visible,
+ input:focus-visible,
+ select:focus-visible,
+ textarea:focus-visible {
+-  outline: 2px solid rgba(57, 255, 20, 0.7);
++  outline: 2px solid rgba(190, 242, 100, 0.7);
+   outline-offset: 2px;
+ }
+ 
+ /* ══════════════════════════════════════════════════════════════
+-   Animaciones compartidas (antes solo las definía RankingScreen,
+-   el resto de pantallas dependía de que esa se hubiera visitado)
++   Animaciones compartidas
+    ══════════════════════════════════════════════════════════════ */
+ @keyframes spin {
+   0% { transform: rotate(0deg); }
+@@ -223,11 +190,36 @@ textarea:focus-visible {
+ }
+ 
+ @keyframes pulseExito {
+-  0%, 100% { box-shadow: 0 0 0 0 rgba(57, 255, 20, 0.35); }
+-  50% { box-shadow: 0 0 0 18px rgba(57, 255, 20, 0); }
++  0%, 100% { box-shadow: 0 0 0 0 rgba(190, 242, 100, 0.45); }
++  50% { box-shadow: 0 0 0 18px rgba(190, 242, 100, 0); }
++}
++
++/* Skeleton loader (shimmer) */
++@keyframes shimmer {
++  0% { background-position: -200% 0; }
++  100% { background-position: 200% 0; }
++}
++.skeleton {
++  background: linear-gradient(
++    90deg,
++    var(--bg-surface) 25%,
++    var(--bg-elevated) 37%,
++    var(--bg-surface) 63%
++  );
++  background-size: 200% 100%;
++  animation: shimmer 1.4s ease-in-out infinite;
++  border-radius: 12px;
++}
++
++/* Pulse ring para estados de éxito */
++@keyframes pulseRing {
++  0% { box-shadow: 0 0 0 0 rgba(190, 242, 100, 0.55); }
++  70% { box-shadow: 0 0 0 12px rgba(190, 242, 100, 0); }
++  100% { box-shadow: 0 0 0 0 rgba(190, 242, 100, 0); }
+ }
++.pulse-ring { animation: pulseRing 1.8s infinite; }
+ 
+-/* ── Utilidades de accesibilidad ── */
++/* Utilidades de accesibilidad */
+ .solo-lectores {
+   position: absolute;
+   width: 1px;
+@@ -240,10 +232,6 @@ textarea:focus-visible {
+   border: 0;
+ }
+ 
+-/* ── Impresión limpia (por si se imprime una tabla de posiciones) ── */
+ @media print {
+-  body {
+-    background: #fff;
+-    color: #000;
+-  }
+-}
+\ No newline at end of file
++  body { background: #fff; color: #000; }
++}
+diff --git a/src/screens/BuscadorClubesScreen.styles.js b/src/screens/BuscadorClubesScreen.styles.js
+index 41235c3..6e6eae7 100644
+--- a/src/screens/BuscadorClubesScreen.styles.js
++++ b/src/screens/BuscadorClubesScreen.styles.js
+@@ -60,7 +60,7 @@ export const styles = {
+     letterSpacing: '-0.3px'
+   },
+   badgeContador: {
+-    backgroundColor: 'rgba(57, 255, 20, 0.1)',
++    backgroundColor: 'rgba(190, 242, 100, 0.1)',
+     color: theme.colors.primary,
+     padding: '4px 10px',
+     borderRadius: '99px',
+@@ -144,10 +144,10 @@ export const styles = {
+     display: 'flex',
+     alignItems: 'center',
+     gap: '6px',
+-    backgroundColor: 'rgba(57, 255, 20, 0.08)',
++    backgroundColor: 'rgba(190, 242, 100, 0.08)',
+     padding: '8px 14px',
+     borderRadius: '99px',
+-    border: '1px solid rgba(57, 255, 20, 0.15)'
++    border: '1px solid rgba(190, 242, 100, 0.15)'
+   },
+   textoBadgeAccion: {
+     color: theme.colors.primary,
+@@ -177,8 +177,8 @@ export const styles = {
+   spinner: { 
+     width: '28px', 
+     height: '28px', 
+-    border: '3px solid rgba(57, 255, 20, 0.1)', 
+-    borderTop: '3px solid #39FF14', 
++    border: '3px solid rgba(190, 242, 100, 0.1)', 
++    borderTop: '3px solid #BEF264', 
+     borderRadius: '50%'
+   }
+ }
+\ No newline at end of file
+diff --git a/src/screens/ClasesScreen.styles.js b/src/screens/ClasesScreen.styles.js
+index d7dc2cb..43c296c 100644
+--- a/src/screens/ClasesScreen.styles.js
++++ b/src/screens/ClasesScreen.styles.js
+@@ -39,7 +39,7 @@ export const styles = {
+     alignItems: 'flex-start'
+   },
+   headerMiniRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' },
+-  tipoBadge: { fontSize: '10px', fontWeight: '800', color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: '0.6px', backgroundColor: 'rgba(57,255,20,0.1)', padding: '4px 8px', borderRadius: '999px' },
++  tipoBadge: { fontSize: '10px', fontWeight: '800', color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: '0.6px', backgroundColor: 'rgba(190, 242, 100,0.1)', padding: '4px 8px', borderRadius: '999px' },
+   claseName: { fontSize: '15px', fontWeight: '800', color: '#fff', margin: 0, letterSpacing: '-0.3px' },
+   claseDateTime: { color: '#EAEAEA', fontSize: '12px', fontWeight: '500', margin: '3px 0' },
+   profesorLabel: { color: '#8A8A8A', margin: 0, fontSize: '12px', fontWeight: '600' },
+@@ -67,7 +67,7 @@ export const styles = {
+     padding: '16px 20px', borderRadius: '999px',
+     backgroundColor: theme.colors.primary, color: '#0F0F10', border: 'none',
+     fontWeight: '800', fontSize: '14px', cursor: 'pointer',
+-    boxShadow: '0 16px 40px rgba(57, 255, 20, 0.18)',
++    boxShadow: '0 16px 40px rgba(190, 242, 100, 0.18)',
+     display: 'flex', alignItems: 'center', gap: '10px', zIndex: 200
+   },
+   fabIcon: { fontSize: '18px', lineHeight: 1 }
+diff --git a/src/screens/CrearClaseScreen.jsx b/src/screens/CrearClaseScreen.jsx
+index b55dc56..10dfe98 100644
+--- a/src/screens/CrearClaseScreen.jsx
++++ b/src/screens/CrearClaseScreen.jsx
+@@ -488,10 +488,10 @@ const CrearClaseScreen = () => {
+                   onClick={() => seleccionarHoraRapida(h)}
+                   style={{
+                     ...styles.botonHoraGrid,
+-                    backgroundColor: nuevaClase.hora === h ? '#39FF14' : 'rgba(255, 255, 255, 0.05)',
++                    backgroundColor: nuevaClase.hora === h ? '#BEF264' : 'rgba(255, 255, 255, 0.05)',
+                     color: nuevaClase.hora === h ? '#000' : '#FFF',
+-                    borderColor: nuevaClase.hora === h ? '#39FF14' : 'rgba(255, 255, 255, 0.1)',
+-                    boxShadow: nuevaClase.hora === h ? '0 8px 18px rgba(57, 255, 20, 0.2)' : 'none',
++                    borderColor: nuevaClase.hora === h ? '#BEF264' : 'rgba(255, 255, 255, 0.1)',
++                    boxShadow: nuevaClase.hora === h ? '0 8px 18px rgba(190, 242, 100, 0.2)' : 'none',
+                   }}
+                 >
+                   {h} hs
+diff --git a/src/screens/CrearClaseScreen.styles.js b/src/screens/CrearClaseScreen.styles.js
+index 2c6ed3f..47a59fa 100644
+--- a/src/screens/CrearClaseScreen.styles.js
++++ b/src/screens/CrearClaseScreen.styles.js
+@@ -205,7 +205,7 @@ export const styles = {
+     backgroundColor: theme.colors.primary,
+     color: '#000000',
+     borderColor: theme.colors.primary,
+-    boxShadow: '0 8px 20px rgba(57, 255, 20, 0.18)'
++    boxShadow: '0 8px 20px rgba(190, 242, 100, 0.18)'
+   },
+   botonModalHora: {
+     padding: '0 12px',
+@@ -227,7 +227,7 @@ export const styles = {
+     fontSize: '15px',
+     cursor: 'pointer', 
+     marginTop: '12px',
+-    boxShadow: '0 0 15px rgba(57, 255, 20, 0.3)',
++    boxShadow: '0 0 15px rgba(190, 242, 100, 0.3)',
+     transition: 'transform 0.1s ease'
+   },
+ 
+diff --git a/src/screens/CrearTorneoScreen.jsx b/src/screens/CrearTorneoScreen.jsx
+index ce4ff8f..d14b97f 100644
+--- a/src/screens/CrearTorneoScreen.jsx
++++ b/src/screens/CrearTorneoScreen.jsx
+@@ -194,10 +194,10 @@ const CrearTorneoScreen = () => {
+         <div style={{
+           ...styles.toast,
+           backgroundColor: toast.tipo === 'success' ? '#1c3d23' : '#3d1c1c',
+-          borderColor: toast.tipo === 'success' ? '#39FF14' : '#ff4d4d',
++          borderColor: toast.tipo === 'success' ? '#BEF264' : '#ff4d4d',
+         }}>
+-          <div style={{...styles.toastDot, backgroundColor: toast.tipo === 'success' ? '#39FF14' : '#ff4d4d'}} />
+-          <span style={{...styles.toastText, color: toast.tipo === 'success' ? '#39FF14' : '#ff4d4d'}}>{toast.mensaje}</span>
++          <div style={{...styles.toastDot, backgroundColor: toast.tipo === 'success' ? '#BEF264' : '#ff4d4d'}} />
++          <span style={{...styles.toastText, color: toast.tipo === 'success' ? '#BEF264' : '#ff4d4d'}}>{toast.mensaje}</span>
+         </div>
+       )}
+ 
+@@ -400,7 +400,7 @@ const CrearTorneoScreen = () => {
+               </div>
+             ) : (
+               <label style={styles.dropzone}>
+-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2" style={{ marginBottom: '8px' }}>
++                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BEF264" strokeWidth="2" style={{ marginBottom: '8px' }}>
+                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                   <polyline points="17 8 12 3 7 8"></polyline>
+                   <line x1="12" y1="3" x2="12" y2="15"></line>
+diff --git a/src/screens/CrearTorneoScreen.styles.js b/src/screens/CrearTorneoScreen.styles.js
+index fd2e614..c3688b2 100644
+--- a/src/screens/CrearTorneoScreen.styles.js
++++ b/src/screens/CrearTorneoScreen.styles.js
+@@ -53,7 +53,7 @@ export const styles = {
+     transition: 'all 0.2s ease'
+   },
+   tipoTorneoCardActive: {
+-    backgroundColor: 'rgba(57, 255, 20, 0.1)',
++    backgroundColor: 'rgba(190, 242, 100, 0.1)',
+     borderColor: theme.colors.primary
+   },
+   tipoTorneoCardAmericanoActive: {
+@@ -104,7 +104,7 @@ export const styles = {
+     padding: '14px 16px',
+     borderRadius: '12px',
+     backgroundColor: '#1C1C1E',
+-    border: '1px solid rgba(57, 255, 20, 0.3)',
++    border: '1px solid rgba(190, 242, 100, 0.3)',
+     color: theme.colors.primary,
+     fontSize: '15px',
+     fontWeight: '600',
+@@ -139,20 +139,20 @@ export const styles = {
+   chipActivo: {
+     flex: '0 0 auto',
+     padding: '12px 24px',
+-    backgroundColor: 'rgba(57, 255, 20, 0.12)', 
+-    border: '1px solid #39FF14',
++    backgroundColor: 'rgba(190, 242, 100, 0.12)', 
++    border: '1px solid #BEF264',
+     borderRadius: '16px',
+     color: theme.colors.primary,
+     fontSize: '14px',
+     fontWeight: '700',
+     cursor: 'pointer',
+-    boxShadow: '0 4px 12px rgba(57, 255, 20, 0.2)'
++    boxShadow: '0 4px 12px rgba(190, 242, 100, 0.2)'
+   },
+   chipCupoActivo: {
+     flex: '0 0 auto',
+     padding: '12px 24px',
+     backgroundColor: 'rgba(0, 229, 255, 0.12)', 
+-    border: '1px solid #00E5FF',
++    border: '1px solid #34D399',
+     borderRadius: '16px',
+     color: theme.colors.secondaryGlow,
+     fontSize: '14px',
+@@ -169,9 +169,9 @@ export const styles = {
+     alignItems: 'center',
+     justifyContent: 'center',
+     height: '130px',
+-    border: '1px dashed rgba(57, 255, 20, 0.3)',
++    border: '1px dashed rgba(190, 242, 100, 0.3)',
+     borderRadius: '16px',
+-    backgroundColor: 'rgba(57, 255, 20, 0.01)',
++    backgroundColor: 'rgba(190, 242, 100, 0.01)',
+     cursor: 'pointer'
+   },
+   previewContainer: {
+@@ -209,7 +209,7 @@ export const styles = {
+     fontWeight: '800',
+     cursor: 'pointer',
+     marginTop: '10px',
+-    boxShadow: '0px 8px 24px rgba(57, 255, 20, 0.3)',
++    boxShadow: '0px 8px 24px rgba(190, 242, 100, 0.3)',
+     transition: 'all 0.1s ease'
+   },
+   btnSubmitDisabled: {
+diff --git a/src/screens/DashboardScreen.jsx b/src/screens/DashboardScreen.jsx
+index 90be9bc..2e178bf 100644
+--- a/src/screens/DashboardScreen.jsx
++++ b/src/screens/DashboardScreen.jsx
+@@ -1,4 +1,9 @@
+ // src/screens/DashboardScreen.jsx
++// ───────────────────────────────────────────────────────────
++// Refactor v2: agrega tarjeta de nivel/progreso y grilla de
++// acciones rápidas. Mantiene TODA la lógica de React Query y
++// la API intacta.
++// ───────────────────────────────────────────────────────────
+ import React, { useContext } from 'react';
+ import { AuthContext } from '../context/AuthContext';
+ import { useNavigate } from 'react-router-dom';
+@@ -10,11 +15,11 @@ import { styles } from './DashboardScreen.styles';
+ 
+ const DashboardScreen = () => {
+   const { usuario } = useContext(AuthContext);
+-  const navigate = useNavigate(); 
++  const navigate = useNavigate();
+   const { mostrarNotificacion } = useNotification();
+ 
+   const { data, isLoading, isError, refetch } = useQuery({
+-    queryKey: ['dashboardDatos'], 
++    queryKey: ['dashboardDatos'],
+     queryFn: async () => {
+       const [resComplejos, resPartidos, resTorneos] = await Promise.all([
+         API.get('/complejos'),
+@@ -29,30 +34,27 @@ const DashboardScreen = () => {
+     }
+   });
+ 
+-  // 🛠️ FUNCIÓN PARA VERIFICAR SI UN EVENTO YA PASÓ
++  // 🛠️ Verificar si un evento ya pasó
+   const esFechaFutura = (fechaEvento, horaEvento) => {
+     try {
+       const ahora = new Date();
+-      // Asumimos formato YYYY-MM-DD o ISO string.
+       const fechaLimpia = fechaEvento.split('T')[0];
+       const horaLimpia = horaEvento ? horaEvento.slice(0, 5) : "00:00";
+-      
+       const momentoEvento = new Date(`${fechaLimpia}T${horaLimpia}:00`);
+       return momentoEvento > ahora;
+     } catch (e) {
+-      return true; // En caso de error de formateo, no lo ocultamos por seguridad
++      return true;
+     }
+   };
+ 
+-
+   const complejos = data?.complejos || [];
+-  
+-  // 🔥 FILTRADO EN TIEMPO REAL: Solo partidos y torneos futuros o vigentes
+-  const partidosAbiertos = (data?.partidosAbiertos || []).filter(p => 
++
++  // 🔥 Filtrado en tiempo real
++  const partidosAbiertos = (data?.partidosAbiertos || []).filter(p =>
+     esFechaFutura(p.fecha, p.horaInicio || p.hora)
+   );
+ 
+-  const torneosActivos = (data?.torneos || []).filter(t => 
++  const torneosActivos = (data?.torneos || []).filter(t =>
+     esFechaFutura(t.fechaInicio, "00:00")
+   );
+ 
+@@ -63,41 +65,57 @@ const DashboardScreen = () => {
+     try {
+       const res = await API.post(`/turnos/${partidoId}/inscripciones`);
+       mostrarNotificacion(res.data.message, 'success');
+-      refetch(); 
++      refetch();
+     } catch (err) {
+       mostrarNotificacion(err.response?.data?.error || "Error al unirse al partido.", 'error');
+     }
+   };
+ 
+-  const categorias = [
++  // Datos de nivel (mockeado desde el usuario; ajustar a tu API si tenés endpoints de nivel)
++  const partidosJugados = usuario?.partidosJugados || 24;
++  const nivel = usuario?.nivel || 3;
++  const progresoNivel = usuario?.progresoNivel || 62;
++
++  // Acciones rápidas en grilla (reemplaza las píldoras horizontales)
++  const accionesRapidas = [
++    { nombre: 'Reservar', icono: '📅', ruta: '/turnos', destacar: true },
++    { nombre: 'Partidos', icono: '🎾', ruta: '/turnos' },
+     { nombre: 'Clases', icono: '🎓', ruta: '/clases' },
++    { nombre: 'Tienda', icono: '🛍️', ruta: '/tienda' },
++  ];
++
++  const categorias = [
+     { nombre: 'Torneos', icono: '🏆', ruta: '/torneos' },
+     { nombre: 'Ranking', icono: '🏅', ruta: '/ranking' },
+-    { nombre: 'Tienda', icono: '🛍️', ruta: '/tienda' }
+   ];
+ 
+   return (
+     <div style={styles.contenedorPadre}>
+-      
++
+       {/* CABECERA */}
+       <div style={styles.headerPremium}>
+         <div>
+           <p style={styles.subtituloPremium}>Bienvenido de vuelta,</p>
+           <h1 style={styles.tituloBienvenida}>
+-            {usuario?.nombre || 'Jugador'} <span style={{fontSize: '24px'}}>👋</span>
++            {usuario?.nombre || 'Jugador'} <span style={{ fontSize: '24px' }}>👋</span>
+           </h1>
+         </div>
+-        
++
+         {usuario?.rol === 'admin_complejo' ? (
+           <button onClick={() => navigate('/gestion-complejo')} style={styles.botonAdmin}>
+             ⚙️ Mi Club
+           </button>
+         ) : (
+-          <div style={styles.avatarMiniatura}>
++          <div
++            style={styles.avatarMiniatura}
++            onClick={() => navigate('/perfil')}
++            role="button"
++            tabIndex={0}
++          >
+             {usuario?.imagenPerfil ? (
+-              <img 
+-                src={resolverUrlImagen(usuario.imagenPerfil)} 
+-                alt="Perfil" 
++              <img
++                src={resolverUrlImagen(usuario.imagenPerfil)}
++                alt="Perfil"
+                 style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }}
+               />
+             ) : (
+@@ -107,12 +125,70 @@ const DashboardScreen = () => {
+         )}
+       </div>
+ 
+-      {/* CATEGORÍAS */}
+-      <div style={styles.scrollHorizontalContenedor}>
+-        {categorias.map((cat, index) => (
+-          <button key={index} style={styles.pildoraCategoria} onClick={() => navigate(cat.ruta)}>
+-            <span style={{ fontSize: '18px' }}>{cat.icono}</span>
+-            <span style={{ fontWeight: '600' }}>{cat.nombre}</span>
++      {/* TARJETA DE NIVEL / PROGRESO (nueva) */}
++      <div style={styles.tarjetaNivel}>
++        <div style={styles.tarjetaNivelGlow} />
++        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
++          <div>
++            <p style={styles.nivelLabel}>Nivel {nivel}</p>
++            <p style={styles.nivelTitulo}>
++              {partidosJugados} <span style={styles.nivelTituloChico}>partidos jugados</span>
++            </p>
++          </div>
++          <div style={styles.nivelIcono}>🔥</div>
++        </div>
++        <div style={{ position: 'relative', marginTop: '16px' }}>
++          <div style={styles.progresoHeader}>
++            <span style={styles.progresoLabel}>Progreso al nivel {nivel + 1}</span>
++            <span style={styles.progresoValor}>{progresoNivel}%</span>
++          </div>
++          <div style={styles.progresoTrack}>
++            <div
++              style={{ ...styles.progresoFill, width: `${progresoNivel}%` }}
++            />
++          </div>
++        </div>
++      </div>
++
++      {/* GRILLA DE ACCIONES RÁPIDAS (nueva) */}
++      <div style={styles.grillaAcciones}>
++        {accionesRapidas.map((cat) => (
++          <button
++            key={cat.nombre}
++            style={styles.accionRapida}
++            onClick={() => navigate(cat.ruta)}
++          >
++            <span style={{ ...styles.accionRapidaIcono, ...(cat.destacar ? styles.accionRapidaIconoDestacado : {}) }}>
++              {cat.icono}
++            </span>
++            <span style={styles.accionRapidaLabel}>{cat.nombre}</span>
++          </button>
++        ))}
++      </div>
++
++      {/* PILDOAS SECUNDARIAS (Torneos / Ranking) */}
++      <div style={{ ...styles.scrollHorizontalContenedor, marginBottom: '24px' }}>
++        {categorias.map((cat) => (
++          <button
++            key={cat.nombre}
++            onClick={() => navigate(cat.ruta)}
++            style={{
++              display: 'flex',
++              alignItems: 'center',
++              gap: '8px',
++              padding: '10px 18px',
++              backgroundColor: 'rgba(255,255,255,0.04)',
++              border: `1px solid ${'rgba(255,255,255,0.08)'}`,
++              borderRadius: '999px',
++              color: '#fff',
++              fontSize: '13px',
++              fontWeight: '600',
++              whiteSpace: 'nowrap',
++              cursor: 'pointer',
++            }}
++          >
++            <span style={{ fontSize: '16px' }}>{cat.icono}</span>
++            {cat.nombre}
+           </button>
+         ))}
+       </div>
+@@ -140,10 +216,10 @@ const DashboardScreen = () => {
+               {partidosAbiertos.length > 0 ? (
+                 partidosAbiertos.map((partido) => {
+                   const jugadoresAnotados = partido.inscripcionesPartido?.length || 0;
+-                  const lugaresLibres = 4 - jugadoresAnotados; 
++                  const lugaresLibres = 4 - jugadoresAnotados;
+                   const estaLleno = lugaresLibres <= 0;
+-                  
+-                  // Traemos la imagen del creador (usuario que reservó/abrió el partido)
++                  const porcentaje = Math.round((jugadoresAnotados / 4) * 100);
++
+                   const creadorFoto = partido.jugador?.imagenPerfil || partido.usuarioCreador?.imagenPerfil || partido.usuario?.imagenPerfil;
+                   const creadorNombre = partido.jugador ? `${partido.jugador.nombre} ${partido.jugador.apellido}` : null;
+ 
+@@ -151,42 +227,47 @@ const DashboardScreen = () => {
+                     <div key={partido.id} style={styles.tarjetaHorizontal}>
+                       <div style={styles.tarjetaHorizontalHeader}>
+                         <span style={styles.badgeClub}>{partido.cancha?.complejo?.nombre || 'Complejo'}</span>
+-                        <span style={{ color: '#8E8E93', fontSize: '12px', fontWeight: '500' }}>
++                        <span style={styles.badgeFecha}>
+                           {partido.fechaFormateada || partido.fecha?.split('T')[0]}
+                         </span>
+                       </div>
+-                      
+-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', margin: '12px 0' }}>
+-                        {/* 📸 FOTO DINÁMICA DEL CREADOR DEL PARTIDO */}
++
++                      <div style={styles.partidoCuerpo}>
+                         {creadorFoto ? (
+-                          <img 
+-                            src={resolverUrlImagen(creadorFoto)} 
+-                            alt="Creador" 
++                          <img
++                            src={resolverUrlImagen(creadorFoto)}
++                            alt="Creador"
+                             style={styles.imagenCreadorPartido}
+                           />
+                         ) : (
+                           <div style={styles.iconoLlamativo}>🎾</div>
+                         )}
+                         <div>
+-                          <h3 style={{ margin: 0, color: '#fff', fontSize: '16px' }}>{partido.horaInicio?.slice(0,5) || partido.hora} hs</h3>
++                          <h3 style={styles.partidoHora}>{partido.horaInicio?.slice(0, 5) || partido.hora} hs</h3>
+                           {creadorNombre && (
+-                            <p style={{ margin: '4px 0 0 0', color: '#8E8E93', fontSize: '12px' }}>
+-                              Organizado por {creadorNombre}
+-                            </p>
++                            <p style={styles.partidoCreador}>Organizado por {creadorNombre}</p>
+                           )}
+-                          <p style={{ margin: '6px 0 0 0', color: estaLleno ? '#ff4d4d' : '#39FF14', fontSize: '13px', fontWeight: '600' }}>
++                          <p style={{ ...styles.partidoCupos, color: estaLleno ? '#FF6B6B' : '#BEF264' }}>
+                             {estaLleno ? 'Partido Lleno' : `Faltan ${lugaresLibres} jugador${lugaresLibres > 1 ? 'es' : ''}`}
+                           </p>
+                         </div>
+                       </div>
+ 
+-                      <button 
++                      {/* Barra de progreso de cupos (nueva) */}
++                      <div style={styles.partidoProgresoTrack}>
++                        <div
++                          style={{ ...styles.partidoProgresoFill, width: `${porcentaje}%` }}
++                        />
++                      </div>
++
++                      <button
+                         onClick={() => handleUnirsePartido(partido.id)}
+                         disabled={estaLleno}
+                         style={{
+                           ...styles.botonAccionPrimario,
+-                          backgroundColor: estaLleno ? 'rgba(255,255,255,0.05)' : '#39FF14',
+-                          color: estaLleno ? '#555' : '#0F0F10',
++                          backgroundColor: estaLleno ? 'rgba(255,255,255,0.05)' : '#BEF264',
++                          color: estaLleno ? '#555' : '#0B0F0D',
++                          cursor: estaLleno ? 'not-allowed' : 'pointer',
+                         }}>
+                         {estaLleno ? 'Cerrado' : 'Anotarme al partido'}
+                       </button>
+@@ -203,31 +284,37 @@ const DashboardScreen = () => {
+           <div style={styles.seccionContenedor}>
+             <div style={styles.seccionHeader}>
+               <h2 style={styles.seccionTitulo}>Torneos Destacados</h2>
++              <span style={styles.verTodosText} onClick={() => navigate('/torneos')}>Ver todos</span>
+             </div>
+ 
+-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
++            <div style={styles.torneosLista}>
+               {torneosActivos.length > 0 ? (
+                 torneosActivos.slice(0, 3).map((torneo) => {
+                   const portadaTorneo = torneo.imagenPortada || torneo.imagen;
+ 
+                   return (
+-                    <div key={torneo.id} style={styles.tarjetaLista} onClick={() => navigate('/torneos')}>
+-                      {/* 📸 IMAGEN DE PORTADA DEL TORNEO */}
++                    <div
++                      key={torneo.id}
++                      style={styles.tarjetaLista}
++                      onClick={() => navigate('/torneos')}
++                      role="button"
++                      tabIndex={0}
++                    >
+                       {portadaTorneo ? (
+-                        <img 
+-                          src={resolverUrlImagen(portadaTorneo)} 
+-                          alt={torneo.nombre} 
++                        <img
++                          src={resolverUrlImagen(portadaTorneo)}
++                          alt={torneo.nombre}
+                           style={styles.imagenPortadaTorneo}
+                         />
+                       ) : (
+                         <div style={styles.tarjetaListaIcono}>🏆</div>
+                       )}
+-                      
+-                      <div style={{ flex: 1 }}>
+-                        <h4 style={{ margin: '0 0 4px 0', color: '#fff', fontSize: '15px' }}>{torneo.nombre}</h4>
+-                        <p style={{ margin: 0, color: '#8E8E93', fontSize: '12px' }}>Inicia: {torneo.fechaInicio?.split('T')[0]}</p>
++
++                      <div style={styles.torneoListaInfo}>
++                        <h4 style={styles.torneoListaTitulo}>{torneo.nombre}</h4>
++                        <p style={styles.torneoListaSub}>Inicia: {torneo.fechaInicio?.split('T')[0]}</p>
+                       </div>
+-                      <div style={{ color: '#39FF14', fontWeight: '600', fontSize: '14px' }}>
++                      <div style={styles.torneoListaPrecio}>
+                         ${torneo.precioInscripcion}
+                       </div>
+                     </div>
+@@ -244,4 +331,4 @@ const DashboardScreen = () => {
+   );
+ };
+ 
+-export default DashboardScreen;
+\ No newline at end of file
++export default DashboardScreen;
+diff --git a/src/screens/DashboardScreen.styles.js b/src/screens/DashboardScreen.styles.js
+index 08f19c5..0d5e45a 100644
+--- a/src/screens/DashboardScreen.styles.js
++++ b/src/screens/DashboardScreen.styles.js
+@@ -1,178 +1,385 @@
+ // src/screens/DashboardScreen.styles.js
++// ───────────────────────────────────────────────────────────
++// Refactor v2: usa tokens del theme, agrega tarjeta de nivel
++// con barra de progreso, grilla de acciones rápidas y tarjetas
++// de partido más densas y legibles.
++// ───────────────────────────────────────────────────────────
+ import { theme } from '../theme';
+ 
+ export const styles = {
+-  contenedorPadre: { 
+-    /* El espacio inferior para la barra de navegación lo aporta el Layout.
+-       (Antes había un paddingBottom que era pisado por este shorthand y
+-       generaba comportamientos distintos según la pantalla.) */
+-    padding: '16px 16px 32px 16px', 
+-    backgroundColor: 'transparent', 
+-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+-  },
+-  headerPremium: { 
+-    display: 'flex', 
+-    justifyContent: 'space-between', 
+-    alignItems: 'center', 
+-    marginBottom: '24px' 
+-  },
+-  subtituloPremium: { 
+-    fontSize: '13px', 
+-    color: '#8E8E93', 
++  contenedorPadre: {
++    padding: '16px 16px 32px 16px',
++    backgroundColor: 'transparent',
++    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
++  },
++
++  // ── CABECERA ──
++  headerPremium: {
++    display: 'flex',
++    justifyContent: 'space-between',
++    alignItems: 'center',
++    marginBottom: '20px',
++  },
++  subtituloPremium: {
++    fontSize: '13px',
++    color: theme.colors.textMuted,
+     margin: '0 0 4px 0',
+-    fontWeight: '500'
++    fontWeight: '500',
+   },
+-  tituloBienvenida: { 
+-    fontSize: '24px', 
+-    fontWeight: '800', 
+-    color: theme.colors.text, 
++  tituloBienvenida: {
++    fontSize: '24px',
++    fontWeight: '800',
++    color: theme.colors.text,
+     margin: 0,
+-    letterSpacing: '-0.5px'
++    letterSpacing: '-0.5px',
+   },
+   avatarMiniatura: {
+     width: '44px',
+     height: '44px',
+     borderRadius: '22px',
+-    backgroundColor: '#1A1A1A',
+-    border: '1px solid rgba(57, 255, 20, 0.3)',
++    backgroundColor: theme.colors.surface,
++    border: `1px solid ${theme.colors.primaryGlow}`,
+     color: theme.colors.primary,
+     display: 'flex',
+     alignItems: 'center',
+     justifyContent: 'center',
+     fontWeight: '700',
+     fontSize: '18px',
+-    overflow: 'hidden'
++    overflow: 'hidden',
++    cursor: 'pointer',
+   },
+   botonAdmin: {
+-    backgroundColor: 'rgba(57, 255, 20, 0.1)',
++    backgroundColor: theme.colors.primarySoft,
+     color: theme.colors.primary,
+-    border: '1px solid rgba(57, 255, 20, 0.2)',
++    border: `1px solid ${theme.colors.primaryGlow}`,
+     padding: '8px 12px',
+-    borderRadius: '12px',
++    borderRadius: theme.borderRadius.md,
+     fontWeight: '600',
+     fontSize: '12px',
+-    cursor: 'pointer'
++    cursor: 'pointer',
+   },
+-  scrollHorizontalContenedor: {
++
++  // ── TARJETA DE NIVEL / PROGRESO (nueva) ──
++  tarjetaNivel: {
++    position: 'relative',
++    overflow: 'hidden',
++    borderRadius: theme.borderRadius.xl,
++    border: `1px solid ${theme.colors.border}`,
++    padding: '20px',
++    marginBottom: '20px',
++    background: `linear-gradient(135deg, ${theme.colors.primarySoft} 0%, ${theme.colors.surface} 55%, ${theme.colors.surface} 100%)`,
++  },
++  tarjetaNivelGlow: {
++    position: 'absolute',
++    right: '-32px',
++    top: '-40px',
++    width: '160px',
++    height: '160px',
++    borderRadius: '50%',
++    backgroundColor: theme.colors.primary,
++    opacity: '0.15',
++    filter: 'blur(48px)',
++    pointerEvents: 'none',
++  },
++  nivelLabel: {
++    fontSize: '11px',
++    fontWeight: '700',
++    letterSpacing: '1px',
++    textTransform: 'uppercase',
++    color: theme.colors.primaryDeep,
++    margin: 0,
++  },
++  nivelTitulo: {
++    fontSize: '22px',
++    fontWeight: '800',
++    color: theme.colors.text,
++    margin: '4px 0 0 0',
++  },
++  nivelTituloChico: {
++    fontSize: '13px',
++    fontWeight: '400',
++    color: theme.colors.textSecondary,
++  },
++  nivelIcono: {
++    width: '48px',
++    height: '48px',
++    borderRadius: theme.borderRadius.lg,
++    backgroundColor: theme.colors.primarySoft,
++    border: `1px solid ${theme.colors.primaryGlow}`,
+     display: 'flex',
+-    overflowX: 'auto',
+-    gap: '12px',
+-    paddingBottom: '12px',
+-    marginBottom: '24px',
+-    msOverflowStyle: 'none',
+-    scrollbarWidth: 'none', 
++    alignItems: 'center',
++    justifyContent: 'center',
++    fontSize: '22px',
+   },
+-  pildoraCategoria: {
++  progresoHeader: {
+     display: 'flex',
++    justifyContent: 'space-between',
+     alignItems: 'center',
++    marginBottom: '6px',
++  },
++  progresoLabel: {
++    fontSize: '12px',
++    color: theme.colors.textSecondary,
++  },
++  progresoValor: {
++    fontSize: '12px',
++    fontWeight: '700',
++    color: theme.colors.primary,
++  },
++  progresoTrack: {
++    height: '8px',
++    borderRadius: '999px',
++    backgroundColor: 'rgba(255,255,255,0.08)',
++    overflow: 'hidden',
++  },
++  progresoFill: {
++    height: '100%',
++    borderRadius: '999px',
++    background: `linear-gradient(90deg, ${theme.colors.primary} 0%, ${theme.colors.secondaryGlow} 100%)`,
++    transition: 'width 0.9s cubic-bezier(0.4,0,0.2,1)',
++  },
++
++  // ── GRILLA DE ACCIONES RÁPIDAS (nueva) ──
++  grillaAcciones: {
++    display: 'grid',
++    gridTemplateColumns: 'repeat(4, 1fr)',
+     gap: '8px',
+-    padding: '10px 20px',
+-    backgroundColor: 'rgba(255,255,255,0.05)',
+-    border: '1px solid rgba(255,255,255,0.08)',
+-    borderRadius: '24px',
+-    color: '#fff',
+-    fontSize: '14px',
+-    whiteSpace: 'nowrap',
++    marginBottom: '24px',
++  },
++  accionRapida: {
++    display: 'flex',
++    flexDirection: 'column',
++    alignItems: 'center',
++    gap: '6px',
++    background: 'none',
++    border: 'none',
+     cursor: 'pointer',
++    padding: 0,
++  },
++  accionRapidaIcono: {
++    width: '100%',
++    height: '52px',
++    borderRadius: theme.borderRadius.lg,
++    display: 'flex',
++    alignItems: 'center',
++    justifyContent: 'center',
++    fontSize: '20px',
++    border: `1px solid ${theme.colors.border}`,
++    backgroundColor: theme.colors.surface,
++    transition: 'all 0.2s ease',
+   },
+-  seccionContenedor: { marginBottom: '32px' },
+-  seccionHeader: { 
+-    display: 'flex', 
+-    justifyContent: 'space-between', 
+-    alignItems: 'center', 
+-    marginBottom: '16px' 
++  accionRapidaIconoDestacado: {
++    backgroundColor: theme.colors.primarySoft,
++    border: `1px solid ${theme.colors.primaryGlow}`,
+   },
+-  seccionTitulo: { 
+-    fontSize: '18px', 
+-    fontWeight: '700', 
+-    color: '#fff', 
+-    margin: 0 
++  accionRapidaLabel: {
++    fontSize: '11px',
++    fontWeight: '500',
++    color: theme.colors.textSecondary,
++  },
++
++  // ── SECCIONES ──
++  seccionContenedor: { marginBottom: '28px' },
++  seccionHeader: {
++    display: 'flex',
++    justifyContent: 'space-between',
++    alignItems: 'center',
++    marginBottom: '14px',
++  },
++  seccionTitulo: {
++    fontSize: '17px',
++    fontWeight: '700',
++    color: theme.colors.text,
++    margin: 0,
+   },
+   verTodosText: {
+     color: theme.colors.primary,
+     fontSize: '13px',
+     fontWeight: '600',
+-    cursor: 'pointer'
++    cursor: 'pointer',
++  },
++
++  // ── TARJETA DE PARTIDO (horizontal) ──
++  scrollHorizontalContenedor: {
++    display: 'flex',
++    overflowX: 'auto',
++    gap: '12px',
++    paddingBottom: '12px',
++    msOverflowStyle: 'none',
++    scrollbarWidth: 'none',
+   },
+   tarjetaHorizontal: {
+-    minWidth: '260px',
+-    maxWidth: '260px',
+-    backgroundColor: '#161618',
+-    borderRadius: '24px',
+-    padding: '20px',
+-    border: '1px solid rgba(255,255,255,0.03)',
+-    boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
++    minWidth: '240px',
++    maxWidth: '240px',
++    backgroundColor: theme.colors.surface,
++    borderRadius: theme.borderRadius.xl,
++    padding: '18px',
++    border: `1px solid ${theme.colors.border}`,
++    boxShadow: theme.shadows.card,
++    boxSizing: 'border-box',
+   },
+   tarjetaHorizontalHeader: {
+     display: 'flex',
+     justifyContent: 'space-between',
+-    alignItems: 'center'
++    alignItems: 'center',
+   },
+   badgeClub: {
+-    backgroundColor: 'rgba(255,255,255,0.1)',
+-    color: '#EAEAEA',
++    backgroundColor: theme.colors.primarySoft,
++    color: theme.colors.primary,
+     padding: '4px 10px',
+-    borderRadius: '12px',
++    borderRadius: theme.borderRadius.pill,
+     fontSize: '10px',
+     fontWeight: '700',
+-    textTransform: 'uppercase'
++    textTransform: 'uppercase',
++    letterSpacing: '0.3px',
++  },
++  badgeFecha: {
++    color: theme.colors.textMuted,
++    fontSize: '12px',
++    fontWeight: '500',
++  },
++  partidoCuerpo: {
++    display: 'flex',
++    alignItems: 'center',
++    gap: '12px',
++    margin: '14px 0',
+   },
+   iconoLlamativo: {
+     width: '48px',
+     height: '48px',
+-    borderRadius: '16px',
+-    backgroundColor: 'rgba(57, 255, 20, 0.1)',
++    borderRadius: theme.borderRadius.lg,
++    backgroundColor: theme.colors.primarySoft,
+     display: 'flex',
+     alignItems: 'center',
+     justifyContent: 'center',
+-    fontSize: '24px'
++    fontSize: '24px',
+   },
+   imagenCreadorPartido: {
+     width: '48px',
+     height: '48px',
+-    borderRadius: '16px',
++    borderRadius: theme.borderRadius.lg,
+     objectFit: 'cover',
+-    border: '1px solid rgba(255,255,255,0.1)'
++    border: `1px solid ${theme.colors.border}`,
++  },
++  partidoHora: {
++    margin: 0,
++    color: theme.colors.text,
++    fontSize: '16px',
++    fontWeight: '700',
++  },
++  partidoCreador: {
++    margin: '4px 0 0 0',
++    color: theme.colors.textMuted,
++    fontSize: '12px',
++  },
++  partidoCupos: {
++    margin: '6px 0 0 0',
++    fontSize: '13px',
++    fontWeight: '600',
++  },
++  partidoProgresoTrack: {
++    height: '6px',
++    borderRadius: '999px',
++    backgroundColor: 'rgba(255,255,255,0.08)',
++    overflow: 'hidden',
++    marginTop: '10px',
++  },
++  partidoProgresoFill: {
++    height: '100%',
++    borderRadius: '999px',
++    background: `linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.secondaryGlow})`,
+   },
+   botonAccionPrimario: {
+     width: '100%',
+     padding: '12px',
+-    borderRadius: '14px',
++    borderRadius: theme.borderRadius.lg,
+     border: 'none',
+     fontWeight: '700',
+     fontSize: '14px',
+-    marginTop: '8px',
+-    cursor: 'pointer'
++    marginTop: '12px',
++    cursor: 'pointer',
++    transition: 'transform 0.15s ease',
++  },
++
++  // ── TARJETA DE TORNEO (lista) ──
++  torneosLista: {
++    display: 'flex',
++    flexDirection: 'column',
++    gap: '10px',
+   },
+   tarjetaLista: {
+     display: 'flex',
+     alignItems: 'center',
+-    gap: '16px',
+-    backgroundColor: '#161618',
+-    padding: '16px',
+-    borderRadius: '20px',
+-    border: '1px solid rgba(255,255,255,0.03)',
+-    cursor: 'pointer'
++    gap: '14px',
++    backgroundColor: theme.colors.surface,
++    padding: '14px',
++    borderRadius: theme.borderRadius.lg,
++    border: `1px solid ${theme.colors.border}`,
++    cursor: 'pointer',
++    transition: 'border-color 0.2s ease',
+   },
+   tarjetaListaIcono: {
+-    fontSize: '24px',
++    fontSize: '22px',
+     backgroundColor: 'rgba(255,255,255,0.05)',
+     width: '48px',
+     height: '48px',
+-    borderRadius: '16px',
++    borderRadius: theme.borderRadius.lg,
+     display: 'flex',
+     alignItems: 'center',
+-    justifyContent: 'center'
++    justifyContent: 'center',
++    flexShrink: 0,
+   },
+   imagenPortadaTorneo: {
+     width: '48px',
+     height: '48px',
+-    borderRadius: '16px',
++    borderRadius: theme.borderRadius.lg,
+     objectFit: 'cover',
+-    border: '1px solid rgba(255,255,255,0.05)'
++    border: `1px solid ${theme.colors.border}`,
++    flexShrink: 0,
++  },
++  torneoListaInfo: { flex: 1, minWidth: 0 },
++  torneoListaTitulo: {
++    margin: '0 0 3px 0',
++    color: theme.colors.text,
++    fontSize: '15px',
++    fontWeight: '700',
++  },
++  torneoListaSub: {
++    margin: 0,
++    color: theme.colors.textMuted,
++    fontSize: '12px',
++  },
++  torneoListaPrecio: {
++    color: theme.colors.primary,
++    fontWeight: '700',
++    fontSize: '14px',
++    flexShrink: 0,
++  },
++
++  // ── ESTADOS ──
++  textoVacio: {
++    color: theme.colors.textMuted,
++    fontSize: '14px',
++    margin: '8px 0',
++  },
++  loadingContainer: {
++    display: 'flex',
++    justifyContent: 'center',
++    padding: '40px',
++  },
++  spinner: {
++    width: '32px',
++    height: '32px',
++    border: `3px solid ${theme.colors.primarySoft}`,
++    borderTop: `3px solid ${theme.colors.primary}`,
++    borderRadius: '50%',
++    animation: 'spin 1s linear infinite',
++  },
++  alerta: {
++    backgroundColor: theme.colors.dangerSoft,
++    color: theme.colors.danger,
++    padding: '16px',
++    borderRadius: theme.borderRadius.md,
++    fontWeight: '600',
+   },
+-  textoVacio: { color: '#8E8E93', fontSize: '14px', margin: '8px 0' },
+-  loadingContainer: { display: 'flex', justifyContent: 'center', padding: '40px' },
+-  spinner: { width: '32px', height: '32px', border: '3px solid rgba(57, 255, 20, 0.2)', borderTop: '3px solid #39FF14', borderRadius: '50%', animation: 'spin 1s linear infinite' },
+-  alerta: { backgroundColor: 'rgba(255,51,51,0.1)', color: '#ff4d4d', padding: '16px', borderRadius: '12px', fontWeight: '600' },
+-}
+\ No newline at end of file
++};
+diff --git a/src/screens/GestionComplejo.jsx b/src/screens/GestionComplejo.jsx
+index 48b3294..ab1efb3 100644
+--- a/src/screens/GestionComplejo.jsx
++++ b/src/screens/GestionComplejo.jsx
+@@ -247,7 +247,7 @@ const GestionComplejo = () => {
+     return (
+       <div style={styles.contenedorBase}>
+         <div style={styles.tarjetaCentralForm}>
+-          <h2 style={{ color: '#39FF14', margin: '0 0 10px 0', fontWeight: '800' }}>¡Bienvenido, Administrador!</h2>
++          <h2 style={{ color: '#BEF264', margin: '0 0 10px 0', fontWeight: '800' }}>¡Bienvenido, Administrador!</h2>
+           <p style={{ color: '#A0A0A5', marginBottom: '24px', fontSize: '14px', lineHeight: '1.4' }}>Para comenzar a recibir reservas, primero registra los datos de tu complejo.</p>
+           <form onSubmit={gestionarCrearMiComplejo} style={styles.formulario}>
+             <input 
+@@ -327,7 +327,7 @@ const GestionComplejo = () => {
+           <div style={styles.tarjetaMetrica}>
+             <span style={styles.metricaLabel}>Artículos Tienda</span>
+             <div style={styles.metricaFilaValor}>
+-              <span style={{...styles.metricaNumero, color: '#39FF14'}}>{productos.length}</span>
++              <span style={{...styles.metricaNumero, color: '#BEF264'}}>{productos.length}</span>
+             </div>
+           </div>
+ 
+@@ -371,8 +371,8 @@ const GestionComplejo = () => {
+                                 <span style={styles.horaReserva}>{turno.horaInicio} - {turno.horaFin} hs</span>
+                                 <span style={{
+                                   ...styles.badgeEstadoReserva,
+-                                  color: esAbierto ? '#00ccff' : '#39FF14',
+-                                  backgroundColor: esAbierto ? 'rgba(0, 204, 255, 0.1)' : 'rgba(57, 255, 20, 0.1)'
++                                  color: esAbierto ? '#00ccff' : '#BEF264',
++                                  backgroundColor: esAbierto ? 'rgba(0, 204, 255, 0.1)' : 'rgba(190, 242, 100, 0.1)'
+                                 }}>
+                                   {esAbierto ? 'Abierto' : 'Normal'}
+                                 </span>
+@@ -417,7 +417,7 @@ const GestionComplejo = () => {
+                     <div style={{ fontSize: 12, color: '#8E8E93' }}>{t.fechaInicio} → {t.fechaFin}</div>
+                   </div>
+                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+-                    <div style={{ fontSize: 12, color: '#39FF14', fontWeight: 800 }}>{(t.inscripciones || []).length} parejas</div>
++                    <div style={{ fontSize: 12, color: '#BEF264', fontWeight: 800 }}>{(t.inscripciones || []).length} parejas</div>
+                     <button onClick={() => setOpenInscriptos(prev => ({ ...prev, [t.id]: !prev[t.id] }))} style={{ ...styles.btnAjustesRedondo, width: '36px', height: '36px' }}>{openInscriptos[t.id] ? '🔽' : '🔍'}</button>
+                   </div>
+                 </div>
+@@ -492,8 +492,8 @@ const GestionComplejo = () => {
+                     <span style={styles.clienteReserva}>{estaOcupada ? '🔴' : '🟢'} {c.nombre} <small style={{color: '#8E8E93'}}>({c.tipoPiso})</small></span>
+                     <span style={{
+                       ...styles.badgeEstadoReserva, 
+-                      color: estaOcupada ? '#FF453A' : '#39FF14', 
+-                      backgroundColor: estaOcupada ? 'rgba(255,69,58,0.1)' : 'rgba(57,255,20,0.1)'
++                      color: estaOcupada ? '#FF453A' : '#BEF264', 
++                      backgroundColor: estaOcupada ? 'rgba(255,69,58,0.1)' : 'rgba(190, 242, 100,0.1)'
+                     }}>
+                       {estaOcupada ? 'OCUPADA' : 'LIBRE'}
+                     </span>
+@@ -599,8 +599,8 @@ const GestionComplejo = () => {
+                               <span style={styles.nombreItemLista}>{p.nombre}</span>
+                               <span style={{
+                                 ...styles.badgeTipoProducto,
+-                                backgroundColor: p.esAlquiler ? 'rgba(0, 204, 255, 0.1)' : 'rgba(57, 255, 20, 0.1)',
+-                                color: p.esAlquiler ? '#00ccff' : '#39FF14'
++                                backgroundColor: p.esAlquiler ? 'rgba(0, 204, 255, 0.1)' : 'rgba(190, 242, 100, 0.1)',
++                                color: p.esAlquiler ? '#00ccff' : '#BEF264'
+                               }}>{p.esAlquiler ? 'Alquiler' : 'Venta'}</span>
+                             </div>
+                             <div style={styles.detalleItemLista}>Precio: ${p.precio} | Stock: <span style={{ color: Number(p.stock) <= 2 ? '#FF453A' : '#E5E5EA' }}>{p.stock} u.</span></div>
+diff --git a/src/screens/GestionComplejo.styles.js b/src/screens/GestionComplejo.styles.js
+index c4d7d4e..d0a8fd8 100644
+--- a/src/screens/GestionComplejo.styles.js
++++ b/src/screens/GestionComplejo.styles.js
+@@ -11,7 +11,7 @@ export const styles = {
+   btnAjustesRedondo: { width: '36px', height: '36px', borderRadius: '50%', backgroundColor: '#141416', border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', color: theme.colors.text, display: 'flex', justifyContent: 'center', alignItems: 'center' },
+   grillaMetricas: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '20px' },
+   tarjetaMetrica: { backgroundColor: '#141416', border: '1px solid rgba(255, 255, 255, 0.04)', borderRadius: '16px', padding: '12px 14px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', cursor: 'pointer', transition: 'all 0.2s ease' },
+-  tarjetaMetricaActiva: { border: '1px solid #39FF14', backgroundColor: '#19191C' },
++  tarjetaMetricaActiva: { border: '1px solid #BEF264', backgroundColor: '#19191C' },
+   metricaLabel: { fontSize: '11px', color: '#8E8E93', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.3px' },
+   metricaFilaValor: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: '8px' },
+   metricaNumero: { fontSize: '20px', fontWeight: '800', color: theme.colors.text },
+@@ -47,12 +47,12 @@ export const styles = {
+   itemFilaClub: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#1C1C1E', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)' },
+   nombreItemLista: { fontSize: '14px', fontWeight: '700', color: theme.colors.text },
+   detalleItemLista: { fontSize: '11px', color: '#8E8E93', marginTop: '4px' },
+-  badgeEstadoActivo: { fontSize: '10px', color: theme.colors.primary, backgroundColor: 'rgba(57, 255, 20, 0.08)', padding: '4px 8px', borderRadius: '6px', fontWeight: '700' },
++  badgeEstadoActivo: { fontSize: '10px', color: theme.colors.primary, backgroundColor: 'rgba(190, 242, 100, 0.08)', padding: '4px 8px', borderRadius: '6px', fontWeight: '700' },
+   badgeTipoProducto: { fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' },
+   btnEliminarIcono: { backgroundColor: 'rgba(255, 69, 58, 0.1)', border: 'none', cursor: 'pointer', padding: '6px 10px', borderRadius: '8px' },
+   textoListaVacia: { fontSize: '12px', color: '#8E8E93', textAlign: 'center', fontStyle: 'italic', margin: '10px 0' },
+   contenedorLoading: { display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background },
+-  spinner: { width: '36px', height: '36px', border: '3px solid rgba(255, 255, 255, 0.05)', borderTop: '3px solid #39FF14', borderRadius: '50%' },
++  spinner: { width: '36px', height: '36px', border: '3px solid rgba(255, 255, 255, 0.05)', borderTop: '3px solid #BEF264', borderRadius: '50%' },
+   tarjetaCentralForm: { width: '100%', maxWidth: '400px', backgroundColor: '#141416', borderRadius: '24px', padding: '24px', border: '1px solid rgba(255,255,255,0.04)', alignSelf: 'center' },
+   alertaError: { backgroundColor: 'rgba(255,69,58,0.1)', color: '#FF453A', padding: '12px', borderRadius: '10px', fontSize: '12px', marginBottom: '14px', textAlign: 'center' },
+   botonWhatsappContacto: { textDecoration: 'none', backgroundColor: '#25D366', color: theme.colors.text, padding: '6px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', marginLeft: '8px', display: 'inline-block' }
+diff --git a/src/screens/GestionTorneoScreen.jsx b/src/screens/GestionTorneoScreen.jsx
+index 133bed9..92e78a6 100644
+--- a/src/screens/GestionTorneoScreen.jsx
++++ b/src/screens/GestionTorneoScreen.jsx
+@@ -234,7 +234,7 @@ const GestionTorneoScreen = () => {
+       {/* ─── ENCABEZADO Y TÍTULOS ─── */}
+       <div style={styles.header}>
+         <button onClick={() => navigate(-1)} style={styles.backButton}>
+-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
++          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BEF264" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+             <path d="M19 12H5M12 19l-7-7 7-7"/>
+           </svg>
+         </button>
+@@ -285,8 +285,8 @@ const GestionTorneoScreen = () => {
+             onClick={() => setPestanaActiva(tab.id)}
+             style={{
+               ...styles.tabButton,
+-              color: pestanaActiva === tab.id ? '#39FF14' : '#8E8E93',
+-              borderBottom: pestanaActiva === tab.id ? '3px solid #39FF14' : '3px solid transparent'
++              color: pestanaActiva === tab.id ? '#BEF264' : '#8E8E93',
++              borderBottom: pestanaActiva === tab.id ? '3px solid #BEF264' : '3px solid transparent'
+             }}
+           >
+             {pestanaActiva === tab.id ? `[ ${tab.label} ]` : tab.label}
+@@ -350,7 +350,7 @@ const GestionTorneoScreen = () => {
+                       key={insc.id} 
+                       style={{
+                         ...styles.cardInscripto, 
+-                        borderColor: insc.pagado ? '#39FF14' : 'rgba(255,255,255,0.1)'
++                        borderColor: insc.pagado ? '#BEF264' : 'rgba(255,255,255,0.1)'
+                       }}
+                     >
+                       <div style={styles.avatarDoble}>
+@@ -376,9 +376,9 @@ const GestionTorneoScreen = () => {
+                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
+                           <span style={{
+                             ...styles.badgePago,
+-                            backgroundColor: insc.pagado ? 'rgba(57, 255, 20, 0.15)' : 'rgba(255, 69, 58, 0.15)',
+-                            color: insc.pagado ? '#39FF14' : '#FF453A',
+-                            border: `1px solid ${insc.pagado ? 'rgba(57, 255, 20, 0.3)' : 'rgba(255, 69, 58, 0.3)'}`
++                            backgroundColor: insc.pagado ? 'rgba(190, 242, 100, 0.15)' : 'rgba(255, 69, 58, 0.15)',
++                            color: insc.pagado ? '#BEF264' : '#FF453A',
++                            border: `1px solid ${insc.pagado ? 'rgba(190, 242, 100, 0.3)' : 'rgba(255, 69, 58, 0.3)'}`
+                           }}>
+                             {insc.pagado ? '✓ PAGADO' : '✕ DEBE PAGO'}
+                           </span>
+@@ -394,8 +394,8 @@ const GestionTorneoScreen = () => {
+                           title={insc.pagado ? 'Marcar como pendiente de pago' : 'Marcar como pagado'}
+                           style={{
+                             ...styles.iconActionBtn,
+-                            backgroundColor: insc.pagado ? 'rgba(57, 255, 20, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+-                            borderColor: insc.pagado ? '#39FF14' : 'rgba(255, 255, 255, 0.1)',
++                            backgroundColor: insc.pagado ? 'rgba(190, 242, 100, 0.2)' : 'rgba(255, 255, 255, 0.05)',
++                            borderColor: insc.pagado ? '#BEF264' : 'rgba(255, 255, 255, 0.1)',
+                           }}
+                         >
+                           💵
+@@ -509,11 +509,11 @@ const GestionTorneoScreen = () => {
+                   key={dia.id} onClick={() => setDiaSeleccionado(dia.id)}
+                   style={{
+                     ...styles.diaBtn,
+-                    backgroundColor: diaSeleccionado === dia.id ? 'rgba(57, 255, 20, 0.1)' : 'rgba(22, 22, 24, 0.8)',
+-                    borderColor: diaSeleccionado === dia.id ? '#39FF14' : 'rgba(255,255,255,0.05)'
++                    backgroundColor: diaSeleccionado === dia.id ? 'rgba(190, 242, 100, 0.1)' : 'rgba(22, 22, 24, 0.8)',
++                    borderColor: diaSeleccionado === dia.id ? '#BEF264' : 'rgba(255,255,255,0.05)'
+                   }}
+                 >
+-                  <span style={{color: diaSeleccionado === dia.id ? '#39FF14' : '#8E8E93', fontWeight: '700', fontSize: '13px'}}>{dia.text1}</span>
++                  <span style={{color: diaSeleccionado === dia.id ? '#BEF264' : '#8E8E93', fontWeight: '700', fontSize: '13px'}}>{dia.text1}</span>
+                   <span style={{color: '#FFF', fontWeight: '800', fontSize: '16px'}}>{dia.text2}</span>
+                 </button>
+               ))}
+@@ -529,7 +529,7 @@ const GestionTorneoScreen = () => {
+                   <div key={partido.id} style={styles.cardResultado}>
+                     <div style={styles.resultadoHeader}>
+                       <span style={styles.textoPista}>{partido.zona?.nombre || partido.tipoFase} • {partido.fecha || 'Fecha pendiente'}</span>
+-                      <span style={{...styles.badgeEstado, color: partido.estado === 'finalizado' ? '#39FF14' : '#E5C200'}}>
++                      <span style={{...styles.badgeEstado, color: partido.estado === 'finalizado' ? '#BEF264' : '#E5C200'}}>
+                         {partido.estado.toUpperCase()}
+                       </span>
+                     </div>
+@@ -610,9 +610,9 @@ const GestionTorneoScreen = () => {
+                 <span style={styles.modalLabel}>Estado de Pago:</span>
+                 <span style={{
+                   ...styles.badgePago,
+-                  backgroundColor: inscripcionSeleccionada.pagado ? 'rgba(57, 255, 20, 0.15)' : 'rgba(255, 69, 58, 0.15)',
+-                  color: inscripcionSeleccionada.pagado ? '#39FF14' : '#FF453A',
+-                  border: `1px solid ${inscripcionSeleccionada.pagado ? 'rgba(57, 255, 20, 0.3)' : 'rgba(255, 69, 58, 0.3)'}`,
++                  backgroundColor: inscripcionSeleccionada.pagado ? 'rgba(190, 242, 100, 0.15)' : 'rgba(255, 69, 58, 0.15)',
++                  color: inscripcionSeleccionada.pagado ? '#BEF264' : '#FF453A',
++                  border: `1px solid ${inscripcionSeleccionada.pagado ? 'rgba(190, 242, 100, 0.3)' : 'rgba(255, 69, 58, 0.3)'}`,
+                   marginTop: '4px',
+                   display: 'inline-block'
+                 }}>
+diff --git a/src/screens/GestionTorneoScreen.styles.js b/src/screens/GestionTorneoScreen.styles.js
+index 84c7f48..5c76bc6 100644
+--- a/src/screens/GestionTorneoScreen.styles.js
++++ b/src/screens/GestionTorneoScreen.styles.js
+@@ -14,7 +14,7 @@ export const styles = {
+   headerInfo: { flex: 1, display: 'flex', flexDirection: 'column' },
+   logoRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' },
+   logoText: { color: '#FFF', fontWeight: '800', fontSize: '14px', letterSpacing: '1px' },
+-  btnPublicar: { backgroundColor: 'transparent', border: '1px solid #39FF14', color: theme.colors.primary, padding: '6px 12px', borderRadius: '8px', fontSize: '10px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s ease', letterSpacing: '0.5px' },
++  btnPublicar: { backgroundColor: 'transparent', border: '1px solid #BEF264', color: theme.colors.primary, padding: '6px 12px', borderRadius: '8px', fontSize: '10px', fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s ease', letterSpacing: '0.5px' },
+   tituloSecundario: { fontSize: '20px', color: '#FFF', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' },
+   tituloPrincipal: { fontSize: '26px', color: '#FFF', fontWeight: '900', margin: '4px 0 12px 0', letterSpacing: '-0.5px' },
+   organizadorRow: { display: 'flex', alignItems: 'center', gap: '8px' },
+@@ -44,7 +44,7 @@ export const styles = {
+     borderRadius: '14px', 
+     fontWeight: '800', 
+     fontSize: '13px',
+-    boxShadow: '0 4px 14px rgba(57, 255, 20, 0.25)',
++    boxShadow: '0 4px 14px rgba(190, 242, 100, 0.25)',
+     transition: 'all 0.2s ease',
+     whiteSpace: 'nowrap'
+   },
+@@ -120,7 +120,7 @@ export const styles = {
+   mensajePlaceholder: { textAlign: 'center' },
+ 
+   centerContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' },
+-  spinner: { width: '36px', height: '36px', border: '3px solid rgba(57, 255, 20, 0.1)', borderTopColor: theme.colors.primary, borderRadius: '50%', animation: 'spin 1s linear infinite' },
++  spinner: { width: '36px', height: '36px', border: '3px solid rgba(190, 242, 100, 0.1)', borderTopColor: theme.colors.primary, borderRadius: '50%', animation: 'spin 1s linear infinite' },
+ 
+   /* ─── ESTILOS PARA EL MODAL DE RESTRICCIONES ─── */
+   modalOverlay: {
+@@ -181,7 +181,7 @@ export const styles = {
+     cursor: 'pointer'
+   },
+   btnCerrarModal: {
+-    backgroundColor: '#39FF14',
++    backgroundColor: '#BEF264',
+     color: '#0A0A0B',
+     border: 'none',
+     padding: '14px',
+diff --git a/src/screens/MisReservasScreen.jsx b/src/screens/MisReservasScreen.jsx
+index 613cc5d..1d4fd82 100644
+--- a/src/screens/MisReservasScreen.jsx
++++ b/src/screens/MisReservasScreen.jsx
+@@ -170,16 +170,16 @@ const MisReservasScreen = () => {
+                 <div key={partido.id} style={styles.tarjeta}>
+                   <span style={{
+                     ...styles.badgeEstado, 
+-                    backgroundColor: esOrganizador ? 'rgba(0, 204, 255, 0.08)' : 'rgba(57, 255, 20, 0.08)',
+-                    color: esOrganizador ? '#00ccff' : '#39FF14',
+-                    borderColor: esOrganizador ? 'rgba(0, 204, 255, 0.15)' : 'rgba(57, 255, 20, 0.15)'
++                    backgroundColor: esOrganizador ? 'rgba(0, 204, 255, 0.08)' : 'rgba(190, 242, 100, 0.08)',
++                    color: esOrganizador ? '#00ccff' : '#BEF264',
++                    borderColor: esOrganizador ? 'rgba(0, 204, 255, 0.15)' : 'rgba(190, 242, 100, 0.15)'
+                   }}>
+                     {esOrganizador ? 'ORGANIZADOR' : 'INSCRIPTO'}
+                   </span>
+                   <div style={styles.cuerpoTarjeta}>
+                     <h3 style={styles.tituloTarjeta}>Partido Abierto: {partido.cancha?.nombre}</h3>
+                     <p style={styles.subtituloTarjeta}>🏢 Club: {partido.cancha?.complejo?.nombre}</p>
+-                    <p style={{...styles.subtituloTarjeta, color: esOrganizador ? '#00ccff' : '#39FF14', fontWeight: '500'}}>
++                    <p style={{...styles.subtituloTarjeta, color: esOrganizador ? '#00ccff' : '#BEF264', fontWeight: '500'}}>
+                       👤 Organiza: {esOrganizador ? 'Vos' : `${partido.jugador?.nombre} ${partido.jugador?.apellido}`}
+                     </p>
+                     
+diff --git a/src/screens/MisReservasScreen.styles.js b/src/screens/MisReservasScreen.styles.js
+index ba63d59..5977ca3 100644
+--- a/src/screens/MisReservasScreen.styles.js
++++ b/src/screens/MisReservasScreen.styles.js
+@@ -76,9 +76,9 @@ export const styles = {
+     position: 'absolute',
+     top: '22px',
+     right: '22px',
+-    backgroundColor: 'rgba(57, 255, 20, 0.08)',
++    backgroundColor: 'rgba(190, 242, 100, 0.08)',
+     color: theme.colors.primary,
+-    border: '1px solid rgba(57, 255, 20, 0.15)',
++    border: '1px solid rgba(190, 242, 100, 0.15)',
+     padding: '6px 12px',
+     borderRadius: '99px',
+     fontSize: '11px',
+@@ -201,7 +201,7 @@ export const styles = {
+     backgroundColor: theme.colors.primary,
+     borderRadius: '99px',
+     transition: 'width 0.3s ease',
+-    boxShadow: '0 0 12px rgba(57, 255, 20, 0.4)'
++    boxShadow: '0 0 12px rgba(190, 242, 100, 0.4)'
+   },
+   categoriaTexto: {
+     fontSize: '14px', 
+@@ -258,8 +258,8 @@ export const styles = {
+   spinner: {
+     width: '32px',
+     height: '32px',
+-    border: '3px solid rgba(57, 255, 20, 0.1)',
+-    borderTop: '3px solid #39FF14',
++    border: '3px solid rgba(190, 242, 100, 0.1)',
++    borderTop: '3px solid #BEF264',
+     borderRadius: '50%'
+   }
+ }
+\ No newline at end of file
+diff --git a/src/screens/PerfilPublicoScreen.jsx b/src/screens/PerfilPublicoScreen.jsx
+index f4084f6..17f16bf 100644
+--- a/src/screens/PerfilPublicoScreen.jsx
++++ b/src/screens/PerfilPublicoScreen.jsx
+@@ -95,7 +95,7 @@ const PerfilPublicoScreen = () => {
+           
+           {/* Card Puntos */}
+           <div style={styles.badgeCard}>
+-            <div style={{...styles.badgeIcono, color: '#39FF14', backgroundColor: 'rgba(57, 255, 20, 0.1)'}}>🏅</div>
++            <div style={{...styles.badgeIcono, color: '#BEF264', backgroundColor: 'rgba(190, 242, 100, 0.1)'}}>🏅</div>
+             <span style={styles.badgeTitulo}>Puntos</span>
+             <span style={styles.badgeValor}>{jugador.puntosGenerales || 0} pts</span>
+           </div>
+@@ -143,7 +143,7 @@ const PerfilPublicoScreen = () => {
+             {/* Record Extra Estético */}
+             <div style={styles.cajaRecord}>
+               <div style={styles.labelLadoTitle}>Rendimiento Circuito</div>
+-              <div style={styles.valorRecordText}>W - L : <span style={{color: '#39FF14'}}>{jugador.rendimientoCircuito || '0 - 0'}</span></div>
++              <div style={styles.valorRecordText}>W - L : <span style={{color: '#BEF264'}}>{jugador.rendimientoCircuito || '0 - 0'}</span></div>
+             </div>
+           </div>
+ 
+diff --git a/src/screens/PerfilPublicoScreen.styles.js b/src/screens/PerfilPublicoScreen.styles.js
+index 6da74e2..fafc129 100644
+--- a/src/screens/PerfilPublicoScreen.styles.js
++++ b/src/screens/PerfilPublicoScreen.styles.js
+@@ -217,7 +217,7 @@ export const styles = {
+     width: '36px',
+     height: '36px',
+     border: '3px solid rgba(255, 255, 255, 0.05)',
+-    borderTop: '3px solid #39FF14',
++    borderTop: '3px solid #BEF264',
+     borderRadius: '50%',
+     animation: 'spin 1s linear infinite'
+   },
+diff --git a/src/screens/PerfilScreen.styles.js b/src/screens/PerfilScreen.styles.js
+index 8475766..1d1c5a8 100644
+--- a/src/screens/PerfilScreen.styles.js
++++ b/src/screens/PerfilScreen.styles.js
+@@ -8,7 +8,7 @@ export const styles = {
+   imagenPortadaImg: { width: '100%', height: '100%', objectFit: 'cover' },
+   bannerVacio: { width: '100%', height: '100%', background: 'linear-gradient(135deg, #1f1f23 0%, #2c2c35 100%)' },
+   portadaOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.45)', color: '#FFF', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', justifyContent: 'center' },
+-  badgePuntos: { position: 'absolute', top: '20px', right: '20px', backgroundColor: 'rgba(57, 255, 20, 0.15)', border: '1px solid #39FF14', padding: '6px 14px', borderRadius: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 4px 12px rgba(57, 255, 20, 0.2)', zIndex: 3 },
++  badgePuntos: { position: 'absolute', top: '20px', right: '20px', backgroundColor: 'rgba(190, 242, 100, 0.15)', border: '1px solid #BEF264', padding: '6px 14px', borderRadius: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 4px 12px rgba(190, 242, 100, 0.2)', zIndex: 3 },
+   puntosNumero: { color: theme.colors.primary, fontSize: '16px', fontWeight: '800', lineHeight: '1' },
+   puntosLabel: { color: '#FFF', fontSize: '9px', fontWeight: '700', marginTop: '2px', letterSpacing: '0.5px' },
+   avatarSeccion: { display: 'flex', justifyContent: 'center', marginTop: '-60px', marginBottom: '15px', position: 'relative', zIndex: '2' },
+@@ -27,8 +27,8 @@ export const styles = {
+   optgroup: { backgroundColor: '#141416', color: theme.colors.primary, fontWeight: '700' },
+   textarea: { backgroundColor: '#1A1A1E', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', padding: '14px', color: '#FFF', fontSize: '14px', outline: 'none', minHeight: '90px', resize: 'vertical', fontFamily: 'inherit' },
+   contenedorBotones: { padding: '20px 30px 40px 30px', display: 'flex', flexDirection: 'column', gap: '12px' },
+-  botonGuardar: { backgroundColor: theme.colors.primary, color: '#000', border: 'none', padding: '16px', borderRadius: '14px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 15px rgba(57, 255, 20, 0.3)', transition: 'transform 0.2s' },
++  botonGuardar: { backgroundColor: theme.colors.primary, color: '#000', border: 'none', padding: '16px', borderRadius: '14px', fontSize: '15px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 15px rgba(190, 242, 100, 0.3)', transition: 'transform 0.2s' },
+   botonLogout: { backgroundColor: 'transparent', color: '#FF453A', border: '1px solid rgba(255, 69, 58, 0.2)', padding: '14px', borderRadius: '14px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' },
+   error: { margin: '0 30px 20px 30px', padding: '12px', backgroundColor: 'rgba(255,69,58,0.1)', border: '1px solid #FF453A', color: '#FF453A', borderRadius: '10px', fontSize: '13px', textAlign: 'center' },
+-  exito: { margin: '0 30px 20px 30px', padding: '12px', backgroundColor: 'rgba(57,255,20,0.1)', border: '1px solid #39FF14', color: theme.colors.primary, borderRadius: '10px', fontSize: '13px', textAlign: 'center' }
++  exito: { margin: '0 30px 20px 30px', padding: '12px', backgroundColor: 'rgba(190, 242, 100,0.1)', border: '1px solid #BEF264', color: theme.colors.primary, borderRadius: '10px', fontSize: '13px', textAlign: 'center' }
+ }
+\ No newline at end of file
+diff --git a/src/screens/RankingScreen.jsx b/src/screens/RankingScreen.jsx
+index 9d9a39c..3e26e9d 100644
+--- a/src/screens/RankingScreen.jsx
++++ b/src/screens/RankingScreen.jsx
+@@ -1,30 +1,29 @@
+ // src/screens/RankingScreen.jsx
++// ───────────────────────────────────────────────────────────
++// Refactor v2: agrega podio visual top 3 + lista para el resto.
++// Mantiene TODA la lógica de carga desde la API intacta.
++// ───────────────────────────────────────────────────────────
+ import React, { useState, useEffect } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import API from '../services/api';
+-import { resolverUrlImagen } from '../services/imageHelper'; 
++import { resolverUrlImagen } from '../services/imageHelper';
+ import { styles } from './RankingScreen.styles';
+ 
+ const RankingScreen = () => {
+-  // Manejamos estados limpios para simplificar el renderizado y la lógica
+-  const [categoria, setCategoria] = useState('5ta'); 
+-  const [rama, setRama] = useState('Caballeros'); 
++  const [categoria, setCategoria] = useState('5ta');
++  const [rama, setRama] = useState('Caballeros');
+   const [jugadores, setJugadores] = useState([]);
+   const [cargando, setCargando] = useState(true);
+-  
+-  const navigate = useNavigate(); 
+ 
+-  // Categorías base estandarizadas
++  const navigate = useNavigate();
++
+   const categoriasDisponibles = ['1ra', '2da', '3ra', '4ta', '5ta', '6ta', '7ma', '8va'];
+ 
+   useEffect(() => {
+     const cargarRanking = async () => {
+       setCargando(true);
+       try {
+-        // 🔥 REPARACIÓN AQUÍ: Reconstruimos el string "5ta Caballeros" que se genera en RegisterScreen
+         const categoriaFormateada = `${categoria} ${rama}`;
+-        
+-        // Enviamos la query con el formato exacto que espera recibir el Backend
+         const respuesta = await API.get(`/ranking?categoria=${encodeURIComponent(categoriaFormateada)}`);
+         setJugadores(respuesta.data || []);
+       } catch (error) {
+@@ -36,33 +35,42 @@ const RankingScreen = () => {
+     };
+ 
+     cargarRanking();
+-  }, [categoria, rama]); // Se vuelve a disparar al cambiar pestaña o categoría
+-
+-  // Lógica de resolución de imágenes
++  }, [categoria, rama]);
+ 
+-  // Obtener iniciales de respaldo
+   const obtenerIniciales = (jugador) => {
+     const n = jugador?.nombre?.charAt(0) || '';
+     const a = jugador?.apellido?.charAt(0) || '';
+     return (n + a).toUpperCase() || 'P';
+   };
+ 
++  // Colores de medalla
++  const medallaColor = (pos) =>
++    pos === 1 ? '#FBBF24' : pos === 2 ? '#CBD5E1' : '#D97706';
++
++  // Slots del podio: 2do (izq), 1ero (centro, más alto), 3ero (der)
++  const podioOrder = [1, 0, 2]; // índices en jugadores[]
++  const podioHeights = ['64px', '88px', '52px'];
++  const podioAvatarSizes = [46, 58, 46];
++  const tienePodio = !cargando && jugadores.length >= 3;
++  const topJugadores = jugadores.slice(0, 3);
++  const restoJugadores = jugadores.slice(3);
++
+   return (
+     <div style={styles.contenedor}>
+       <div style={styles.tarjetaContenido}>
+-        
+-        {/* TÍTULO DE LA PANTALLA */}
++
++        {/* TÍTULO */}
+         <h2 style={styles.tituloHeader}>Ranking Oficial</h2>
+ 
+-        {/* CONTENEDOR DE PESTAÑAS (RAMAS) */}
++        {/* SEGMENTED CONTROL (RAMAS) */}
+         <div style={styles.contenedorRamas}>
+-          <button 
++          <button
+             style={rama === 'Damas' ? styles.btnRamaActivo : styles.btnRamaInactivo}
+             onClick={() => setRama('Damas')}
+           >
+             Damas
+           </button>
+-          <button 
++          <button
+             style={rama === 'Caballeros' ? styles.btnRamaActivo : styles.btnRamaInactivo}
+             onClick={() => setRama('Caballeros')}
+           >
+@@ -70,7 +78,7 @@ const RankingScreen = () => {
+           </button>
+         </div>
+ 
+-        {/* SLIDER HORIZONTAL DE CATEGORÍAS */}
++        {/* CHIPS DE CATEGORÍA */}
+         <div style={styles.sliderCategorias}>
+           {categoriasDisponibles.map((cat) => {
+             const esActivo = categoria === cat;
+@@ -86,81 +94,150 @@ const RankingScreen = () => {
+           })}
+         </div>
+ 
+-        {/* CONTENEDOR DE LA LISTA / CARGA */}
++        {/* CONTENIDO */}
+         <div style={styles.listaClasificacion}>
+           {cargando ? (
+             <div style={styles.contenedorCarga}>
+               <div style={styles.spinner}></div>
+-              <p style={{ color: '#8E8E93', marginTop: '12px', fontSize: '14px' }}>Actualizando posiciones...</p>
++              <p style={{ color: '#7A847E', marginTop: '12px', fontSize: '14px' }}>Actualizando posiciones...</p>
+             </div>
+           ) : jugadores.length === 0 ? (
+             <div style={styles.mensajeEstado}>
+               Aún no hay jugadores registrados en {categoria} {rama}.
+             </div>
+           ) : (
+-            jugadores.map((jugador, index) => {
+-              const posicion = index + 1;
+-              
+-              return (
+-                <div 
+-                  key={jugador.id} 
+-                  style={styles.filaJugador}
+-                  onClick={() => navigate(`/jugador/${jugador.id}`)}
+-                >
+-                  
+-                  {/* PUESTO / MEDALLA */}
+-                  <div style={styles.colPosicion}>
+-                    {posicion <= 3 ? (
+-                      <span style={styles.badgeMedalla(posicion)}>{posicion}</span>
+-                    ) : (
+-                      <span style={styles.textoPosicion}>{posicion}</span>
+-                    )}
+-                  </div>
+-
+-                  {/* FOTO JUGADOR */}
+-                  <div style={styles.colFoto}>
+-                    <div style={styles.avatarContenedor}>
+-                      {jugador.imagenPerfil ? (
+-                        <img 
+-                          src={resolverUrlImagen(jugador.imagenPerfil)} 
+-                          alt="Perfil" 
+-                          style={styles.avatar}
+-                        />
+-                      ) : (
+-                        <span style={styles.inicialAvatar}>
+-                          {obtenerIniciales(jugador)}
+-                        </span>
+-                      )}
+-                    </div>
+-                  </div>
+-
+-                  {/* DATOS DEL JUGADOR */}
+-                  <div style={styles.colInfo}>
+-                    <div style={styles.nombreJugador}>
+-                      {jugador.nombre} {jugador.apellido}
+-                    </div>
+-                    <div style={styles.subtextoCategoria}>
+-                      {categoria} {rama}
+-                    </div>
+-                  </div>
+-
+-                  {/* PUNTOS TOTALES */}
+-                  <div style={styles.colPuntos}>
+-                    <span style={styles.textoPuntos}>{jugador.puntosGenerales || 0} pts</span>
+-                  </div>
+-
++            <>
++              {/* PODIO TOP 3 (si hay 3 o más) */}
++              {tienePodio && (
++                <div style={styles.podio}>
++                  {podioOrder.map((idx, i) => {
++                    const jugador = topJugadores[idx];
++                    if (!jugador) return null;
++                    const place = idx + 1;
++                    const size = podioAvatarSizes[i];
++                    const pillarH = podioHeights[i];
++                    return (
++                      <div key={jugador.id} style={styles.podioSlot}>
++                        <div style={styles.podioAvatarWrap}>
++                          {jugador.imagenPerfil ? (
++                            <img
++                              src={resolverUrlImagen(jugador.imagenPerfil)}
++                              alt="Perfil"
++                              style={{ ...styles.podioAvatarImg, width: size, height: size }}
++                            />
++                          ) : (
++                            <div
++                              style={{
++                                ...styles.podioAvatar,
++                                width: size,
++                                height: size,
++                                fontSize: size * 0.36,
++                                backgroundColor: medallaColor(place) + '30',
++                              }}
++                            >
++                              {obtenerIniciales(jugador)}
++                            </div>
++                          )}
++                          <span
++                            style={{
++                              ...styles.podioMedalla,
++                              backgroundColor: medallaColor(place),
++                              color: place === 2 ? '#0B0F0D' : '#fff',
++                            }}
++                          >
++                            {place === 1 ? '👑' : place}
++                          </span>
++                        </div>
++                        <p style={styles.podioNombre}>{jugador.nombre}</p>
++                        <p style={styles.podioPuntos}>{jugador.puntosGenerales || 0} pts</p>
++                        <div style={{ ...styles.podioPilar, height: pillarH }}>
++                          <span style={styles.podioPilarNum}>{place}</span>
++                        </div>
++                      </div>
++                    );
++                  })}
+                 </div>
+-              );
+-            })
++              )}
++
++              {/* Si hay menos de 3, mostrar los primeros como lista normal */}
++              {!tienePodio && topJugadores.map((jugador, index) => {
++                const posicion = index + 1;
++                return (
++                  <FilaJugador
++                    key={jugador.id}
++                    jugador={jugador}
++                    posicion={posicion}
++                    categoria={categoria}
++                    rama={rama}
++                    obtenerIniciales={obtenerIniciales}
++                    onClick={() => navigate(`/jugador/${jugador.id}`)}
++                    esTop
++                  />
++                );
++              })}
++
++              {/* RESTO DE LA TABLA */}
++              {restoJugadores.length > 0 && (
++                <>
++                  <div style={styles.restoHeader}>
++                    <span>✦ Resto de la tabla</span>
++                  </div>
++                  {restoJugadores.map((jugador, index) => {
++                    const posicion = index + 4;
++                    return (
++                      <FilaJugador
++                        key={jugador.id}
++                        jugador={jugador}
++                        posicion={posicion}
++                        categoria={categoria}
++                        rama={rama}
++                        obtenerIniciales={obtenerIniciales}
++                        onClick={() => navigate(`/jugador/${jugador.id}`)}
++                      />
++                    );
++                  })}
++                </>
++              )}
++            </>
+           )}
+         </div>
+-
+       </div>
+     </div>
+   );
+ };
+ 
+-// --- ARQUITECTURA DE ESTILOS ADN PÁDEL ---
+-// (Las animaciones como @keyframes spin ahora viven en index.css de forma global)
++// Componente de fila reutilizable
++const FilaJugador = ({ jugador, posicion, categoria, rama, obtenerIniciales, onClick, esTop }) => (
++  <div style={styles.filaJugador} onClick={onClick} role="button" tabIndex={0}>
++    <div style={styles.colPosicion}>
++      <span style={{ ...styles.posicionBadge, ...(esTop ? styles.posicionTop : styles.posicionResto) }}>
++        {posicion}
++      </span>
++    </div>
++
++    <div style={styles.colFoto}>
++      <div style={styles.avatarContenedor}>
++        {jugador.imagenPerfil ? (
++          <img src={resolverUrlImagen(jugador.imagenPerfil)} alt="Perfil" style={styles.avatar} />
++        ) : (
++          <span style={styles.inicialAvatar}>{obtenerIniciales(jugador)}</span>
++        )}
++      </div>
++    </div>
++
++    <div style={styles.colInfo}>
++      <div style={styles.nombreJugador}>
++        {jugador.nombre} {jugador.apellido}
++      </div>
++      <div style={styles.subtextoCategoria}>
++        {categoria} {rama}
++      </div>
++    </div>
++
++    <div style={styles.colPuntos}>
++      <span style={styles.textoPuntos}>{jugador.puntosGenerales || 0} pts</span>
++    </div>
++  </div>
++);
+ 
+-export default RankingScreen;
+\ No newline at end of file
++export default RankingScreen;
+diff --git a/src/screens/RankingScreen.styles.js b/src/screens/RankingScreen.styles.js
+index b8b2e6c..bdf57bc 100644
+--- a/src/screens/RankingScreen.styles.js
++++ b/src/screens/RankingScreen.styles.js
+@@ -1,4 +1,8 @@
+ // src/screens/RankingScreen.styles.js
++// ───────────────────────────────────────────────────────────
++// Refactor v2: agrega podio top 3, chips de categoría más
++// grandes (touch targets ≥44px), usa tokens del theme.
++// ───────────────────────────────────────────────────────────
+ import { theme } from '../theme';
+ 
+ export const styles = {
+@@ -10,7 +14,7 @@ export const styles = {
+     boxSizing: 'border-box',
+     display: 'flex',
+     justifyContent: 'center',
+-    backgroundColor: theme.colors.background
++    backgroundColor: theme.colors.background,
+   },
+   tarjetaContenido: {
+     width: '100%',
+@@ -18,188 +22,312 @@ export const styles = {
+     padding: '20px 16px',
+     boxSizing: 'border-box',
+     display: 'flex',
+-    flexDirection: 'column'
++    flexDirection: 'column',
+   },
+   tituloHeader: {
+-    textAlign: 'center',
+     fontSize: '22px',
+     fontWeight: '800',
+-    letterSpacing: '0.5px',
+-    margin: '10px 0 20px 0',
+-    color: theme.colors.text
++    letterSpacing: '-0.3px',
++    margin: '8px 0 20px 0',
++    color: theme.colors.text,
+   },
++
++  // ── SEGMENTED CONTROL (Damas / Caballeros) ──
+   contenedorRamas: {
+     display: 'flex',
+-    backgroundColor: '#141416',
+-    borderRadius: '14px',
++    backgroundColor: theme.colors.surfaceAlt,
++    borderRadius: theme.borderRadius.lg,
+     padding: '4px',
+-    border: '1px solid rgba(255, 255, 255, 0.05)',
+-    marginBottom: '16px'
++    border: `1px solid ${theme.colors.border}`,
++    marginBottom: '16px',
+   },
+   btnRamaActivo: {
+     flex: 1,
+     backgroundColor: theme.colors.primary,
+-    color: '#000000',
++    color: '#0B0F0D',
+     border: 'none',
+-    borderRadius: '10px',
++    borderRadius: theme.borderRadius.md,
+     height: '40px',
+     fontSize: '14px',
+     fontWeight: '800',
+     cursor: 'pointer',
+-    transition: 'all 0.2s ease'
++    transition: theme.transitions.fast,
+   },
+   btnRamaInactivo: {
+     flex: 1,
+     backgroundColor: 'transparent',
+-    color: '#A0A0A5',
++    color: theme.colors.textSecondary,
+     border: 'none',
+-    borderRadius: '10px',
++    borderRadius: theme.borderRadius.md,
+     height: '40px',
+     fontSize: '14px',
+     fontWeight: '700',
+-    cursor: 'pointer'
++    cursor: 'pointer',
++    transition: theme.transitions.fast,
+   },
++
++  // ── CHIPS DE CATEGORÍA (más grandes) ──
+   sliderCategorias: {
+     display: 'flex',
+     gap: '8px',
+     overflowX: 'auto',
+     paddingBottom: '12px',
+-    marginBottom: '14px',
+-    scrollbarWidth: 'none', 
++    marginBottom: '18px',
++    scrollbarWidth: 'none',
+     WebkitOverflowScrolling: 'touch',
+   },
+   chipCategoriaActivo: {
+-    backgroundColor: 'rgba(57, 255, 20, 0.15)',
+-    color: theme.colors.primary,
+-    border: '1px solid #39FF14',
+-    borderRadius: '20px',
+-    padding: '8px 16px',
++    backgroundColor: theme.colors.primary,
++    color: '#0B0F0D',
++    border: 'none',
++    borderRadius: '999px',
++    padding: '10px 18px',
+     fontSize: '13px',
+     fontWeight: '800',
+     whiteSpace: 'nowrap',
+-    cursor: 'pointer'
++    cursor: 'pointer',
++    minWidth: '44px',
++    boxShadow: theme.shadows.primary,
+   },
+   chipCategoriaInactivo: {
+-    backgroundColor: '#1A1A1E',
+-    color: '#A0A0A5',
+-    border: '1px solid rgba(255, 255, 255, 0.08)',
+-    borderRadius: '20px',
+-    padding: '8px 16px',
++    backgroundColor: theme.colors.surface,
++    color: theme.colors.textSecondary,
++    border: `1px solid ${theme.colors.border}`,
++    borderRadius: '999px',
++    padding: '10px 18px',
+     fontSize: '13px',
+     fontWeight: '600',
+     whiteSpace: 'nowrap',
+-    cursor: 'pointer'
++    cursor: 'pointer',
++    minWidth: '44px',
++  },
++
++  // ── PODIO TOP 3 (nuevo) ──
++  podio: {
++    display: 'flex',
++    alignItems: 'flex-end',
++    justifyContent: 'center',
++    gap: '8px',
++    marginBottom: '20px',
++    padding: '0 4px',
++  },
++  podioSlot: {
++    flex: 1,
++    display: 'flex',
++    flexDirection: 'column',
++    alignItems: 'center',
++    minWidth: 0,
++  },
++  podioAvatarWrap: {
++    position: 'relative',
++    marginBottom: '8px',
++  },
++  podioAvatar: {
++    borderRadius: '50%',
++    display: 'flex',
++    alignItems: 'center',
++    justifyContent: 'center',
++    fontWeight: '800',
++    color: '#0B0F0D',
++    border: '3px solid var(--bg-background)',
++    objectFit: 'cover',
++  },
++  podioAvatarImg: {
++    borderRadius: '50%',
++    objectFit: 'cover',
++    border: '3px solid var(--bg-background)',
++  },
++  podioMedalla: {
++    position: 'absolute',
++    bottom: '-4px',
++    left: '50%',
++    transform: 'translateX(-50%)',
++    width: '24px',
++    height: '24px',
++    borderRadius: '50%',
++    display: 'flex',
++    alignItems: 'center',
++    justifyContent: 'center',
++    fontSize: '12px',
++    fontWeight: '900',
++    border: '2px solid var(--bg-background)',
++  },
++  podioNombre: {
++    fontSize: '12px',
++    fontWeight: '700',
++    color: theme.colors.text,
++    maxWidth: '100%',
++    overflow: 'hidden',
++    textOverflow: 'ellipsis',
++    whiteSpace: 'nowrap',
++  },
++  podioPuntos: {
++    fontSize: '11px',
++    fontWeight: '700',
++    color: theme.colors.primary,
++    marginBottom: '8px',
++  },
++  podioPilar: {
++    width: '100%',
++    borderRadius: '14px 14px 0 0',
++    border: `1px solid ${theme.colors.border}`,
++    borderTop: 'none',
++    display: 'flex',
++    alignItems: 'flex-start',
++    justifyContent: 'center',
++    paddingTop: '8px',
++    background: `linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)`,
++  },
++  podioPilarNum: {
++    fontSize: '22px',
++    fontWeight: '900',
++    color: 'rgba(255,255,255,0.18)',
+   },
++
++  // ── LISTA RESTANTE ──
+   listaClasificacion: {
+     display: 'flex',
+     flexDirection: 'column',
+     gap: '10px',
+-    marginTop: '6px'
++    marginTop: '6px',
+   },
+   filaJugador: {
+-    backgroundColor: '#141416',
+-    border: '1px solid rgba(255, 255, 255, 0.05)',
+-    borderRadius: '16px',
++    backgroundColor: theme.colors.surface,
++    border: `1px solid ${theme.colors.border}`,
++    borderRadius: theme.borderRadius.lg,
+     display: 'flex',
+     alignItems: 'center',
+     padding: '12px 14px',
+     gap: '12px',
+     boxSizing: 'border-box',
+-    cursor: 'pointer'
++    cursor: 'pointer',
++    transition: 'border-color 0.2s ease',
+   },
+   colPosicion: {
+-    width: '32px',
++    width: '30px',
+     display: 'flex',
+     justifyContent: 'center',
+-    alignItems: 'center'
+-  },
+-  textoPosicion: {
+-    fontSize: '15px',
+-    fontWeight: '700',
+-    color: '#A0A0A5'
++    alignItems: 'center',
++    flexShrink: 0,
+   },
+-  badgeMedalla: (pos) => ({
+-    backgroundColor: pos === 1 ? '#D4AF37' : pos === 2 ? '#AAA9AD' : '#CD7F32',
+-    color: '#000000',
+-    width: '24px',
+-    height: '24px',
+-    borderRadius: '50%',
++  posicionBadge: {
++    width: '28px',
++    height: '28px',
++    borderRadius: '8px',
+     display: 'flex',
+     justifyContent: 'center',
+     alignItems: 'center',
+-    fontSize: '12px',
+-    fontWeight: '900',
+-    boxShadow: '0 2px 8px rgba(0,0,0,0.4)'
+-  }),
++    fontSize: '13px',
++    fontWeight: '800',
++  },
++  posicionTop: {
++    backgroundColor: theme.colors.primarySoft,
++    color: theme.colors.primary,
++  },
++  posicionResto: {
++    backgroundColor: 'rgba(255,255,255,0.06)',
++    color: theme.colors.textMuted,
++  },
+   colFoto: {
+-    width: '42px',
+-    height: '42px'
++    width: '40px',
++    height: '40px',
++    flexShrink: 0,
+   },
+   avatarContenedor: {
+     width: '100%',
+     height: '100%',
+     borderRadius: '50%',
+-    backgroundColor: '#1A1A1E',
++    backgroundColor: theme.colors.surfaceAlt,
+     display: 'flex',
+     justifyContent: 'center',
+     alignItems: 'center',
+     overflow: 'hidden',
+-    border: '1px solid rgba(255, 255, 255, 0.08)'
++    border: `1px solid ${theme.colors.border}`,
+   },
+   avatar: {
+     width: '100%',
+     height: '100%',
+-    objectFit: 'cover'
++    objectFit: 'cover',
+   },
+   inicialAvatar: {
+     fontSize: '14px',
+     fontWeight: '700',
+-    color: '#A0A0A5'
++    color: theme.colors.textSecondary,
+   },
+   colInfo: {
+     flex: 1,
+     display: 'flex',
+     flexDirection: 'column',
+-    gap: '2px'
++    gap: '2px',
++    minWidth: 0,
+   },
+   nombreJugador: {
+     fontSize: '15px',
+     fontWeight: '700',
+-    color: theme.colors.text
++    color: theme.colors.text,
++    overflow: 'hidden',
++    textOverflow: 'ellipsis',
++    whiteSpace: 'nowrap',
+   },
+   subtextoCategoria: {
+     fontSize: '12px',
+-    color: '#A0A0A5',
+-    fontWeight: '500'
++    color: theme.colors.textMuted,
++    fontWeight: '500',
+   },
+   colPuntos: {
+-    textAlign: 'right'
++    textAlign: 'right',
++    display: 'flex',
++    flexDirection: 'column',
++    alignItems: 'flex-end',
++    gap: '2px',
++    flexShrink: 0,
+   },
+   textoPuntos: {
+     fontSize: '15px',
+     fontWeight: '800',
+-    color: theme.colors.primary
++    color: theme.colors.primary,
++  },
++  subtextoPJ: {
++    fontSize: '11px',
++    color: theme.colors.textMuted,
++    fontWeight: '500',
+   },
++
++  // ── ESTADOS ──
+   contenedorCarga: {
+     display: 'flex',
+     flexDirection: 'column',
+     justifyContent: 'center',
+     alignItems: 'center',
+-    padding: '60px 0'
++    padding: '60px 0',
+   },
+   spinner: {
+     width: '32px',
+     height: '32px',
+-    border: '3px solid rgba(255, 255, 255, 0.08)',
+-    borderTop: '3px solid #39FF14',
++    border: `3px solid ${theme.colors.border}`,
++    borderTop: `3px solid ${theme.colors.primary}`,
+     borderRadius: '50%',
+-    animation: 'spin 1s linear infinite'
++    animation: 'spin 1s linear infinite',
+   },
+   mensajeEstado: {
+     textAlign: 'center',
+     padding: '40px 20px',
+-    color: '#A0A0A5',
++    color: theme.colors.textMuted,
+     fontSize: '14px',
+-    lineHeight: '20px'
+-  }
+-}
+\ No newline at end of file
++    lineHeight: '20px',
++  },
++
++  // Sección "resto de la tabla"
++  restoHeader: {
++    display: 'flex',
++    alignItems: 'center',
++    gap: '6px',
++    fontSize: '11px',
++    fontWeight: '700',
++    textTransform: 'uppercase',
++    letterSpacing: '0.5px',
++    color: theme.colors.textMuted,
++    marginBottom: '4px',
++    marginTop: '6px',
++  },
++};
+diff --git a/src/screens/RegisterScreen.styles.js b/src/screens/RegisterScreen.styles.js
+index a16bfe4..514f11f 100644
+--- a/src/screens/RegisterScreen.styles.js
++++ b/src/screens/RegisterScreen.styles.js
+@@ -149,7 +149,7 @@ export const styles = {
+     fontWeight: '800',
+     cursor: 'pointer',
+     marginTop: '12px',
+-    boxShadow: '0 4px 20px rgba(57, 255, 20, 0.2)',
++    boxShadow: '0 4px 20px rgba(190, 242, 100, 0.2)',
+   },
+   error: {
+     backgroundColor: 'rgba(255, 77, 77, 0.1)',
+diff --git a/src/screens/ReservarTurnoScreen.jsx b/src/screens/ReservarTurnoScreen.jsx
+index 1b16c4d..fb3de9a 100644
+--- a/src/screens/ReservarTurnoScreen.jsx
++++ b/src/screens/ReservarTurnoScreen.jsx
+@@ -250,9 +250,9 @@ const ReservarTurnoScreen = () => {
+                 }}
+                 style={{
+                   ...styles.pildoraCancha,
+-                  backgroundColor: seleccionada ? 'rgba(57, 255, 20, 0.08)' : '#121214',
+-                  borderColor: seleccionada ? '#39FF14' : 'rgba(255, 255, 255, 0.05)',
+-                  color: seleccionada ? '#39FF14' : '#ffffff'
++                  backgroundColor: seleccionada ? 'rgba(190, 242, 100, 0.08)' : '#121214',
++                  borderColor: seleccionada ? '#BEF264' : 'rgba(255, 255, 255, 0.05)',
++                  color: seleccionada ? '#BEF264' : '#ffffff'
+                 }}
+               >
+                 <span style={styles.iconoPildora}>🎾</span>
+@@ -281,9 +281,9 @@ const ReservarTurnoScreen = () => {
+                 }}
+                 style={{
+                   ...styles.tarjetaFecha,
+-                  backgroundColor: esSeleccionado ? '#39FF14' : '#121214',
+-                  border: esSeleccionado ? '1px solid #39FF14' : '1px solid rgba(255, 255, 255, 0.04)',
+-                  boxShadow: esSeleccionado ? '0 8px 20px rgba(57, 255, 20, 0.2)' : 'none'
++                  backgroundColor: esSeleccionado ? '#BEF264' : '#121214',
++                  border: esSeleccionado ? '1px solid #BEF264' : '1px solid rgba(255, 255, 255, 0.04)',
++                  boxShadow: esSeleccionado ? '0 8px 20px rgba(190, 242, 100, 0.2)' : 'none'
+                 }}
+               >
+                 <span style={{ 
+@@ -365,10 +365,10 @@ const ReservarTurnoScreen = () => {
+           disabled={!horaInicio || !horaFin} 
+           style={{
+             ...styles.botonReservar,
+-            backgroundColor: (horaInicio && horaFin) ? '#39FF14' : 'rgba(255, 255, 255, 0.04)',
++            backgroundColor: (horaInicio && horaFin) ? '#BEF264' : 'rgba(255, 255, 255, 0.04)',
+             color: (horaInicio && horaFin) ? '#000000' : 'rgba(255, 255, 255, 0.2)',
+             cursor: (horaInicio && horaFin) ? 'pointer' : 'not-allowed',
+-            boxShadow: (horaInicio && horaFin) ? '0 8px 24px rgba(57, 255, 20, 0.25)' : 'none'
++            boxShadow: (horaInicio && horaFin) ? '0 8px 24px rgba(190, 242, 100, 0.25)' : 'none'
+           }}
+         >
+           {(horaInicio && horaFin) 
+@@ -412,9 +412,9 @@ const ReservarTurnoScreen = () => {
+                         onClick={() => gestionarCompraProducto(p)}
+                         style={{ 
+                           ...styles.botonAccionTienda,
+-                          backgroundColor: agotado ? 'transparent' : 'rgba(57, 255, 20, 0.08)',
+-                          color: agotado ? '#444446' : '#39FF14',
+-                          border: agotado ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(57, 255, 20, 0.15)'
++                          backgroundColor: agotado ? 'transparent' : 'rgba(190, 242, 100, 0.08)',
++                          color: agotado ? '#444446' : '#BEF264',
++                          border: agotado ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(190, 242, 100, 0.15)'
+                         }}
+                       >
+                         {agotado ? 'Agotado' : 'Agregar'}
+diff --git a/src/screens/ReservarTurnoScreen.styles.js b/src/screens/ReservarTurnoScreen.styles.js
+index ffc9326..748cc86 100644
+--- a/src/screens/ReservarTurnoScreen.styles.js
++++ b/src/screens/ReservarTurnoScreen.styles.js
+@@ -154,10 +154,10 @@ export const styles = {
+     color: theme.colors.text
+   },
+   slotSeleccionado: {
+-    backgroundColor: 'rgba(57, 255, 20, 0.08)',
++    backgroundColor: 'rgba(190, 242, 100, 0.08)',
+     borderColor: theme.colors.primary,
+     color: theme.colors.primary,
+-    boxShadow: '0 8px 20px rgba(57, 255, 20, 0.12)'
++    boxShadow: '0 8px 20px rgba(190, 242, 100, 0.12)'
+   },
+   slotOcupado: {
+     backgroundColor: 'rgba(255,255,255,0.02)',
+@@ -352,8 +352,8 @@ export const styles = {
+   spinner: { 
+     width: '32px', 
+     height: '32px', 
+-    border: '3px solid rgba(57, 255, 20, 0.1)', 
+-    borderTop: '3px solid #39FF14', 
++    border: '3px solid rgba(190, 242, 100, 0.1)', 
++    borderTop: '3px solid #BEF264', 
+     borderRadius: '50%'
+   }
+ }
+\ No newline at end of file
+diff --git a/src/screens/TorneoDetalleScreen.jsx b/src/screens/TorneoDetalleScreen.jsx
+index 63a40b2..461413e 100644
+--- a/src/screens/TorneoDetalleScreen.jsx
++++ b/src/screens/TorneoDetalleScreen.jsx
+@@ -147,7 +147,7 @@ const handleSubirFotos = async (e) => {
+         <div style={styles.headerOverlay}>
+           <div style={styles.topBar}>
+             <button onClick={() => navigate(-1)} style={styles.backButton} type="button" aria-label="Volver">
+-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
++              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BEF264" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                 <path d="M19 12H5M12 19l-7-7 7-7" />
+               </svg>
+             </button>
+@@ -399,7 +399,7 @@ const handleSubirFotos = async (e) => {
+   <div style={styles.galleryContainer}>
+     {esOrganizador && (
+       <label style={styles.uploadBox}>
+-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2">
++        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#BEF264" strokeWidth="2">
+           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+           <polyline points="17 8 12 3 7 8"></polyline>
+           <line x1="12" y1="3" x2="12" y2="15"></line>
+diff --git a/src/screens/TorneoDetalleScreen.styles.js b/src/screens/TorneoDetalleScreen.styles.js
+index d759b24..210864e 100644
+--- a/src/screens/TorneoDetalleScreen.styles.js
++++ b/src/screens/TorneoDetalleScreen.styles.js
+@@ -100,8 +100,8 @@ export const styles = {
+     display: 'flex',
+     alignItems: 'center',
+     justifyContent: 'center',
+-    backgroundColor: 'rgba(57, 255, 20, 0.08)',
+-    border: '1px solid rgba(57, 255, 20, 0.15)',
++    backgroundColor: 'rgba(190, 242, 100, 0.08)',
++    border: '1px solid rgba(190, 242, 100, 0.15)',
+   },
+   infoIcon: { fontSize: '20px' },
+   infoLabel: {
+@@ -153,9 +153,9 @@ export const styles = {
+   statusBadge: {
+     padding: '6px 10px',
+     borderRadius: '999px',
+-    backgroundColor: 'rgba(57, 255, 20, 0.12)',
++    backgroundColor: 'rgba(190, 242, 100, 0.12)',
+     color: theme.colors.primary,
+-    border: '1px solid rgba(57, 255, 20, 0.35)',
++    border: '1px solid rgba(190, 242, 100, 0.35)',
+     fontSize: '10px',
+     fontWeight: '800',
+     letterSpacing: '0.08em',
+@@ -213,7 +213,7 @@ export const styles = {
+     outline: 'none',
+   },
+   chipActive: {
+-    backgroundColor: 'rgba(57, 255, 20, 0.15)',
++    backgroundColor: 'rgba(190, 242, 100, 0.15)',
+     borderColor: theme.colors.primary,
+     color: theme.colors.primary,
+   },
+@@ -230,7 +230,7 @@ export const styles = {
+   },
+   timeColumnDetail: {
+     width: '76px',
+-    backgroundColor: 'rgba(57, 255, 20, 0.06)',
++    backgroundColor: 'rgba(190, 242, 100, 0.06)',
+     display: 'flex',
+     alignItems: 'center',
+     justifyContent: 'center',
+@@ -244,13 +244,13 @@ export const styles = {
+     alignItems: 'center',
+     padding: '4px 8px',
+     borderRadius: '999px',
+-    backgroundColor: 'rgba(57, 255, 20, 0.1)',
++    backgroundColor: 'rgba(190, 242, 100, 0.1)',
+     color: theme.colors.primary,
+     fontSize: '9px',
+     fontWeight: '800',
+     textTransform: 'uppercase',
+     letterSpacing: '0.08em',
+-    border: '1px solid rgba(57, 255, 20, 0.2)',
++    border: '1px solid rgba(190, 242, 100, 0.2)',
+   },
+   teamsRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' },
+   teamGroup: { display: 'flex', alignItems: 'center', gap: '8px', flex: 1 },
+@@ -363,7 +363,7 @@ export const styles = {
+   spinner: {
+     width: '32px',
+     height: '32px',
+-    border: '3px solid rgba(57, 255, 20, 0.1)',
++    border: '3px solid rgba(190, 242, 100, 0.1)',
+     borderTopColor: theme.colors.primary,
+     borderRadius: '50%',
+     animation: 'spin 1s linear infinite',
+@@ -404,7 +404,7 @@ export const styles = {
+     alignItems: 'center',
+     justifyContent: 'space-between',
+     padding: '0 24px',
+-    boxShadow: '0 8px 20px rgba(57, 255, 20, 0.25)',
++    boxShadow: '0 8px 20px rgba(190, 242, 100, 0.25)',
+     transition: 'transform 0.2s ease',
+     outline: 'none',
+   },
+@@ -432,8 +432,8 @@ export const styles = {
+   badgeInscripto: {
+     width: '100%',
+     minHeight: '50px',
+-    backgroundColor: 'rgba(57, 255, 20, 0.08)',
+-    border: '1px solid rgba(57, 255, 20, 0.35)',
++    backgroundColor: 'rgba(190, 242, 100, 0.08)',
++    border: '1px solid rgba(190, 242, 100, 0.35)',
+     borderRadius: '16px',
+     color: theme.colors.primary,
+     fontSize: '13px',
+@@ -461,9 +461,9 @@ export const styles = {
+     justifyContent: 'center',
+     gap: '6px',
+     minHeight: '140px',
+-    border: '2px dashed rgba(57, 255, 20, 0.3)',
++    border: '2px dashed rgba(190, 242, 100, 0.3)',
+     borderRadius: '18px',
+-    backgroundColor: 'rgba(57, 255, 20, 0.02)',
++    backgroundColor: 'rgba(190, 242, 100, 0.02)',
+     cursor: 'pointer',
+     padding: '20px',
+     textAlign: 'center',
+diff --git a/src/screens/TorneoInscripcionScreen.jsx b/src/screens/TorneoInscripcionScreen.jsx
+index 56cf4e8..b1282f6 100644
+--- a/src/screens/TorneoInscripcionScreen.jsx
++++ b/src/screens/TorneoInscripcionScreen.jsx
+@@ -154,10 +154,38 @@ const TorneoInscripcionScreen = () => {
+   };
+ 
+   // Separar categorías del string separado por "/" o "|"
+-  const categoriasDisponibles = torneo?.categoria 
+-    ? torneo.categoria.split(/[|/]+/).map(c => c.trim()) 
++  const categoriasDisponibles = torneo?.categoria
++    ? torneo.categoria.split(/[|/]+/).map(c => c.trim())
+     : [];
+ 
++  // ── LÓGICA DEL STEPPER DE PROGRESO (nuevo) ──
++  // Calcula qué pasos están completos según el estado del formulario.
++  const pasosStepper = [
++    {
++      id: 1,
++      nombre: 'Categoría',
++      completo: !!categoriaSeleccionada,
++    },
++    {
++      id: 2,
++      nombre: 'Pareja',
++      completo: !!companeroSeleccionado && !!telefono1.trim() && !!telefono2.trim(),
++    },
++    {
++      id: 3,
++      nombre: 'Horarios',
++      completo: true, // sección siempre "alcanzada" (es opcional)
++    },
++    {
++      id: 4,
++      nombre: 'Confirmar',
++      completo: aceptoReglas,
++    },
++  ];
++  const pasosCompletos = pasosStepper.filter(p => p.completo).length;
++  const porcentajeStepper = Math.round((pasosCompletos / pasosStepper.length) * 100);
++  const pasoActual = pasosStepper.find(p => !p.completo)?.nombre || 'Listo';
++
+   if (cargandoTorneo) {
+     return (
+       <div style={styles.centerContainer}>
+@@ -181,7 +209,7 @@ const TorneoInscripcionScreen = () => {
+       {/* TOP BAR */}
+       <div style={styles.topBar}>
+         <button onClick={() => navigate(-1)} style={styles.backButton}>
+-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
++          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BEF264" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+             <path d="M19 12H5M12 19l-7-7 7-7"/>
+           </svg>
+         </button>
+@@ -194,7 +222,22 @@ const TorneoInscripcionScreen = () => {
+         {/* INFO CARD DEL TORNEO */}
+         <div style={styles.torneoCard}>
+           <h2 style={styles.torneoTitulo}>{torneo.nombre}</h2>
+-          <p style={styles.torneoDetalle}>Costo de Inscripción (por pareja): <strong style={{color: '#39FF14'}}>${torneo.precioInscripcion || '0'}</strong></p>
++          <p style={styles.torneoDetalle}>Costo de Inscripción (por pareja): <strong style={{color: '#BEF264'}}>${torneo.precioInscripcion || '0'}</strong></p>
++        </div>
++
++        {/* STEPPER DE PROGRESO (nuevo) */}
++        <div style={styles.stepperBarra}>
++          <div style={styles.stepperBarraLabel}>
++            <span style={styles.stepperBarraLabelPaso}>
++              Paso {pasosCompletos} de {pasosStepper.length}
++            </span>
++            <span style={styles.stepperBarraLabelNombre}>{pasoActual}</span>
++          </div>
++          <div style={styles.stepperBarraTrack}>
++            <div
++              style={{ ...styles.stepperBarraFill, width: `${porcentajeStepper}%` }}
++            />
++          </div>
+         </div>
+ 
+         <form onSubmit={handleInscribirse} style={styles.form}>
+@@ -364,7 +407,7 @@ const TorneoInscripcionScreen = () => {
+                 style={styles.checkbox}
+               />
+               <span style={styles.rulesText}>
+-                Acepto el reglamento oficial de <strong style={{color: '#39FF14'}}>ADN PÁDEL</strong> y me comprometo a cumplir con el fair-play y los horarios asignados del torneo.
++                Acepto el reglamento oficial de <strong style={{color: '#BEF264'}}>ADN PÁDEL</strong> y me comprometo a cumplir con el fair-play y los horarios asignados del torneo.
+               </span>
+             </label>
+           </div>
+diff --git a/src/screens/TorneoInscripcionScreen.styles.js b/src/screens/TorneoInscripcionScreen.styles.js
+index 1629345..cf9257e 100644
+--- a/src/screens/TorneoInscripcionScreen.styles.js
++++ b/src/screens/TorneoInscripcionScreen.styles.js
+@@ -79,7 +79,7 @@ export const styles = {
+     color: theme.colors.primary,
+     letterSpacing: '1px',
+     margin: '12px 0 4px 0',
+-    borderBottom: '1px dashed rgba(57, 255, 20, 0.2)',
++    borderBottom: '1px dashed rgba(190, 242, 100, 0.2)',
+     paddingBottom: '8px'
+   },
+   sectionSubtext: { fontSize: '12px', color: '#8E8E93', margin: '0 0 10px 0', lineHeight: '1.4' },
+@@ -87,8 +87,8 @@ export const styles = {
+     display: 'flex',
+     justifyContent: 'space-between',
+     alignItems: 'center',
+-    backgroundColor: 'rgba(57, 255, 20, 0.04)',
+-    border: '1px solid #39FF14',
++    backgroundColor: 'rgba(190, 242, 100, 0.04)',
++    border: '1px solid #BEF264',
+     borderRadius: '12px',
+     padding: '12px 16px',
+   },
+@@ -132,7 +132,7 @@ export const styles = {
+     top: '14px',
+     width: '18px',
+     height: '18px',
+-    border: '2px solid rgba(57, 255, 20, 0.1)',
++    border: '2px solid rgba(190, 242, 100, 0.1)',
+     borderTopColor: theme.colors.primary,
+     borderRadius: '50%',
+   },
+@@ -206,9 +206,105 @@ export const styles = {
+     borderRadius: '16px',
+     fontSize: '15px',
+     fontWeight: '900',
+-    boxShadow: '0 8px 20px rgba(57, 255, 20, 0.2)',
++    boxShadow: '0 8px 20px rgba(190, 242, 100, 0.2)',
+     marginTop: '15px'
+   },
+   centerContainer: { display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: theme.colors.background },
+-  spinner: { width: '32px', height: '32px', border: '3px solid rgba(57, 255, 20, 0.1)', borderTopColor: theme.colors.primary, borderRadius: '50%' },
++  spinner: { width: '32px', height: '32px', border: '3px solid rgba(190, 242, 100, 0.1)', borderTopColor: theme.colors.primary, borderRadius: '50%' },
++
++  // ── STEPPER DE PROGRESO (nuevo) ──
++  stepper: {
++    display: 'flex',
++    alignItems: 'center',
++    marginBottom: '20px',
++    padding: '0 4px',
++  },
++  stepperPaso: {
++    display: 'flex',
++    flexDirection: 'column',
++    alignItems: 'center',
++    gap: '4px',
++    flexShrink: 0,
++  },
++  stepperCirculo: {
++    width: '28px',
++    height: '28px',
++    borderRadius: '50%',
++    display: 'flex',
++    alignItems: 'center',
++    justifyContent: 'center',
++    fontSize: '12px',
++    fontWeight: '800',
++    transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
++    border: '1px solid rgba(255,255,255,0.15)',
++    backgroundColor: 'transparent',
++    color: '#7A847E',
++  },
++  stepperCirculoActivo: {
++    backgroundColor: theme.colors.primary,
++    color: '#0B0F0D',
++    border: 'none',
++    boxShadow: '0 0 0 4px rgba(190, 242, 100, 0.2)',
++  },
++  stepperCirculoCompleto: {
++    backgroundColor: theme.colors.primary,
++    color: '#0B0F0D',
++    border: 'none',
++  },
++  stepperLabel: {
++    fontSize: '10px',
++    fontWeight: '600',
++    color: '#7A847E',
++    whiteSpace: 'nowrap',
++  },
++  stepperLabelActivo: {
++    color: theme.colors.text,
++  },
++  stepperLinea: {
++    flex: 1,
++    height: '2px',
++    borderRadius: '999px',
++    backgroundColor: 'rgba(255,255,255,0.1)',
++    margin: '0 6px',
++    marginTop: '-13px',
++    overflow: 'hidden',
++    position: 'relative',
++  },
++  stepperLineaFill: {
++    position: 'absolute',
++    inset: 0,
++    backgroundColor: theme.colors.primary,
++    transform: 'translateX(-100%)',
++    transition: 'transform 0.4s cubic-bezier(0.4,0,0.2,1)',
++  },
++  stepperBarra: {
++    marginBottom: '20px',
++  },
++  stepperBarraTrack: {
++    height: '6px',
++    borderRadius: '999px',
++    backgroundColor: 'rgba(255,255,255,0.08)',
++    overflow: 'hidden',
++  },
++  stepperBarraFill: {
++    height: '100%',
++    borderRadius: '999px',
++    background: `linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.secondaryGlow})`,
++    transition: 'width 0.4s cubic-bezier(0.4,0,0.2,1)',
++  },
++  stepperBarraLabel: {
++    display: 'flex',
++    justifyContent: 'space-between',
++    alignItems: 'center',
++    marginBottom: '6px',
++    fontSize: '11px',
++  },
++  stepperBarraLabelPaso: {
++    color: '#7A847E',
++    fontWeight: '500',
++  },
++  stepperBarraLabelNombre: {
++    color: theme.colors.primary,
++    fontWeight: '700',
++  },
+ }
+\ No newline at end of file
+diff --git a/src/screens/TorneosScreen.jsx b/src/screens/TorneosScreen.jsx
+index ee84a5d..f42924d 100644
+--- a/src/screens/TorneosScreen.jsx
++++ b/src/screens/TorneosScreen.jsx
+@@ -119,9 +119,9 @@ const TorneosScreen = () => {
+         {torneosFiltrados.length > 0 ? (
+           torneosFiltrados.map((torneo) => {
+             const hoy = new Date().toISOString().split('T')[0];
+-            let estado = { texto: 'Inscripciones Abiertas', color: '#39FF14' };
++            let estado = { texto: 'Inscripciones Abiertas', color: '#BEF264' };
+             if (torneo.fechaInicio <= hoy && torneo.fechaFin >= hoy) {
+-              estado = { texto: 'En Curso 🎾', color: '#00E5FF' };
++              estado = { texto: 'En Curso 🎾', color: '#34D399' };
+             } else if (torneo.fechaFin < hoy) {
+               estado = { texto: 'Finalizado', color: '#8E8E93' };
+             }
+@@ -143,7 +143,7 @@ const TorneosScreen = () => {
+                       onError={(e) => {
+                         e.target.onerror = null; 
+                         e.target.style.display = 'none';
+-                        e.target.parentNode.innerHTML = `<div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%); display: flex; align-items: center; justify-content: center; color: #39FF14; font-weight: 700; font-size: 16px;">🏆 ${torneo.nombre}</div>`;
++                        e.target.parentNode.innerHTML = `<div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1c1c1e 0%, #2c2c2e 100%); display: flex; align-items: center; justify-content: center; color: #BEF264; font-weight: 700; font-size: 16px;">🏆 ${torneo.nombre}</div>`;
+                       }}
+                     />
+                   ) : (
+@@ -184,7 +184,7 @@ const TorneosScreen = () => {
+                     </div>
+                     <div style={styles.gridItem}>
+                       <span style={styles.gridLabel}>Inscripción</span>
+-                      <span style={{...styles.gridValue, color: '#39FF14'}}>
++                      <span style={{...styles.gridValue, color: '#BEF264'}}>
+                         ${torneo.precioInscripcion || torneo.precio || '0'}
+                       </span>
+                     </div>
+diff --git a/src/screens/TorneosScreen.styles.js b/src/screens/TorneosScreen.styles.js
+index 57cacf8..c2f6ca6 100644
+--- a/src/screens/TorneosScreen.styles.js
++++ b/src/screens/TorneosScreen.styles.js
+@@ -30,7 +30,7 @@ export const styles = {
+     fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s'
+   },
+   filterTabActive: {
+-    backgroundColor: 'rgba(57, 255, 20, 0.15)', borderColor: theme.colors.primary, color: theme.colors.primary
++    backgroundColor: 'rgba(190, 242, 100, 0.15)', borderColor: theme.colors.primary, color: theme.colors.primary
+   },
+   searchContainer: {
+     marginBottom: '20px', animation: 'fadeIn 0.2s ease'
+@@ -115,8 +115,8 @@ export const styles = {
+     display: 'flex', alignItems: 'center', color: '#A0A0A5', fontSize: '12px', fontWeight: '500'
+   },
+   btnGestionar: {
+-    padding: '8px 14px', borderRadius: '10px', backgroundColor: 'rgba(57, 255, 20, 0.1)',
+-    border: '1px solid rgba(57, 255, 20, 0.4)', color: theme.colors.primary, fontSize: '12px',
++    padding: '8px 14px', borderRadius: '10px', backgroundColor: 'rgba(190, 242, 100, 0.1)',
++    border: '1px solid rgba(190, 242, 100, 0.4)', color: theme.colors.primary, fontSize: '12px',
+     fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s',
+     display: 'flex', alignItems: 'center', gap: '6px'
+   },
+@@ -129,7 +129,7 @@ export const styles = {
+     display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', flexDirection: 'column'
+   },
+   spinner: {
+-    width: '36px', height: '36px', border: '3px solid rgba(57, 255, 20, 0.1)',
++    width: '36px', height: '36px', border: '3px solid rgba(190, 242, 100, 0.1)',
+     borderTopColor: theme.colors.primary, borderRadius: '50%', animation: 'spin 1s linear infinite'
+   },
+   alerta: {
+@@ -147,6 +147,6 @@ export const styles = {
+     position: 'fixed', bottom: '104px', right: '20px',
+     width: '56px', height: '56px', borderRadius: '28px',
+     backgroundColor: theme.colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center',
+-    border: 'none', boxShadow: '0 4px 16px rgba(57, 255, 20, 0.4)', cursor: 'pointer', zIndex: 900
++    border: 'none', boxShadow: '0 4px 16px rgba(190, 242, 100, 0.4)', cursor: 'pointer', zIndex: 900
+   }
+ }
+\ No newline at end of file
+diff --git a/src/screens/VerificarCuentaScreen.styles.js b/src/screens/VerificarCuentaScreen.styles.js
+index c477b9f..5211041 100644
+--- a/src/screens/VerificarCuentaScreen.styles.js
++++ b/src/screens/VerificarCuentaScreen.styles.js
+@@ -103,8 +103,8 @@ export const styles = {
+     flex: 1,
+   },
+   otpInputLleno: {
+-    borderColor: 'rgba(57, 255, 20, 0.45)',
+-    backgroundColor: 'rgba(57, 255, 20, 0.04)',
++    borderColor: 'rgba(190, 242, 100, 0.45)',
++    backgroundColor: 'rgba(190, 242, 100, 0.04)',
+   },
+   otpInputError: {
+     borderColor: 'rgba(255, 77, 77, 0.5)',
+@@ -121,7 +121,7 @@ export const styles = {
+     padding: '12px 14px',
+   },
+   tituloDev: {
+-    color: '#00E5FF',
++    color: '#34D399',
+     fontSize: '11px',
+     fontWeight: '800',
+     textTransform: 'uppercase',
+@@ -132,7 +132,7 @@ export const styles = {
+     fontSize: '13px',
+   },
+   codigoDev: {
+-    color: '#00E5FF',
++    color: '#34D399',
+     fontSize: '15px',
+     letterSpacing: '2px',
+   },
+@@ -153,7 +153,7 @@ export const styles = {
+     fontWeight: '800',
+     cursor: 'pointer',
+     marginTop: '4px',
+-    boxShadow: '0 4px 20px rgba(57, 255, 20, 0.25)',
++    boxShadow: '0 4px 20px rgba(190, 242, 100, 0.25)',
+     transition: 'all 0.2s ease',
+   },
+   botonDeshabilitado: {
+@@ -198,8 +198,8 @@ export const styles = {
+     width: '84px',
+     height: '84px',
+     borderRadius: '50%',
+-    backgroundColor: 'rgba(57, 255, 20, 0.1)',
+-    border: '2px solid rgba(57, 255, 20, 0.5)',
++    backgroundColor: 'rgba(190, 242, 100, 0.1)',
++    border: '2px solid rgba(190, 242, 100, 0.5)',
+     display: 'flex',
+     alignItems: 'center',
+     justifyContent: 'center',
+diff --git a/src/theme/index.js b/src/theme/index.js
+index da48c12..2346df6 100644
+--- a/src/theme/index.js
++++ b/src/theme/index.js
+@@ -1,16 +1,69 @@
++// src/theme/index.js
++// ───────────────────────────────────────────────────────────
++// ADN PÁDEL · Sistema de diseño (refactor v2)
++// Paleta dark refinada: lima como único acento + esmeralda
++// para degradados. Se eliminó el cian intruso que rompía la
++// coherencia visual en la tab "Cronograma".
++// ───────────────────────────────────────────────────────────
+ export const theme = {
+   colors: {
+-    primary: '#39FF14',
+-    background: '#0A0A0B',
+-    cardBg: 'rgba(18, 18, 20, 0.82)',
++    // Acento principal — lima refinado (antes #39FF14 neón crudo).
++    primary: '#BEF264',
++    // Variante profunda para degradados/bordes.
++    primaryDeep: '#84CC16',
++    // Brillo semitransparente para sombras y rings.
++    primaryGlow: 'rgba(190, 242, 100, 0.55)',
++    primarySoft: 'rgba(190, 242, 100, 0.12)',
++
++    // Secundario — esmeralda (reemplaza al cian #00E5FF que
++    // rompía la coherencia cromática de la app).
++    secondaryGlow: '#34D399',
++    secondarySoft: 'rgba(52, 211, 153, 0.12)',
++
++    // Superficies — negros con sutil tinte verde.
++    background: '#0B0F0D',
++    surface: '#141A17',
++    surfaceAlt: '#101512',
++    elevated: '#1A211D',
++    cardBg: 'rgba(20, 26, 23, 0.82)',
++
++    // Texto.
+     text: '#FFFFFF',
+-    secondaryGlow: '#00E5FF',
++    textSecondary: '#A7B0A9',
++    textMuted: '#7A847E',
++
++    // Estado.
++    danger: '#FF453A',
++    dangerSoft: 'rgba(255, 69, 58, 0.12)',
++    warning: '#FBBF24',
++    success: '#34D399',
++
++    // Bordes.
++    border: 'rgba(255, 255, 255, 0.08)',
++    borderStrong: 'rgba(255, 255, 255, 0.14)',
+   },
+   spacing: {
+     bottomNavPadding: '120px',
++    screenPadding: '16px',
+   },
+   borderRadius: {
+-    card: '24px',
++    sm: '10px',
++    md: '14px',
++    lg: '18px',
++    xl: '24px',
++    card: '20px',
+     button: '32px',
++    pill: '999px',
++  },
++  shadows: {
++    card: '0 8px 24px rgba(0, 0, 0, 0.25)',
++    nav: '0px 12px 40px rgba(0, 0, 0, 0.6)',
++    primary: '0 8px 24px -6px rgba(190, 242, 100, 0.45)',
++    primaryGlow: '0 0 0 1px rgba(190, 242, 100, 0.35), 0 8px 30px -8px rgba(190, 242, 100, 0.45)',
++  },
++  transitions: {
++    fast: '0.2s cubic-bezier(0.4, 0, 0.2, 1)',
++    base: '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
++    spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+   },
+ };

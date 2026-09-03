@@ -60,7 +60,7 @@ export const styles = {
     letterSpacing: '-0.3px'
   },
   badgeContador: {
-    backgroundColor: 'rgba(57, 255, 20, 0.1)',
+    backgroundColor: 'rgba(190, 242, 100, 0.1)',
     color: theme.colors.primary,
     padding: '4px 10px',
     borderRadius: '99px',
@@ -144,10 +144,10 @@ export const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: '6px',
-    backgroundColor: 'rgba(57, 255, 20, 0.08)',
+    backgroundColor: 'rgba(190, 242, 100, 0.08)',
     padding: '8px 14px',
     borderRadius: '99px',
-    border: '1px solid rgba(57, 255, 20, 0.15)'
+    border: '1px solid rgba(190, 242, 100, 0.15)'
   },
   textoBadgeAccion: {
     color: theme.colors.primary,
@@ -177,8 +177,8 @@ export const styles = {
   spinner: { 
     width: '28px', 
     height: '28px', 
-    border: '3px solid rgba(57, 255, 20, 0.1)', 
-    borderTop: '3px solid #39FF14', 
+    border: '3px solid rgba(190, 242, 100, 0.1)', 
+    borderTop: '3px solid #BEF264', 
     borderRadius: '50%'
   }
 }

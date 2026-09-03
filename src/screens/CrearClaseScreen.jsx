@@ -488,10 +488,10 @@ const CrearClaseScreen = () => {
                   onClick={() => seleccionarHoraRapida(h)}
                   style={{
                     ...styles.botonHoraGrid,
-                    backgroundColor: nuevaClase.hora === h ? '#39FF14' : 'rgba(255, 255, 255, 0.05)',
+                    backgroundColor: nuevaClase.hora === h ? '#BEF264' : 'rgba(255, 255, 255, 0.05)',
                     color: nuevaClase.hora === h ? '#000' : '#FFF',
-                    borderColor: nuevaClase.hora === h ? '#39FF14' : 'rgba(255, 255, 255, 0.1)',
-                    boxShadow: nuevaClase.hora === h ? '0 8px 18px rgba(57, 255, 20, 0.2)' : 'none',
+                    borderColor: nuevaClase.hora === h ? '#BEF264' : 'rgba(255, 255, 255, 0.1)',
+                    boxShadow: nuevaClase.hora === h ? '0 8px 18px rgba(190, 242, 100, 0.2)' : 'none',
                   }}
                 >
                   {h} hs

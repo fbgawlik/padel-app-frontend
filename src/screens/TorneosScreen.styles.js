@@ -30,7 +30,7 @@ export const styles = {
     fontWeight: '600', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s'
   },
   filterTabActive: {
-    backgroundColor: 'rgba(57, 255, 20, 0.15)', borderColor: theme.colors.primary, color: theme.colors.primary
+    backgroundColor: 'rgba(190, 242, 100, 0.15)', borderColor: theme.colors.primary, color: theme.colors.primary
   },
   searchContainer: {
     marginBottom: '20px', animation: 'fadeIn 0.2s ease'
@@ -115,8 +115,8 @@ export const styles = {
     display: 'flex', alignItems: 'center', color: '#A0A0A5', fontSize: '12px', fontWeight: '500'
   },
   btnGestionar: {
-    padding: '8px 14px', borderRadius: '10px', backgroundColor: 'rgba(57, 255, 20, 0.1)',
-    border: '1px solid rgba(57, 255, 20, 0.4)', color: theme.colors.primary, fontSize: '12px',
+    padding: '8px 14px', borderRadius: '10px', backgroundColor: 'rgba(190, 242, 100, 0.1)',
+    border: '1px solid rgba(190, 242, 100, 0.4)', color: theme.colors.primary, fontSize: '12px',
     fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s',
     display: 'flex', alignItems: 'center', gap: '6px'
   },
@@ -129,7 +129,7 @@ export const styles = {
     display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', flexDirection: 'column'
   },
   spinner: {
-    width: '36px', height: '36px', border: '3px solid rgba(57, 255, 20, 0.1)',
+    width: '36px', height: '36px', border: '3px solid rgba(190, 242, 100, 0.1)',
     borderTopColor: theme.colors.primary, borderRadius: '50%', animation: 'spin 1s linear infinite'
   },
   alerta: {
@@ -147,6 +147,6 @@ export const styles = {
     position: 'fixed', bottom: '104px', right: '20px',
     width: '56px', height: '56px', borderRadius: '28px',
     backgroundColor: theme.colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center',
-    border: 'none', boxShadow: '0 4px 16px rgba(57, 255, 20, 0.4)', cursor: 'pointer', zIndex: 900
+    border: 'none', boxShadow: '0 4px 16px rgba(190, 242, 100, 0.4)', cursor: 'pointer', zIndex: 900
   }
 }

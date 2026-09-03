@@ -39,7 +39,7 @@ export const styles = {
     alignItems: 'flex-start'
   },
   headerMiniRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' },
-  tipoBadge: { fontSize: '10px', fontWeight: '800', color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: '0.6px', backgroundColor: 'rgba(57,255,20,0.1)', padding: '4px 8px', borderRadius: '999px' },
+  tipoBadge: { fontSize: '10px', fontWeight: '800', color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: '0.6px', backgroundColor: 'rgba(190, 242, 100,0.1)', padding: '4px 8px', borderRadius: '999px' },
   claseName: { fontSize: '15px', fontWeight: '800', color: '#fff', margin: 0, letterSpacing: '-0.3px' },
   claseDateTime: { color: '#EAEAEA', fontSize: '12px', fontWeight: '500', margin: '3px 0' },
   profesorLabel: { color: '#8A8A8A', margin: 0, fontSize: '12px', fontWeight: '600' },
@@ -67,7 +67,7 @@ export const styles = {
     padding: '16px 20px', borderRadius: '999px',
     backgroundColor: theme.colors.primary, color: '#0F0F10', border: 'none',
     fontWeight: '800', fontSize: '14px', cursor: 'pointer',
-    boxShadow: '0 16px 40px rgba(57, 255, 20, 0.18)',
+    boxShadow: '0 16px 40px rgba(190, 242, 100, 0.18)',
     display: 'flex', alignItems: 'center', gap: '10px', zIndex: 200
   },
   fabIcon: { fontSize: '18px', lineHeight: 1 }

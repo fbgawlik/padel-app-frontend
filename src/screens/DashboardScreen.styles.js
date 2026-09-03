@@ -1,178 +1,385 @@
 // src/screens/DashboardScreen.styles.js
+// ───────────────────────────────────────────────────────────
+// Refactor v2: usa tokens del theme, agrega tarjeta de nivel
+// con barra de progreso, grilla de acciones rápidas y tarjetas
+// de partido más densas y legibles.
+// ───────────────────────────────────────────────────────────
 import { theme } from '../theme';
 
 export const styles = {
-  contenedorPadre: { 
-    /* El espacio inferior para la barra de navegación lo aporta el Layout.
-       (Antes había un paddingBottom que era pisado por este shorthand y
-       generaba comportamientos distintos según la pantalla.) */
-    padding: '16px 16px 32px 16px', 
-    backgroundColor: 'transparent', 
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' 
+  contenedorPadre: {
+    padding: '16px 16px 32px 16px',
+    backgroundColor: 'transparent',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
   },
-  headerPremium: { 
-    display: 'flex', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    marginBottom: '24px' 
+
+  // ── CABECERA ──
+  headerPremium: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '20px',
   },
-  subtituloPremium: { 
-    fontSize: '13px', 
-    color: '#8E8E93', 
+  subtituloPremium: {
+    fontSize: '13px',
+    color: theme.colors.textMuted,
     margin: '0 0 4px 0',
-    fontWeight: '500'
+    fontWeight: '500',
   },
-  tituloBienvenida: { 
-    fontSize: '24px', 
-    fontWeight: '800', 
-    color: theme.colors.text, 
+  tituloBienvenida: {
+    fontSize: '24px',
+    fontWeight: '800',
+    color: theme.colors.text,
     margin: 0,
-    letterSpacing: '-0.5px'
+    letterSpacing: '-0.5px',
   },
   avatarMiniatura: {
     width: '44px',
     height: '44px',
     borderRadius: '22px',
-    backgroundColor: '#1A1A1A',
-    border: '1px solid rgba(57, 255, 20, 0.3)',
+    backgroundColor: theme.colors.surface,
+    border: `1px solid ${theme.colors.primaryGlow}`,
     color: theme.colors.primary,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     fontWeight: '700',
     fontSize: '18px',
-    overflow: 'hidden'
-  },
-  botonAdmin: {
-    backgroundColor: 'rgba(57, 255, 20, 0.1)',
-    color: theme.colors.primary,
-    border: '1px solid rgba(57, 255, 20, 0.2)',
-    padding: '8px 12px',
-    borderRadius: '12px',
-    fontWeight: '600',
-    fontSize: '12px',
-    cursor: 'pointer'
-  },
-  scrollHorizontalContenedor: {
-    display: 'flex',
-    overflowX: 'auto',
-    gap: '12px',
-    paddingBottom: '12px',
-    marginBottom: '24px',
-    msOverflowStyle: 'none',
-    scrollbarWidth: 'none', 
-  },
-  pildoraCategoria: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    padding: '10px 20px',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    borderRadius: '24px',
-    color: '#fff',
-    fontSize: '14px',
-    whiteSpace: 'nowrap',
+    overflow: 'hidden',
     cursor: 'pointer',
   },
-  seccionContenedor: { marginBottom: '32px' },
-  seccionHeader: { 
-    display: 'flex', 
-    justifyContent: 'space-between', 
-    alignItems: 'center', 
-    marginBottom: '16px' 
+  botonAdmin: {
+    backgroundColor: theme.colors.primarySoft,
+    color: theme.colors.primary,
+    border: `1px solid ${theme.colors.primaryGlow}`,
+    padding: '8px 12px',
+    borderRadius: theme.borderRadius.md,
+    fontWeight: '600',
+    fontSize: '12px',
+    cursor: 'pointer',
   },
-  seccionTitulo: { 
-    fontSize: '18px', 
-    fontWeight: '700', 
-    color: '#fff', 
-    margin: 0 
+
+  // ── TARJETA DE NIVEL / PROGRESO (nueva) ──
+  tarjetaNivel: {
+    position: 'relative',
+    overflow: 'hidden',
+    borderRadius: theme.borderRadius.xl,
+    border: `1px solid ${theme.colors.border}`,
+    padding: '20px',
+    marginBottom: '20px',
+    background: `linear-gradient(135deg, ${theme.colors.primarySoft} 0%, ${theme.colors.surface} 55%, ${theme.colors.surface} 100%)`,
+  },
+  tarjetaNivelGlow: {
+    position: 'absolute',
+    right: '-32px',
+    top: '-40px',
+    width: '160px',
+    height: '160px',
+    borderRadius: '50%',
+    backgroundColor: theme.colors.primary,
+    opacity: '0.15',
+    filter: 'blur(48px)',
+    pointerEvents: 'none',
+  },
+  nivelLabel: {
+    fontSize: '11px',
+    fontWeight: '700',
+    letterSpacing: '1px',
+    textTransform: 'uppercase',
+    color: theme.colors.primaryDeep,
+    margin: 0,
+  },
+  nivelTitulo: {
+    fontSize: '22px',
+    fontWeight: '800',
+    color: theme.colors.text,
+    margin: '4px 0 0 0',
+  },
+  nivelTituloChico: {
+    fontSize: '13px',
+    fontWeight: '400',
+    color: theme.colors.textSecondary,
+  },
+  nivelIcono: {
+    width: '48px',
+    height: '48px',
+    borderRadius: theme.borderRadius.lg,
+    backgroundColor: theme.colors.primarySoft,
+    border: `1px solid ${theme.colors.primaryGlow}`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '22px',
+  },
+  progresoHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '6px',
+  },
+  progresoLabel: {
+    fontSize: '12px',
+    color: theme.colors.textSecondary,
+  },
+  progresoValor: {
+    fontSize: '12px',
+    fontWeight: '700',
+    color: theme.colors.primary,
+  },
+  progresoTrack: {
+    height: '8px',
+    borderRadius: '999px',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    overflow: 'hidden',
+  },
+  progresoFill: {
+    height: '100%',
+    borderRadius: '999px',
+    background: `linear-gradient(90deg, ${theme.colors.primary} 0%, ${theme.colors.secondaryGlow} 100%)`,
+    transition: 'width 0.9s cubic-bezier(0.4,0,0.2,1)',
+  },
+
+  // ── GRILLA DE ACCIONES RÁPIDAS (nueva) ──
+  grillaAcciones: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: '8px',
+    marginBottom: '24px',
+  },
+  accionRapida: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '6px',
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    padding: 0,
+  },
+  accionRapidaIcono: {
+    width: '100%',
+    height: '52px',
+    borderRadius: theme.borderRadius.lg,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '20px',
+    border: `1px solid ${theme.colors.border}`,
+    backgroundColor: theme.colors.surface,
+    transition: 'all 0.2s ease',
+  },
+  accionRapidaIconoDestacado: {
+    backgroundColor: theme.colors.primarySoft,
+    border: `1px solid ${theme.colors.primaryGlow}`,
+  },
+  accionRapidaLabel: {
+    fontSize: '11px',
+    fontWeight: '500',
+    color: theme.colors.textSecondary,
+  },
+
+  // ── SECCIONES ──
+  seccionContenedor: { marginBottom: '28px' },
+  seccionHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '14px',
+  },
+  seccionTitulo: {
+    fontSize: '17px',
+    fontWeight: '700',
+    color: theme.colors.text,
+    margin: 0,
   },
   verTodosText: {
     color: theme.colors.primary,
     fontSize: '13px',
     fontWeight: '600',
-    cursor: 'pointer'
+    cursor: 'pointer',
+  },
+
+  // ── TARJETA DE PARTIDO (horizontal) ──
+  scrollHorizontalContenedor: {
+    display: 'flex',
+    overflowX: 'auto',
+    gap: '12px',
+    paddingBottom: '12px',
+    msOverflowStyle: 'none',
+    scrollbarWidth: 'none',
   },
   tarjetaHorizontal: {
-    minWidth: '260px',
-    maxWidth: '260px',
-    backgroundColor: '#161618',
-    borderRadius: '24px',
-    padding: '20px',
-    border: '1px solid rgba(255,255,255,0.03)',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
+    minWidth: '240px',
+    maxWidth: '240px',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.xl,
+    padding: '18px',
+    border: `1px solid ${theme.colors.border}`,
+    boxShadow: theme.shadows.card,
+    boxSizing: 'border-box',
   },
   tarjetaHorizontalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   badgeClub: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    color: '#EAEAEA',
+    backgroundColor: theme.colors.primarySoft,
+    color: theme.colors.primary,
     padding: '4px 10px',
-    borderRadius: '12px',
+    borderRadius: theme.borderRadius.pill,
     fontSize: '10px',
     fontWeight: '700',
-    textTransform: 'uppercase'
+    textTransform: 'uppercase',
+    letterSpacing: '0.3px',
+  },
+  badgeFecha: {
+    color: theme.colors.textMuted,
+    fontSize: '12px',
+    fontWeight: '500',
+  },
+  partidoCuerpo: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    margin: '14px 0',
   },
   iconoLlamativo: {
     width: '48px',
     height: '48px',
-    borderRadius: '16px',
-    backgroundColor: 'rgba(57, 255, 20, 0.1)',
+    borderRadius: theme.borderRadius.lg,
+    backgroundColor: theme.colors.primarySoft,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '24px'
+    fontSize: '24px',
   },
   imagenCreadorPartido: {
     width: '48px',
     height: '48px',
-    borderRadius: '16px',
+    borderRadius: theme.borderRadius.lg,
     objectFit: 'cover',
-    border: '1px solid rgba(255,255,255,0.1)'
+    border: `1px solid ${theme.colors.border}`,
+  },
+  partidoHora: {
+    margin: 0,
+    color: theme.colors.text,
+    fontSize: '16px',
+    fontWeight: '700',
+  },
+  partidoCreador: {
+    margin: '4px 0 0 0',
+    color: theme.colors.textMuted,
+    fontSize: '12px',
+  },
+  partidoCupos: {
+    margin: '6px 0 0 0',
+    fontSize: '13px',
+    fontWeight: '600',
+  },
+  partidoProgresoTrack: {
+    height: '6px',
+    borderRadius: '999px',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    overflow: 'hidden',
+    marginTop: '10px',
+  },
+  partidoProgresoFill: {
+    height: '100%',
+    borderRadius: '999px',
+    background: `linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.secondaryGlow})`,
   },
   botonAccionPrimario: {
     width: '100%',
     padding: '12px',
-    borderRadius: '14px',
+    borderRadius: theme.borderRadius.lg,
     border: 'none',
     fontWeight: '700',
     fontSize: '14px',
-    marginTop: '8px',
-    cursor: 'pointer'
+    marginTop: '12px',
+    cursor: 'pointer',
+    transition: 'transform 0.15s ease',
+  },
+
+  // ── TARJETA DE TORNEO (lista) ──
+  torneosLista: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
   },
   tarjetaLista: {
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
-    backgroundColor: '#161618',
-    padding: '16px',
-    borderRadius: '20px',
-    border: '1px solid rgba(255,255,255,0.03)',
-    cursor: 'pointer'
+    gap: '14px',
+    backgroundColor: theme.colors.surface,
+    padding: '14px',
+    borderRadius: theme.borderRadius.lg,
+    border: `1px solid ${theme.colors.border}`,
+    cursor: 'pointer',
+    transition: 'border-color 0.2s ease',
   },
   tarjetaListaIcono: {
-    fontSize: '24px',
+    fontSize: '22px',
     backgroundColor: 'rgba(255,255,255,0.05)',
     width: '48px',
     height: '48px',
-    borderRadius: '16px',
+    borderRadius: theme.borderRadius.lg,
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   imagenPortadaTorneo: {
     width: '48px',
     height: '48px',
-    borderRadius: '16px',
+    borderRadius: theme.borderRadius.lg,
     objectFit: 'cover',
-    border: '1px solid rgba(255,255,255,0.05)'
+    border: `1px solid ${theme.colors.border}`,
+    flexShrink: 0,
   },
-  textoVacio: { color: '#8E8E93', fontSize: '14px', margin: '8px 0' },
-  loadingContainer: { display: 'flex', justifyContent: 'center', padding: '40px' },
-  spinner: { width: '32px', height: '32px', border: '3px solid rgba(57, 255, 20, 0.2)', borderTop: '3px solid #39FF14', borderRadius: '50%', animation: 'spin 1s linear infinite' },
-  alerta: { backgroundColor: 'rgba(255,51,51,0.1)', color: '#ff4d4d', padding: '16px', borderRadius: '12px', fontWeight: '600' },
-}
+  torneoListaInfo: { flex: 1, minWidth: 0 },
+  torneoListaTitulo: {
+    margin: '0 0 3px 0',
+    color: theme.colors.text,
+    fontSize: '15px',
+    fontWeight: '700',
+  },
+  torneoListaSub: {
+    margin: 0,
+    color: theme.colors.textMuted,
+    fontSize: '12px',
+  },
+  torneoListaPrecio: {
+    color: theme.colors.primary,
+    fontWeight: '700',
+    fontSize: '14px',
+    flexShrink: 0,
+  },
+
+  // ── ESTADOS ──
+  textoVacio: {
+    color: theme.colors.textMuted,
+    fontSize: '14px',
+    margin: '8px 0',
+  },
+  loadingContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '40px',
+  },
+  spinner: {
+    width: '32px',
+    height: '32px',
+    border: `3px solid ${theme.colors.primarySoft}`,
+    borderTop: `3px solid ${theme.colors.primary}`,
+    borderRadius: '50%',
+    animation: 'spin 1s linear infinite',
+  },
+  alerta: {
+    backgroundColor: theme.colors.dangerSoft,
+    color: theme.colors.danger,
+    padding: '16px',
+    borderRadius: theme.borderRadius.md,
+    fontWeight: '600',
+  },
+};

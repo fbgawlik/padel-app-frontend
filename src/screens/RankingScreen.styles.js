@@ -1,4 +1,8 @@
 // src/screens/RankingScreen.styles.js
+// ───────────────────────────────────────────────────────────
+// Refactor v2: agrega podio top 3, chips de categoría más
+// grandes (touch targets ≥44px), usa tokens del theme.
+// ───────────────────────────────────────────────────────────
 import { theme } from '../theme';
 
 export const styles = {
@@ -10,7 +14,7 @@ export const styles = {
     boxSizing: 'border-box',
     display: 'flex',
     justifyContent: 'center',
-    backgroundColor: theme.colors.background
+    backgroundColor: theme.colors.background,
   },
   tarjetaContenido: {
     width: '100%',
@@ -18,188 +22,312 @@ export const styles = {
     padding: '20px 16px',
     boxSizing: 'border-box',
     display: 'flex',
-    flexDirection: 'column'
+    flexDirection: 'column',
   },
   tituloHeader: {
-    textAlign: 'center',
     fontSize: '22px',
     fontWeight: '800',
-    letterSpacing: '0.5px',
-    margin: '10px 0 20px 0',
-    color: theme.colors.text
+    letterSpacing: '-0.3px',
+    margin: '8px 0 20px 0',
+    color: theme.colors.text,
   },
+
+  // ── SEGMENTED CONTROL (Damas / Caballeros) ──
   contenedorRamas: {
     display: 'flex',
-    backgroundColor: '#141416',
-    borderRadius: '14px',
+    backgroundColor: theme.colors.surfaceAlt,
+    borderRadius: theme.borderRadius.lg,
     padding: '4px',
-    border: '1px solid rgba(255, 255, 255, 0.05)',
-    marginBottom: '16px'
+    border: `1px solid ${theme.colors.border}`,
+    marginBottom: '16px',
   },
   btnRamaActivo: {
     flex: 1,
     backgroundColor: theme.colors.primary,
-    color: '#000000',
+    color: '#0B0F0D',
     border: 'none',
-    borderRadius: '10px',
+    borderRadius: theme.borderRadius.md,
     height: '40px',
     fontSize: '14px',
     fontWeight: '800',
     cursor: 'pointer',
-    transition: 'all 0.2s ease'
+    transition: theme.transitions.fast,
   },
   btnRamaInactivo: {
     flex: 1,
     backgroundColor: 'transparent',
-    color: '#A0A0A5',
+    color: theme.colors.textSecondary,
     border: 'none',
-    borderRadius: '10px',
+    borderRadius: theme.borderRadius.md,
     height: '40px',
     fontSize: '14px',
     fontWeight: '700',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    transition: theme.transitions.fast,
   },
+
+  // ── CHIPS DE CATEGORÍA (más grandes) ──
   sliderCategorias: {
     display: 'flex',
     gap: '8px',
     overflowX: 'auto',
     paddingBottom: '12px',
-    marginBottom: '14px',
-    scrollbarWidth: 'none', 
+    marginBottom: '18px',
+    scrollbarWidth: 'none',
     WebkitOverflowScrolling: 'touch',
   },
   chipCategoriaActivo: {
-    backgroundColor: 'rgba(57, 255, 20, 0.15)',
-    color: theme.colors.primary,
-    border: '1px solid #39FF14',
-    borderRadius: '20px',
-    padding: '8px 16px',
+    backgroundColor: theme.colors.primary,
+    color: '#0B0F0D',
+    border: 'none',
+    borderRadius: '999px',
+    padding: '10px 18px',
     fontSize: '13px',
     fontWeight: '800',
     whiteSpace: 'nowrap',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    minWidth: '44px',
+    boxShadow: theme.shadows.primary,
   },
   chipCategoriaInactivo: {
-    backgroundColor: '#1A1A1E',
-    color: '#A0A0A5',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
-    borderRadius: '20px',
-    padding: '8px 16px',
+    backgroundColor: theme.colors.surface,
+    color: theme.colors.textSecondary,
+    border: `1px solid ${theme.colors.border}`,
+    borderRadius: '999px',
+    padding: '10px 18px',
     fontSize: '13px',
     fontWeight: '600',
     whiteSpace: 'nowrap',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    minWidth: '44px',
   },
+
+  // ── PODIO TOP 3 (nuevo) ──
+  podio: {
+    display: 'flex',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    gap: '8px',
+    marginBottom: '20px',
+    padding: '0 4px',
+  },
+  podioSlot: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    minWidth: 0,
+  },
+  podioAvatarWrap: {
+    position: 'relative',
+    marginBottom: '8px',
+  },
+  podioAvatar: {
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontWeight: '800',
+    color: '#0B0F0D',
+    border: '3px solid var(--bg-background)',
+    objectFit: 'cover',
+  },
+  podioAvatarImg: {
+    borderRadius: '50%',
+    objectFit: 'cover',
+    border: '3px solid var(--bg-background)',
+  },
+  podioMedalla: {
+    position: 'absolute',
+    bottom: '-4px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: '24px',
+    height: '24px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '12px',
+    fontWeight: '900',
+    border: '2px solid var(--bg-background)',
+  },
+  podioNombre: {
+    fontSize: '12px',
+    fontWeight: '700',
+    color: theme.colors.text,
+    maxWidth: '100%',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  podioPuntos: {
+    fontSize: '11px',
+    fontWeight: '700',
+    color: theme.colors.primary,
+    marginBottom: '8px',
+  },
+  podioPilar: {
+    width: '100%',
+    borderRadius: '14px 14px 0 0',
+    border: `1px solid ${theme.colors.border}`,
+    borderTop: 'none',
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+    paddingTop: '8px',
+    background: `linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%)`,
+  },
+  podioPilarNum: {
+    fontSize: '22px',
+    fontWeight: '900',
+    color: 'rgba(255,255,255,0.18)',
+  },
+
+  // ── LISTA RESTANTE ──
   listaClasificacion: {
     display: 'flex',
     flexDirection: 'column',
     gap: '10px',
-    marginTop: '6px'
+    marginTop: '6px',
   },
   filaJugador: {
-    backgroundColor: '#141416',
-    border: '1px solid rgba(255, 255, 255, 0.05)',
-    borderRadius: '16px',
+    backgroundColor: theme.colors.surface,
+    border: `1px solid ${theme.colors.border}`,
+    borderRadius: theme.borderRadius.lg,
     display: 'flex',
     alignItems: 'center',
     padding: '12px 14px',
     gap: '12px',
     boxSizing: 'border-box',
-    cursor: 'pointer'
+    cursor: 'pointer',
+    transition: 'border-color 0.2s ease',
   },
   colPosicion: {
-    width: '32px',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center'
-  },
-  textoPosicion: {
-    fontSize: '15px',
-    fontWeight: '700',
-    color: '#A0A0A5'
-  },
-  badgeMedalla: (pos) => ({
-    backgroundColor: pos === 1 ? '#D4AF37' : pos === 2 ? '#AAA9AD' : '#CD7F32',
-    color: '#000000',
-    width: '24px',
-    height: '24px',
-    borderRadius: '50%',
+    width: '30px',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    fontSize: '12px',
-    fontWeight: '900',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.4)'
-  }),
+    flexShrink: 0,
+  },
+  posicionBadge: {
+    width: '28px',
+    height: '28px',
+    borderRadius: '8px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    fontSize: '13px',
+    fontWeight: '800',
+  },
+  posicionTop: {
+    backgroundColor: theme.colors.primarySoft,
+    color: theme.colors.primary,
+  },
+  posicionResto: {
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    color: theme.colors.textMuted,
+  },
   colFoto: {
-    width: '42px',
-    height: '42px'
+    width: '40px',
+    height: '40px',
+    flexShrink: 0,
   },
   avatarContenedor: {
     width: '100%',
     height: '100%',
     borderRadius: '50%',
-    backgroundColor: '#1A1A1E',
+    backgroundColor: theme.colors.surfaceAlt,
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-    border: '1px solid rgba(255, 255, 255, 0.08)'
+    border: `1px solid ${theme.colors.border}`,
   },
   avatar: {
     width: '100%',
     height: '100%',
-    objectFit: 'cover'
+    objectFit: 'cover',
   },
   inicialAvatar: {
     fontSize: '14px',
     fontWeight: '700',
-    color: '#A0A0A5'
+    color: theme.colors.textSecondary,
   },
   colInfo: {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    gap: '2px'
+    gap: '2px',
+    minWidth: 0,
   },
   nombreJugador: {
     fontSize: '15px',
     fontWeight: '700',
-    color: theme.colors.text
+    color: theme.colors.text,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   },
   subtextoCategoria: {
     fontSize: '12px',
-    color: '#A0A0A5',
-    fontWeight: '500'
+    color: theme.colors.textMuted,
+    fontWeight: '500',
   },
   colPuntos: {
-    textAlign: 'right'
+    textAlign: 'right',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: '2px',
+    flexShrink: 0,
   },
   textoPuntos: {
     fontSize: '15px',
     fontWeight: '800',
-    color: theme.colors.primary
+    color: theme.colors.primary,
   },
+  subtextoPJ: {
+    fontSize: '11px',
+    color: theme.colors.textMuted,
+    fontWeight: '500',
+  },
+
+  // ── ESTADOS ──
   contenedorCarga: {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: '60px 0'
+    padding: '60px 0',
   },
   spinner: {
     width: '32px',
     height: '32px',
-    border: '3px solid rgba(255, 255, 255, 0.08)',
-    borderTop: '3px solid #39FF14',
+    border: `3px solid ${theme.colors.border}`,
+    borderTop: `3px solid ${theme.colors.primary}`,
     borderRadius: '50%',
-    animation: 'spin 1s linear infinite'
+    animation: 'spin 1s linear infinite',
   },
   mensajeEstado: {
     textAlign: 'center',
     padding: '40px 20px',
-    color: '#A0A0A5',
+    color: theme.colors.textMuted,
     fontSize: '14px',
-    lineHeight: '20px'
-  }
-}
+    lineHeight: '20px',
+  },
+
+  // Sección "resto de la tabla"
+  restoHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '11px',
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: '0.5px',
+    color: theme.colors.textMuted,
+    marginBottom: '4px',
+    marginTop: '6px',
+  },
+};

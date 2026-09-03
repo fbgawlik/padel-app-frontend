@@ -234,7 +234,7 @@ const GestionTorneoScreen = () => {
       {/* ─── ENCABEZADO Y TÍTULOS ─── */}
       <div style={styles.header}>
         <button onClick={() => navigate(-1)} style={styles.backButton}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BEF264" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
         </button>
@@ -285,8 +285,8 @@ const GestionTorneoScreen = () => {
             onClick={() => setPestanaActiva(tab.id)}
             style={{
               ...styles.tabButton,
-              color: pestanaActiva === tab.id ? '#39FF14' : '#8E8E93',
-              borderBottom: pestanaActiva === tab.id ? '3px solid #39FF14' : '3px solid transparent'
+              color: pestanaActiva === tab.id ? '#BEF264' : '#8E8E93',
+              borderBottom: pestanaActiva === tab.id ? '3px solid #BEF264' : '3px solid transparent'
             }}
           >
             {pestanaActiva === tab.id ? `[ ${tab.label} ]` : tab.label}
@@ -350,7 +350,7 @@ const GestionTorneoScreen = () => {
                       key={insc.id} 
                       style={{
                         ...styles.cardInscripto, 
-                        borderColor: insc.pagado ? '#39FF14' : 'rgba(255,255,255,0.1)'
+                        borderColor: insc.pagado ? '#BEF264' : 'rgba(255,255,255,0.1)'
                       }}
                     >
                       <div style={styles.avatarDoble}>
@@ -376,9 +376,9 @@ const GestionTorneoScreen = () => {
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
                           <span style={{
                             ...styles.badgePago,
-                            backgroundColor: insc.pagado ? 'rgba(57, 255, 20, 0.15)' : 'rgba(255, 69, 58, 0.15)',
-                            color: insc.pagado ? '#39FF14' : '#FF453A',
-                            border: `1px solid ${insc.pagado ? 'rgba(57, 255, 20, 0.3)' : 'rgba(255, 69, 58, 0.3)'}`
+                            backgroundColor: insc.pagado ? 'rgba(190, 242, 100, 0.15)' : 'rgba(255, 69, 58, 0.15)',
+                            color: insc.pagado ? '#BEF264' : '#FF453A',
+                            border: `1px solid ${insc.pagado ? 'rgba(190, 242, 100, 0.3)' : 'rgba(255, 69, 58, 0.3)'}`
                           }}>
                             {insc.pagado ? '✓ PAGADO' : '✕ DEBE PAGO'}
                           </span>
@@ -394,8 +394,8 @@ const GestionTorneoScreen = () => {
                           title={insc.pagado ? 'Marcar como pendiente de pago' : 'Marcar como pagado'}
                           style={{
                             ...styles.iconActionBtn,
-                            backgroundColor: insc.pagado ? 'rgba(57, 255, 20, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                            borderColor: insc.pagado ? '#39FF14' : 'rgba(255, 255, 255, 0.1)',
+                            backgroundColor: insc.pagado ? 'rgba(190, 242, 100, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                            borderColor: insc.pagado ? '#BEF264' : 'rgba(255, 255, 255, 0.1)',
                           }}
                         >
                           💵
@@ -509,11 +509,11 @@ const GestionTorneoScreen = () => {
                   key={dia.id} onClick={() => setDiaSeleccionado(dia.id)}
                   style={{
                     ...styles.diaBtn,
-                    backgroundColor: diaSeleccionado === dia.id ? 'rgba(57, 255, 20, 0.1)' : 'rgba(22, 22, 24, 0.8)',
-                    borderColor: diaSeleccionado === dia.id ? '#39FF14' : 'rgba(255,255,255,0.05)'
+                    backgroundColor: diaSeleccionado === dia.id ? 'rgba(190, 242, 100, 0.1)' : 'rgba(22, 22, 24, 0.8)',
+                    borderColor: diaSeleccionado === dia.id ? '#BEF264' : 'rgba(255,255,255,0.05)'
                   }}
                 >
-                  <span style={{color: diaSeleccionado === dia.id ? '#39FF14' : '#8E8E93', fontWeight: '700', fontSize: '13px'}}>{dia.text1}</span>
+                  <span style={{color: diaSeleccionado === dia.id ? '#BEF264' : '#8E8E93', fontWeight: '700', fontSize: '13px'}}>{dia.text1}</span>
                   <span style={{color: '#FFF', fontWeight: '800', fontSize: '16px'}}>{dia.text2}</span>
                 </button>
               ))}
@@ -529,7 +529,7 @@ const GestionTorneoScreen = () => {
                   <div key={partido.id} style={styles.cardResultado}>
                     <div style={styles.resultadoHeader}>
                       <span style={styles.textoPista}>{partido.zona?.nombre || partido.tipoFase} • {partido.fecha || 'Fecha pendiente'}</span>
-                      <span style={{...styles.badgeEstado, color: partido.estado === 'finalizado' ? '#39FF14' : '#E5C200'}}>
+                      <span style={{...styles.badgeEstado, color: partido.estado === 'finalizado' ? '#BEF264' : '#E5C200'}}>
                         {partido.estado.toUpperCase()}
                       </span>
                     </div>
@@ -610,9 +610,9 @@ const GestionTorneoScreen = () => {
                 <span style={styles.modalLabel}>Estado de Pago:</span>
                 <span style={{
                   ...styles.badgePago,
-                  backgroundColor: inscripcionSeleccionada.pagado ? 'rgba(57, 255, 20, 0.15)' : 'rgba(255, 69, 58, 0.15)',
-                  color: inscripcionSeleccionada.pagado ? '#39FF14' : '#FF453A',
-                  border: `1px solid ${inscripcionSeleccionada.pagado ? 'rgba(57, 255, 20, 0.3)' : 'rgba(255, 69, 58, 0.3)'}`,
+                  backgroundColor: inscripcionSeleccionada.pagado ? 'rgba(190, 242, 100, 0.15)' : 'rgba(255, 69, 58, 0.15)',
+                  color: inscripcionSeleccionada.pagado ? '#BEF264' : '#FF453A',
+                  border: `1px solid ${inscripcionSeleccionada.pagado ? 'rgba(190, 242, 100, 0.3)' : 'rgba(255, 69, 58, 0.3)'}`,
                   marginTop: '4px',
                   display: 'inline-block'
                 }}>

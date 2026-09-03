@@ -147,7 +147,7 @@ const handleSubirFotos = async (e) => {
         <div style={styles.headerOverlay}>
           <div style={styles.topBar}>
             <button onClick={() => navigate(-1)} style={styles.backButton} type="button" aria-label="Volver">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BEF264" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </button>
@@ -399,7 +399,7 @@ const handleSubirFotos = async (e) => {
   <div style={styles.galleryContainer}>
     {esOrganizador && (
       <label style={styles.uploadBox}>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#BEF264" strokeWidth="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
           <polyline points="17 8 12 3 7 8"></polyline>
           <line x1="12" y1="3" x2="12" y2="15"></line>

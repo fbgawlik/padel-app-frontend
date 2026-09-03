@@ -95,7 +95,7 @@ const PerfilPublicoScreen = () => {
           
           {/* Card Puntos */}
           <div style={styles.badgeCard}>
-            <div style={{...styles.badgeIcono, color: '#39FF14', backgroundColor: 'rgba(57, 255, 20, 0.1)'}}>🏅</div>
+            <div style={{...styles.badgeIcono, color: '#BEF264', backgroundColor: 'rgba(190, 242, 100, 0.1)'}}>🏅</div>
             <span style={styles.badgeTitulo}>Puntos</span>
             <span style={styles.badgeValor}>{jugador.puntosGenerales || 0} pts</span>
           </div>
@@ -143,7 +143,7 @@ const PerfilPublicoScreen = () => {
             {/* Record Extra Estético */}
             <div style={styles.cajaRecord}>
               <div style={styles.labelLadoTitle}>Rendimiento Circuito</div>
-              <div style={styles.valorRecordText}>W - L : <span style={{color: '#39FF14'}}>{jugador.rendimientoCircuito || '0 - 0'}</span></div>
+              <div style={styles.valorRecordText}>W - L : <span style={{color: '#BEF264'}}>{jugador.rendimientoCircuito || '0 - 0'}</span></div>
             </div>
           </div>
 

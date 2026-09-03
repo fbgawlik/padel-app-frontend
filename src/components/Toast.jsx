@@ -1,26 +1,27 @@
 // src/components/Toast.jsx
+// ───────────────────────────────────────────────────────────
+// Refactor v2: usa tokens del theme. Mantiene la misma API
+// (mensaje, tipo, onClose) para no romper los usos existentes.
+// ───────────────────────────────────────────────────────────
 import React, { useEffect, useState } from 'react';
+import { theme } from '../theme';
 
 const Toast = ({ mensaje, tipo, onClose }) => {
   const [visible, setVisible] = useState(false);
 
-  // Animación de entrada y salida
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
-
     const timer = setTimeout(() => {
       setVisible(false);
-      setTimeout(onClose, 300); // Espera a que termine la animación para desmontar
+      setTimeout(onClose, 300);
     }, 3000);
-
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  // Definir colores según el tipo de notificación
   const colores = {
-    success: '#39FF14', // Verde neón
-    error: '#FF3333',   // Rojo para errores
-    info: '#00E5FF'     // Cian para información
+    success: theme.colors.primary,
+    error: theme.colors.danger,
+    info: theme.colors.secondaryGlow,
   };
 
   const colorActivo = colores[tipo] || colores.info;
@@ -31,11 +32,10 @@ const Toast = ({ mensaje, tipo, onClose }) => {
       aria-live="polite"
       style={{
         ...styles.toastContainer,
-        // Combinamos SIEMPRE el centrado horizontal con la animación vertical
         transform: `translateX(-50%) translateY(${visible ? '0' : '-24px'})`,
         opacity: visible ? 1 : 0,
         borderLeft: `4px solid ${colorActivo}`,
-        boxShadow: `0px 4px 15px ${colorActivo}20`, // Brillo sutil del color
+        boxShadow: `0px 4px 15px ${colorActivo}20`,
       }}
     >
       <div style={{ ...styles.iconContainer, color: colorActivo }}>
@@ -57,11 +57,11 @@ const styles = {
     alignItems: 'center',
     gap: '12px',
     padding: '12px 20px',
-    backgroundColor: 'rgba(18, 18, 20, 0.92)',
+    backgroundColor: theme.colors.cardBg,
     backdropFilter: 'blur(16px)',
     WebkitBackdropFilter: 'blur(16px)',
-    borderRadius: '12px',
-    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: theme.borderRadius.md,
+    border: `1px solid ${theme.colors.border}`,
     zIndex: 9999,
     minWidth: '0',
     maxWidth: 'min(90vw, 420px)',
@@ -82,7 +82,7 @@ const styles = {
   mensaje: {
     fontSize: '14px',
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: theme.colors.text,
     letterSpacing: '-0.2px',
   },
 };

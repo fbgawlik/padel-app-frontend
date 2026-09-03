@@ -247,7 +247,7 @@ const GestionComplejo = () => {
     return (
       <div style={styles.contenedorBase}>
         <div style={styles.tarjetaCentralForm}>
-          <h2 style={{ color: '#39FF14', margin: '0 0 10px 0', fontWeight: '800' }}>¡Bienvenido, Administrador!</h2>
+          <h2 style={{ color: '#BEF264', margin: '0 0 10px 0', fontWeight: '800' }}>¡Bienvenido, Administrador!</h2>
           <p style={{ color: '#A0A0A5', marginBottom: '24px', fontSize: '14px', lineHeight: '1.4' }}>Para comenzar a recibir reservas, primero registra los datos de tu complejo.</p>
           <form onSubmit={gestionarCrearMiComplejo} style={styles.formulario}>
             <input 
@@ -327,7 +327,7 @@ const GestionComplejo = () => {
           <div style={styles.tarjetaMetrica}>
             <span style={styles.metricaLabel}>Artículos Tienda</span>
             <div style={styles.metricaFilaValor}>
-              <span style={{...styles.metricaNumero, color: '#39FF14'}}>{productos.length}</span>
+              <span style={{...styles.metricaNumero, color: '#BEF264'}}>{productos.length}</span>
             </div>
           </div>
 
@@ -371,8 +371,8 @@ const GestionComplejo = () => {
                                 <span style={styles.horaReserva}>{turno.horaInicio} - {turno.horaFin} hs</span>
                                 <span style={{
                                   ...styles.badgeEstadoReserva,
-                                  color: esAbierto ? '#00ccff' : '#39FF14',
-                                  backgroundColor: esAbierto ? 'rgba(0, 204, 255, 0.1)' : 'rgba(57, 255, 20, 0.1)'
+                                  color: esAbierto ? '#00ccff' : '#BEF264',
+                                  backgroundColor: esAbierto ? 'rgba(0, 204, 255, 0.1)' : 'rgba(190, 242, 100, 0.1)'
                                 }}>
                                   {esAbierto ? 'Abierto' : 'Normal'}
                                 </span>
@@ -417,7 +417,7 @@ const GestionComplejo = () => {
                     <div style={{ fontSize: 12, color: '#8E8E93' }}>{t.fechaInicio} → {t.fechaFin}</div>
                   </div>
                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                    <div style={{ fontSize: 12, color: '#39FF14', fontWeight: 800 }}>{(t.inscripciones || []).length} parejas</div>
+                    <div style={{ fontSize: 12, color: '#BEF264', fontWeight: 800 }}>{(t.inscripciones || []).length} parejas</div>
                     <button onClick={() => setOpenInscriptos(prev => ({ ...prev, [t.id]: !prev[t.id] }))} style={{ ...styles.btnAjustesRedondo, width: '36px', height: '36px' }}>{openInscriptos[t.id] ? '🔽' : '🔍'}</button>
                   </div>
                 </div>
@@ -492,8 +492,8 @@ const GestionComplejo = () => {
                     <span style={styles.clienteReserva}>{estaOcupada ? '🔴' : '🟢'} {c.nombre} <small style={{color: '#8E8E93'}}>({c.tipoPiso})</small></span>
                     <span style={{
                       ...styles.badgeEstadoReserva, 
-                      color: estaOcupada ? '#FF453A' : '#39FF14', 
-                      backgroundColor: estaOcupada ? 'rgba(255,69,58,0.1)' : 'rgba(57,255,20,0.1)'
+                      color: estaOcupada ? '#FF453A' : '#BEF264', 
+                      backgroundColor: estaOcupada ? 'rgba(255,69,58,0.1)' : 'rgba(190, 242, 100,0.1)'
                     }}>
                       {estaOcupada ? 'OCUPADA' : 'LIBRE'}
                     </span>
@@ -599,8 +599,8 @@ const GestionComplejo = () => {
                               <span style={styles.nombreItemLista}>{p.nombre}</span>
                               <span style={{
                                 ...styles.badgeTipoProducto,
-                                backgroundColor: p.esAlquiler ? 'rgba(0, 204, 255, 0.1)' : 'rgba(57, 255, 20, 0.1)',
-                                color: p.esAlquiler ? '#00ccff' : '#39FF14'
+                                backgroundColor: p.esAlquiler ? 'rgba(0, 204, 255, 0.1)' : 'rgba(190, 242, 100, 0.1)',
+                                color: p.esAlquiler ? '#00ccff' : '#BEF264'
                               }}>{p.esAlquiler ? 'Alquiler' : 'Venta'}</span>
                             </div>
                             <div style={styles.detalleItemLista}>Precio: ${p.precio} | Stock: <span style={{ color: Number(p.stock) <= 2 ? '#FF453A' : '#E5E5EA' }}>{p.stock} u.</span></div>

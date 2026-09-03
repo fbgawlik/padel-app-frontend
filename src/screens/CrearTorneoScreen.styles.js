@@ -53,7 +53,7 @@ export const styles = {
     transition: 'all 0.2s ease'
   },
   tipoTorneoCardActive: {
-    backgroundColor: 'rgba(57, 255, 20, 0.1)',
+    backgroundColor: 'rgba(190, 242, 100, 0.1)',
     borderColor: theme.colors.primary
   },
   tipoTorneoCardAmericanoActive: {
@@ -104,7 +104,7 @@ export const styles = {
     padding: '14px 16px',
     borderRadius: '12px',
     backgroundColor: '#1C1C1E',
-    border: '1px solid rgba(57, 255, 20, 0.3)',
+    border: '1px solid rgba(190, 242, 100, 0.3)',
     color: theme.colors.primary,
     fontSize: '15px',
     fontWeight: '600',
@@ -139,20 +139,20 @@ export const styles = {
   chipActivo: {
     flex: '0 0 auto',
     padding: '12px 24px',
-    backgroundColor: 'rgba(57, 255, 20, 0.12)', 
-    border: '1px solid #39FF14',
+    backgroundColor: 'rgba(190, 242, 100, 0.12)', 
+    border: '1px solid #BEF264',
     borderRadius: '16px',
     color: theme.colors.primary,
     fontSize: '14px',
     fontWeight: '700',
     cursor: 'pointer',
-    boxShadow: '0 4px 12px rgba(57, 255, 20, 0.2)'
+    boxShadow: '0 4px 12px rgba(190, 242, 100, 0.2)'
   },
   chipCupoActivo: {
     flex: '0 0 auto',
     padding: '12px 24px',
     backgroundColor: 'rgba(0, 229, 255, 0.12)', 
-    border: '1px solid #00E5FF',
+    border: '1px solid #34D399',
     borderRadius: '16px',
     color: theme.colors.secondaryGlow,
     fontSize: '14px',
@@ -169,9 +169,9 @@ export const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     height: '130px',
-    border: '1px dashed rgba(57, 255, 20, 0.3)',
+    border: '1px dashed rgba(190, 242, 100, 0.3)',
     borderRadius: '16px',
-    backgroundColor: 'rgba(57, 255, 20, 0.01)',
+    backgroundColor: 'rgba(190, 242, 100, 0.01)',
     cursor: 'pointer'
   },
   previewContainer: {
@@ -209,7 +209,7 @@ export const styles = {
     fontWeight: '800',
     cursor: 'pointer',
     marginTop: '10px',
-    boxShadow: '0px 8px 24px rgba(57, 255, 20, 0.3)',
+    boxShadow: '0px 8px 24px rgba(190, 242, 100, 0.3)',
     transition: 'all 0.1s ease'
   },
   btnSubmitDisabled: {

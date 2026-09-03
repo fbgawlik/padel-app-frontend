@@ -103,8 +103,8 @@ export const styles = {
     flex: 1,
   },
   otpInputLleno: {
-    borderColor: 'rgba(57, 255, 20, 0.45)',
-    backgroundColor: 'rgba(57, 255, 20, 0.04)',
+    borderColor: 'rgba(190, 242, 100, 0.45)',
+    backgroundColor: 'rgba(190, 242, 100, 0.04)',
   },
   otpInputError: {
     borderColor: 'rgba(255, 77, 77, 0.5)',
@@ -121,7 +121,7 @@ export const styles = {
     padding: '12px 14px',
   },
   tituloDev: {
-    color: '#00E5FF',
+    color: '#34D399',
     fontSize: '11px',
     fontWeight: '800',
     textTransform: 'uppercase',
@@ -132,7 +132,7 @@ export const styles = {
     fontSize: '13px',
   },
   codigoDev: {
-    color: '#00E5FF',
+    color: '#34D399',
     fontSize: '15px',
     letterSpacing: '2px',
   },
@@ -153,7 +153,7 @@ export const styles = {
     fontWeight: '800',
     cursor: 'pointer',
     marginTop: '4px',
-    boxShadow: '0 4px 20px rgba(57, 255, 20, 0.25)',
+    boxShadow: '0 4px 20px rgba(190, 242, 100, 0.25)',
     transition: 'all 0.2s ease',
   },
   botonDeshabilitado: {
@@ -198,8 +198,8 @@ export const styles = {
     width: '84px',
     height: '84px',
     borderRadius: '50%',
-    backgroundColor: 'rgba(57, 255, 20, 0.1)',
-    border: '2px solid rgba(57, 255, 20, 0.5)',
+    backgroundColor: 'rgba(190, 242, 100, 0.1)',
+    border: '2px solid rgba(190, 242, 100, 0.5)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

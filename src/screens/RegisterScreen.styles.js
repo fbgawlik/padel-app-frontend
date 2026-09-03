@@ -149,7 +149,7 @@ export const styles = {
     fontWeight: '800',
     cursor: 'pointer',
     marginTop: '12px',
-    boxShadow: '0 4px 20px rgba(57, 255, 20, 0.2)',
+    boxShadow: '0 4px 20px rgba(190, 242, 100, 0.2)',
   },
   error: {
     backgroundColor: 'rgba(255, 77, 77, 0.1)',

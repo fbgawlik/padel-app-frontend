@@ -170,16 +170,16 @@ const MisReservasScreen = () => {
                 <div key={partido.id} style={styles.tarjeta}>
                   <span style={{
                     ...styles.badgeEstado, 
-                    backgroundColor: esOrganizador ? 'rgba(0, 204, 255, 0.08)' : 'rgba(57, 255, 20, 0.08)',
-                    color: esOrganizador ? '#00ccff' : '#39FF14',
-                    borderColor: esOrganizador ? 'rgba(0, 204, 255, 0.15)' : 'rgba(57, 255, 20, 0.15)'
+                    backgroundColor: esOrganizador ? 'rgba(0, 204, 255, 0.08)' : 'rgba(190, 242, 100, 0.08)',
+                    color: esOrganizador ? '#00ccff' : '#BEF264',
+                    borderColor: esOrganizador ? 'rgba(0, 204, 255, 0.15)' : 'rgba(190, 242, 100, 0.15)'
                   }}>
                     {esOrganizador ? 'ORGANIZADOR' : 'INSCRIPTO'}
                   </span>
                   <div style={styles.cuerpoTarjeta}>
                     <h3 style={styles.tituloTarjeta}>Partido Abierto: {partido.cancha?.nombre}</h3>
                     <p style={styles.subtituloTarjeta}>🏢 Club: {partido.cancha?.complejo?.nombre}</p>
-                    <p style={{...styles.subtituloTarjeta, color: esOrganizador ? '#00ccff' : '#39FF14', fontWeight: '500'}}>
+                    <p style={{...styles.subtituloTarjeta, color: esOrganizador ? '#00ccff' : '#BEF264', fontWeight: '500'}}>
                       👤 Organiza: {esOrganizador ? 'Vos' : `${partido.jugador?.nombre} ${partido.jugador?.apellido}`}
                     </p>
                     

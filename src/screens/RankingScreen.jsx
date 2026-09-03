@@ -1,30 +1,29 @@
 // src/screens/RankingScreen.jsx
+// ───────────────────────────────────────────────────────────
+// Refactor v2: agrega podio visual top 3 + lista para el resto.
+// Mantiene TODA la lógica de carga desde la API intacta.
+// ───────────────────────────────────────────────────────────
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api';
-import { resolverUrlImagen } from '../services/imageHelper'; 
+import { resolverUrlImagen } from '../services/imageHelper';
 import { styles } from './RankingScreen.styles';
 
 const RankingScreen = () => {
-  // Manejamos estados limpios para simplificar el renderizado y la lógica
-  const [categoria, setCategoria] = useState('5ta'); 
-  const [rama, setRama] = useState('Caballeros'); 
+  const [categoria, setCategoria] = useState('5ta');
+  const [rama, setRama] = useState('Caballeros');
   const [jugadores, setJugadores] = useState([]);
   const [cargando, setCargando] = useState(true);
-  
-  const navigate = useNavigate(); 
 
-  // Categorías base estandarizadas
+  const navigate = useNavigate();
+
   const categoriasDisponibles = ['1ra', '2da', '3ra', '4ta', '5ta', '6ta', '7ma', '8va'];
 
   useEffect(() => {
     const cargarRanking = async () => {
       setCargando(true);
       try {
-        // 🔥 REPARACIÓN AQUÍ: Reconstruimos el string "5ta Caballeros" que se genera en RegisterScreen
         const categoriaFormateada = `${categoria} ${rama}`;
-        
-        // Enviamos la query con el formato exacto que espera recibir el Backend
         const respuesta = await API.get(`/ranking?categoria=${encodeURIComponent(categoriaFormateada)}`);
         setJugadores(respuesta.data || []);
       } catch (error) {
@@ -36,33 +35,42 @@ const RankingScreen = () => {
     };
 
     cargarRanking();
-  }, [categoria, rama]); // Se vuelve a disparar al cambiar pestaña o categoría
+  }, [categoria, rama]);
 
-  // Lógica de resolución de imágenes
-
-  // Obtener iniciales de respaldo
   const obtenerIniciales = (jugador) => {
     const n = jugador?.nombre?.charAt(0) || '';
     const a = jugador?.apellido?.charAt(0) || '';
     return (n + a).toUpperCase() || 'P';
   };
 
+  // Colores de medalla
+  const medallaColor = (pos) =>
+    pos === 1 ? '#FBBF24' : pos === 2 ? '#CBD5E1' : '#D97706';
+
+  // Slots del podio: 2do (izq), 1ero (centro, más alto), 3ero (der)
+  const podioOrder = [1, 0, 2]; // índices en jugadores[]
+  const podioHeights = ['64px', '88px', '52px'];
+  const podioAvatarSizes = [46, 58, 46];
+  const tienePodio = !cargando && jugadores.length >= 3;
+  const topJugadores = jugadores.slice(0, 3);
+  const restoJugadores = jugadores.slice(3);
+
   return (
     <div style={styles.contenedor}>
       <div style={styles.tarjetaContenido}>
-        
-        {/* TÍTULO DE LA PANTALLA */}
+
+        {/* TÍTULO */}
         <h2 style={styles.tituloHeader}>Ranking Oficial</h2>
 
-        {/* CONTENEDOR DE PESTAÑAS (RAMAS) */}
+        {/* SEGMENTED CONTROL (RAMAS) */}
         <div style={styles.contenedorRamas}>
-          <button 
+          <button
             style={rama === 'Damas' ? styles.btnRamaActivo : styles.btnRamaInactivo}
             onClick={() => setRama('Damas')}
           >
             Damas
           </button>
-          <button 
+          <button
             style={rama === 'Caballeros' ? styles.btnRamaActivo : styles.btnRamaInactivo}
             onClick={() => setRama('Caballeros')}
           >
@@ -70,7 +78,7 @@ const RankingScreen = () => {
           </button>
         </div>
 
-        {/* SLIDER HORIZONTAL DE CATEGORÍAS */}
+        {/* CHIPS DE CATEGORÍA */}
         <div style={styles.sliderCategorias}>
           {categoriasDisponibles.map((cat) => {
             const esActivo = categoria === cat;
@@ -86,81 +94,150 @@ const RankingScreen = () => {
           })}
         </div>
 
-        {/* CONTENEDOR DE LA LISTA / CARGA */}
+        {/* CONTENIDO */}
         <div style={styles.listaClasificacion}>
           {cargando ? (
             <div style={styles.contenedorCarga}>
               <div style={styles.spinner}></div>
-              <p style={{ color: '#8E8E93', marginTop: '12px', fontSize: '14px' }}>Actualizando posiciones...</p>
+              <p style={{ color: '#7A847E', marginTop: '12px', fontSize: '14px' }}>Actualizando posiciones...</p>
             </div>
           ) : jugadores.length === 0 ? (
             <div style={styles.mensajeEstado}>
               Aún no hay jugadores registrados en {categoria} {rama}.
             </div>
           ) : (
-            jugadores.map((jugador, index) => {
-              const posicion = index + 1;
-              
-              return (
-                <div 
-                  key={jugador.id} 
-                  style={styles.filaJugador}
-                  onClick={() => navigate(`/jugador/${jugador.id}`)}
-                >
-                  
-                  {/* PUESTO / MEDALLA */}
-                  <div style={styles.colPosicion}>
-                    {posicion <= 3 ? (
-                      <span style={styles.badgeMedalla(posicion)}>{posicion}</span>
-                    ) : (
-                      <span style={styles.textoPosicion}>{posicion}</span>
-                    )}
-                  </div>
-
-                  {/* FOTO JUGADOR */}
-                  <div style={styles.colFoto}>
-                    <div style={styles.avatarContenedor}>
-                      {jugador.imagenPerfil ? (
-                        <img 
-                          src={resolverUrlImagen(jugador.imagenPerfil)} 
-                          alt="Perfil" 
-                          style={styles.avatar}
-                        />
-                      ) : (
-                        <span style={styles.inicialAvatar}>
-                          {obtenerIniciales(jugador)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* DATOS DEL JUGADOR */}
-                  <div style={styles.colInfo}>
-                    <div style={styles.nombreJugador}>
-                      {jugador.nombre} {jugador.apellido}
-                    </div>
-                    <div style={styles.subtextoCategoria}>
-                      {categoria} {rama}
-                    </div>
-                  </div>
-
-                  {/* PUNTOS TOTALES */}
-                  <div style={styles.colPuntos}>
-                    <span style={styles.textoPuntos}>{jugador.puntosGenerales || 0} pts</span>
-                  </div>
-
+            <>
+              {/* PODIO TOP 3 (si hay 3 o más) */}
+              {tienePodio && (
+                <div style={styles.podio}>
+                  {podioOrder.map((idx, i) => {
+                    const jugador = topJugadores[idx];
+                    if (!jugador) return null;
+                    const place = idx + 1;
+                    const size = podioAvatarSizes[i];
+                    const pillarH = podioHeights[i];
+                    return (
+                      <div key={jugador.id} style={styles.podioSlot}>
+                        <div style={styles.podioAvatarWrap}>
+                          {jugador.imagenPerfil ? (
+                            <img
+                              src={resolverUrlImagen(jugador.imagenPerfil)}
+                              alt="Perfil"
+                              style={{ ...styles.podioAvatarImg, width: size, height: size }}
+                            />
+                          ) : (
+                            <div
+                              style={{
+                                ...styles.podioAvatar,
+                                width: size,
+                                height: size,
+                                fontSize: size * 0.36,
+                                backgroundColor: medallaColor(place) + '30',
+                              }}
+                            >
+                              {obtenerIniciales(jugador)}
+                            </div>
+                          )}
+                          <span
+                            style={{
+                              ...styles.podioMedalla,
+                              backgroundColor: medallaColor(place),
+                              color: place === 2 ? '#0B0F0D' : '#fff',
+                            }}
+                          >
+                            {place === 1 ? '👑' : place}
+                          </span>
+                        </div>
+                        <p style={styles.podioNombre}>{jugador.nombre}</p>
+                        <p style={styles.podioPuntos}>{jugador.puntosGenerales || 0} pts</p>
+                        <div style={{ ...styles.podioPilar, height: pillarH }}>
+                          <span style={styles.podioPilarNum}>{place}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })
+              )}
+
+              {/* Si hay menos de 3, mostrar los primeros como lista normal */}
+              {!tienePodio && topJugadores.map((jugador, index) => {
+                const posicion = index + 1;
+                return (
+                  <FilaJugador
+                    key={jugador.id}
+                    jugador={jugador}
+                    posicion={posicion}
+                    categoria={categoria}
+                    rama={rama}
+                    obtenerIniciales={obtenerIniciales}
+                    onClick={() => navigate(`/jugador/${jugador.id}`)}
+                    esTop
+                  />
+                );
+              })}
+
+              {/* RESTO DE LA TABLA */}
+              {restoJugadores.length > 0 && (
+                <>
+                  <div style={styles.restoHeader}>
+                    <span>✦ Resto de la tabla</span>
+                  </div>
+                  {restoJugadores.map((jugador, index) => {
+                    const posicion = index + 4;
+                    return (
+                      <FilaJugador
+                        key={jugador.id}
+                        jugador={jugador}
+                        posicion={posicion}
+                        categoria={categoria}
+                        rama={rama}
+                        obtenerIniciales={obtenerIniciales}
+                        onClick={() => navigate(`/jugador/${jugador.id}`)}
+                      />
+                    );
+                  })}
+                </>
+              )}
+            </>
           )}
         </div>
-
       </div>
     </div>
   );
 };
 
-// --- ARQUITECTURA DE ESTILOS ADN PÁDEL ---
-// (Las animaciones como @keyframes spin ahora viven en index.css de forma global)
+// Componente de fila reutilizable
+const FilaJugador = ({ jugador, posicion, categoria, rama, obtenerIniciales, onClick, esTop }) => (
+  <div style={styles.filaJugador} onClick={onClick} role="button" tabIndex={0}>
+    <div style={styles.colPosicion}>
+      <span style={{ ...styles.posicionBadge, ...(esTop ? styles.posicionTop : styles.posicionResto) }}>
+        {posicion}
+      </span>
+    </div>
+
+    <div style={styles.colFoto}>
+      <div style={styles.avatarContenedor}>
+        {jugador.imagenPerfil ? (
+          <img src={resolverUrlImagen(jugador.imagenPerfil)} alt="Perfil" style={styles.avatar} />
+        ) : (
+          <span style={styles.inicialAvatar}>{obtenerIniciales(jugador)}</span>
+        )}
+      </div>
+    </div>
+
+    <div style={styles.colInfo}>
+      <div style={styles.nombreJugador}>
+        {jugador.nombre} {jugador.apellido}
+      </div>
+      <div style={styles.subtextoCategoria}>
+        {categoria} {rama}
+      </div>
+    </div>
+
+    <div style={styles.colPuntos}>
+      <span style={styles.textoPuntos}>{jugador.puntosGenerales || 0} pts</span>
+    </div>
+  </div>
+);
 
 export default RankingScreen;

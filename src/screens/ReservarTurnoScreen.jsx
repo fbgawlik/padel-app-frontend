@@ -250,9 +250,9 @@ const ReservarTurnoScreen = () => {
                 }}
                 style={{
                   ...styles.pildoraCancha,
-                  backgroundColor: seleccionada ? 'rgba(57, 255, 20, 0.08)' : '#121214',
-                  borderColor: seleccionada ? '#39FF14' : 'rgba(255, 255, 255, 0.05)',
-                  color: seleccionada ? '#39FF14' : '#ffffff'
+                  backgroundColor: seleccionada ? 'rgba(190, 242, 100, 0.08)' : '#121214',
+                  borderColor: seleccionada ? '#BEF264' : 'rgba(255, 255, 255, 0.05)',
+                  color: seleccionada ? '#BEF264' : '#ffffff'
                 }}
               >
                 <span style={styles.iconoPildora}>🎾</span>
@@ -281,9 +281,9 @@ const ReservarTurnoScreen = () => {
                 }}
                 style={{
                   ...styles.tarjetaFecha,
-                  backgroundColor: esSeleccionado ? '#39FF14' : '#121214',
-                  border: esSeleccionado ? '1px solid #39FF14' : '1px solid rgba(255, 255, 255, 0.04)',
-                  boxShadow: esSeleccionado ? '0 8px 20px rgba(57, 255, 20, 0.2)' : 'none'
+                  backgroundColor: esSeleccionado ? '#BEF264' : '#121214',
+                  border: esSeleccionado ? '1px solid #BEF264' : '1px solid rgba(255, 255, 255, 0.04)',
+                  boxShadow: esSeleccionado ? '0 8px 20px rgba(190, 242, 100, 0.2)' : 'none'
                 }}
               >
                 <span style={{ 
@@ -365,10 +365,10 @@ const ReservarTurnoScreen = () => {
           disabled={!horaInicio || !horaFin} 
           style={{
             ...styles.botonReservar,
-            backgroundColor: (horaInicio && horaFin) ? '#39FF14' : 'rgba(255, 255, 255, 0.04)',
+            backgroundColor: (horaInicio && horaFin) ? '#BEF264' : 'rgba(255, 255, 255, 0.04)',
             color: (horaInicio && horaFin) ? '#000000' : 'rgba(255, 255, 255, 0.2)',
             cursor: (horaInicio && horaFin) ? 'pointer' : 'not-allowed',
-            boxShadow: (horaInicio && horaFin) ? '0 8px 24px rgba(57, 255, 20, 0.25)' : 'none'
+            boxShadow: (horaInicio && horaFin) ? '0 8px 24px rgba(190, 242, 100, 0.25)' : 'none'
           }}
         >
           {(horaInicio && horaFin) 
@@ -412,9 +412,9 @@ const ReservarTurnoScreen = () => {
                         onClick={() => gestionarCompraProducto(p)}
                         style={{ 
                           ...styles.botonAccionTienda,
-                          backgroundColor: agotado ? 'transparent' : 'rgba(57, 255, 20, 0.08)',
-                          color: agotado ? '#444446' : '#39FF14',
-                          border: agotado ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(57, 255, 20, 0.15)'
+                          backgroundColor: agotado ? 'transparent' : 'rgba(190, 242, 100, 0.08)',
+                          color: agotado ? '#444446' : '#BEF264',
+                          border: agotado ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(190, 242, 100, 0.15)'
                         }}
                       >
                         {agotado ? 'Agotado' : 'Agregar'}

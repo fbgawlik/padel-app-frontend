@@ -1,21 +1,24 @@
 // src/components/Layout.jsx
+// ───────────────────────────────────────────────────────────
+// Refactor v2: ambient glow con tokens del theme (lima +
+// esmeralda), sin hex hardcodeados.
+// ───────────────────────────────────────────────────────────
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import BottomNavigation from './BottomNavigation';
+import { theme } from '../theme';
 
 const Layout = () => {
   return (
     <div style={styles.appContainer}>
-      {/* ─── DETALLES ESTÉTICOS DE BRILLO / AMBIENT GLOW ─── */}
+      {/* ─── LUCES DE AMBIENTE (GLOWS) ─── */}
       <div style={styles.glowTopLeft} />
       <div style={styles.glowBottomRight} />
 
-      {/* Contenedor del contenido de las pantallas */}
       <main style={styles.mainContent}>
         <Outlet />
       </main>
 
-      {/* Barra de navegación inferior */}
       <BottomNavigation />
     </div>
   );
@@ -23,27 +26,26 @@ const Layout = () => {
 
 const styles = {
   appContainer: {
-    backgroundColor: '#0A0A0B',
-    minHeight: '100dvh', // min (no height fija): el contenido nunca se corta
+    backgroundColor: theme.colors.background,
+    minHeight: '100dvh',
     width: '100%',
-    color: '#ffffff',
+    color: theme.colors.text,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'stretch',
-    justifyContent: 'flex-start', // el contenido fluye desde arriba (antes 'center' podía comprimir)
+    justifyContent: 'flex-start',
     position: 'relative',
-    overflowX: 'hidden', // solo horizontal: el scroll vertical vive en el documento
+    overflowX: 'hidden',
   },
-  /* ─── LUCES DE AMBIENTE (GLOWS) ─── */
   glowTopLeft: {
     position: 'absolute',
     top: '-150px',
     left: 'calc(50% - 300px)',
     width: '300px',
     height: '300px',
-    backgroundColor: '#CCFF00',
+    backgroundColor: theme.colors.primary,
     borderRadius: '50%',
-    opacity: '0.06',
+    opacity: '0.07',
     filter: 'blur(90px)',
     pointerEvents: 'none',
     zIndex: 1,
@@ -54,20 +56,18 @@ const styles = {
     right: 'calc(50% - 250px)',
     width: '250px',
     height: '250px',
-    backgroundColor: '#00E5FF',
+    backgroundColor: theme.colors.secondaryGlow,
     borderRadius: '50%',
-    opacity: '0.04',
+    opacity: '0.05',
     filter: 'blur(80px)',
     pointerEvents: 'none',
     zIndex: 1,
   },
-  /* ─── CONTENIDO PRINCIPAL ─── */
   mainContent: {
     width: '100%',
     maxWidth: '500px',
     margin: '0 auto',
     flex: 1,
-    // Espacio inferior reservado para la barra de navegación fija (64px + 24px de margen)
     paddingBottom: '112px',
     paddingTop: '8px',
     boxSizing: 'border-box',

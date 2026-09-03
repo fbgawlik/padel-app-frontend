@@ -154,10 +154,10 @@ export const styles = {
     color: theme.colors.text
   },
   slotSeleccionado: {
-    backgroundColor: 'rgba(57, 255, 20, 0.08)',
+    backgroundColor: 'rgba(190, 242, 100, 0.08)',
     borderColor: theme.colors.primary,
     color: theme.colors.primary,
-    boxShadow: '0 8px 20px rgba(57, 255, 20, 0.12)'
+    boxShadow: '0 8px 20px rgba(190, 242, 100, 0.12)'
   },
   slotOcupado: {
     backgroundColor: 'rgba(255,255,255,0.02)',
@@ -352,8 +352,8 @@ export const styles = {
   spinner: { 
     width: '32px', 
     height: '32px', 
-    border: '3px solid rgba(57, 255, 20, 0.1)', 
-    borderTop: '3px solid #39FF14', 
+    border: '3px solid rgba(190, 242, 100, 0.1)', 
+    borderTop: '3px solid #BEF264', 
     borderRadius: '50%'
   }
 }

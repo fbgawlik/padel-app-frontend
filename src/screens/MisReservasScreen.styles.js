@@ -76,9 +76,9 @@ export const styles = {
     position: 'absolute',
     top: '22px',
     right: '22px',
-    backgroundColor: 'rgba(57, 255, 20, 0.08)',
+    backgroundColor: 'rgba(190, 242, 100, 0.08)',
     color: theme.colors.primary,
-    border: '1px solid rgba(57, 255, 20, 0.15)',
+    border: '1px solid rgba(190, 242, 100, 0.15)',
     padding: '6px 12px',
     borderRadius: '99px',
     fontSize: '11px',
@@ -201,7 +201,7 @@ export const styles = {
     backgroundColor: theme.colors.primary,
     borderRadius: '99px',
     transition: 'width 0.3s ease',
-    boxShadow: '0 0 12px rgba(57, 255, 20, 0.4)'
+    boxShadow: '0 0 12px rgba(190, 242, 100, 0.4)'
   },
   categoriaTexto: {
     fontSize: '14px', 
@@ -258,8 +258,8 @@ export const styles = {
   spinner: {
     width: '32px',
     height: '32px',
-    border: '3px solid rgba(57, 255, 20, 0.1)',
-    borderTop: '3px solid #39FF14',
+    border: '3px solid rgba(190, 242, 100, 0.1)',
+    borderTop: '3px solid #BEF264',
     borderRadius: '50%'
   }
 }

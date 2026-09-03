@@ -154,9 +154,37 @@ const TorneoInscripcionScreen = () => {
   };
 
   // Separar categorías del string separado por "/" o "|"
-  const categoriasDisponibles = torneo?.categoria 
-    ? torneo.categoria.split(/[|/]+/).map(c => c.trim()) 
+  const categoriasDisponibles = torneo?.categoria
+    ? torneo.categoria.split(/[|/]+/).map(c => c.trim())
     : [];
+
+  // ── LÓGICA DEL STEPPER DE PROGRESO (nuevo) ──
+  // Calcula qué pasos están completos según el estado del formulario.
+  const pasosStepper = [
+    {
+      id: 1,
+      nombre: 'Categoría',
+      completo: !!categoriaSeleccionada,
+    },
+    {
+      id: 2,
+      nombre: 'Pareja',
+      completo: !!companeroSeleccionado && !!telefono1.trim() && !!telefono2.trim(),
+    },
+    {
+      id: 3,
+      nombre: 'Horarios',
+      completo: true, // sección siempre "alcanzada" (es opcional)
+    },
+    {
+      id: 4,
+      nombre: 'Confirmar',
+      completo: aceptoReglas,
+    },
+  ];
+  const pasosCompletos = pasosStepper.filter(p => p.completo).length;
+  const porcentajeStepper = Math.round((pasosCompletos / pasosStepper.length) * 100);
+  const pasoActual = pasosStepper.find(p => !p.completo)?.nombre || 'Listo';
 
   if (cargandoTorneo) {
     return (
@@ -181,7 +209,7 @@ const TorneoInscripcionScreen = () => {
       {/* TOP BAR */}
       <div style={styles.topBar}>
         <button onClick={() => navigate(-1)} style={styles.backButton}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BEF264" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M19 12H5M12 19l-7-7 7-7"/>
           </svg>
         </button>
@@ -194,7 +222,22 @@ const TorneoInscripcionScreen = () => {
         {/* INFO CARD DEL TORNEO */}
         <div style={styles.torneoCard}>
           <h2 style={styles.torneoTitulo}>{torneo.nombre}</h2>
-          <p style={styles.torneoDetalle}>Costo de Inscripción (por pareja): <strong style={{color: '#39FF14'}}>${torneo.precioInscripcion || '0'}</strong></p>
+          <p style={styles.torneoDetalle}>Costo de Inscripción (por pareja): <strong style={{color: '#BEF264'}}>${torneo.precioInscripcion || '0'}</strong></p>
+        </div>
+
+        {/* STEPPER DE PROGRESO (nuevo) */}
+        <div style={styles.stepperBarra}>
+          <div style={styles.stepperBarraLabel}>
+            <span style={styles.stepperBarraLabelPaso}>
+              Paso {pasosCompletos} de {pasosStepper.length}
+            </span>
+            <span style={styles.stepperBarraLabelNombre}>{pasoActual}</span>
+          </div>
+          <div style={styles.stepperBarraTrack}>
+            <div
+              style={{ ...styles.stepperBarraFill, width: `${porcentajeStepper}%` }}
+            />
+          </div>
         </div>
 
         <form onSubmit={handleInscribirse} style={styles.form}>
@@ -364,7 +407,7 @@ const TorneoInscripcionScreen = () => {
                 style={styles.checkbox}
               />
               <span style={styles.rulesText}>
-                Acepto el reglamento oficial de <strong style={{color: '#39FF14'}}>ADN PÁDEL</strong> y me comprometo a cumplir con el fair-play y los horarios asignados del torneo.
+                Acepto el reglamento oficial de <strong style={{color: '#BEF264'}}>ADN PÁDEL</strong> y me comprometo a cumplir con el fair-play y los horarios asignados del torneo.
               </span>
             </label>
           </div>

@@ -194,10 +194,10 @@ const CrearTorneoScreen = () => {
         <div style={{
           ...styles.toast,
           backgroundColor: toast.tipo === 'success' ? '#1c3d23' : '#3d1c1c',
-          borderColor: toast.tipo === 'success' ? '#39FF14' : '#ff4d4d',
+          borderColor: toast.tipo === 'success' ? '#BEF264' : '#ff4d4d',
         }}>
-          <div style={{...styles.toastDot, backgroundColor: toast.tipo === 'success' ? '#39FF14' : '#ff4d4d'}} />
-          <span style={{...styles.toastText, color: toast.tipo === 'success' ? '#39FF14' : '#ff4d4d'}}>{toast.mensaje}</span>
+          <div style={{...styles.toastDot, backgroundColor: toast.tipo === 'success' ? '#BEF264' : '#ff4d4d'}} />
+          <span style={{...styles.toastText, color: toast.tipo === 'success' ? '#BEF264' : '#ff4d4d'}}>{toast.mensaje}</span>
         </div>
       )}
 
@@ -400,7 +400,7 @@ const CrearTorneoScreen = () => {
               </div>
             ) : (
               <label style={styles.dropzone}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#39FF14" strokeWidth="2" style={{ marginBottom: '8px' }}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#BEF264" strokeWidth="2" style={{ marginBottom: '8px' }}>
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                   <polyline points="17 8 12 3 7 8"></polyline>
                   <line x1="12" y1="3" x2="12" y2="15"></line>
